@@ -6,12 +6,10 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+from src.handbook import resolve_chapter
+
 MIN_WORD_COUNT = 1500
-STAGE_DIRS = {
-    "drafts": Path("chapters/drafts"),
-    "reviewed": Path("chapters/reviewed"),
-    "final": Path("chapters/final"),
-}
+STAGE_FIELDS = {"drafts": "draft_path", "reviewed": "reviewed_path", "final": "final_path"}
 REQUIRED_SECTIONS = [
     "Learning Objectives",
     "Conceptual Foundation",
@@ -25,12 +23,6 @@ REQUIRED_SECTIONS = [
     "Key Takeaways",
     "Sketchnote Placeholder",
 ]
-
-
-def chapter_filename(chapter: int) -> str:
-    """Return the standard chapter filename."""
-    return f"chapter-{chapter:02d}.md"
-
 
 @dataclass(frozen=True)
 class ValidationResult:
@@ -57,12 +49,13 @@ def has_section(text: str, section: str) -> bool:
 
 def validate_chapter(chapter: int, stage: str = "drafts") -> ValidationResult:
     """Validate a chapter Markdown file without calling the LLM."""
-    stage_dir = STAGE_DIRS.get(stage)
-    if stage_dir is None:
-        available_stages = ", ".join(sorted(STAGE_DIRS))
+    stage_field = STAGE_FIELDS.get(stage)
+    if stage_field is None:
+        available_stages = ", ".join(sorted(STAGE_FIELDS))
         raise ValueError(f"Unknown validation stage '{stage}'. Available stages: {available_stages}")
 
-    chapter_path = stage_dir / chapter_filename(chapter)
+    metadata = resolve_chapter(chapter)
+    chapter_path = getattr(metadata, stage_field)
     errors: list[str] = []
     missing_sections: list[str] = []
 

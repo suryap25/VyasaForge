@@ -93,6 +93,34 @@ def _compile_docx(chapters: str) -> None:
     print(f"Wrote DOCX: {Path(output_path)}")
 
 
+def _run_step(name: str, action: Callable[[], None]) -> None:
+    """Run one pipeline step with progress output."""
+    print(f"START: {name}")
+    action()
+    print(f"DONE: {name}")
+
+
+def _run_chapter(chapter: int) -> None:
+    """Run the single-chapter pipeline."""
+    from src.handbook import resolve_chapter
+
+    metadata = resolve_chapter(chapter)
+    steps: list[tuple[str, Callable[[], None]]] = [
+        ("write-chapter", lambda: _write_chapter(chapter)),
+        ("validate-chapter --stage drafts", lambda: _validate_chapter(chapter, "drafts")),
+        ("review-chapter", lambda: _review_chapter(chapter)),
+        ("revise-chapter", lambda: _revise_chapter(chapter)),
+        ("validate-chapter --stage reviewed", lambda: _validate_chapter(chapter, "reviewed")),
+        ("finalize-chapter", lambda: _finalize_chapter(chapter)),
+        ("validate-chapter --stage final", lambda: _validate_chapter(chapter, "final")),
+    ]
+
+    print(f"Running chapter pipeline for {metadata.chapter_id}: {metadata.title}")
+    for name, action in steps:
+        _run_step(name, action)
+    print(f"Chapter pipeline complete for chapter {chapter}")
+
+
 def _run_argparse() -> None:
     parser = argparse.ArgumentParser(description="AppSec handbook agent utilities.")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -119,6 +147,9 @@ def _run_argparse() -> None:
     compile_parser = subparsers.add_parser("compile-docx")
     compile_parser.add_argument("--chapters", required=True)
 
+    run_parser = subparsers.add_parser("run-chapter")
+    run_parser.add_argument("--chapter", type=int, required=True)
+
     args = parser.parse_args()
     commands: dict[str, Callable[[], None]] = {
         "test-model": lambda: _test_model(args.role),
@@ -128,6 +159,7 @@ def _run_argparse() -> None:
         "revise-chapter": lambda: _revise_chapter(args.chapter),
         "finalize-chapter": lambda: _finalize_chapter(args.chapter),
         "compile-docx": lambda: _compile_docx(args.chapters),
+        "run-chapter": lambda: _run_chapter(args.chapter),
     }
 
     try:
@@ -195,6 +227,14 @@ if typer is not None:
         """Compile final Markdown chapters into a DOCX file."""
         try:
             _compile_docx(chapters)
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    @app.command()
+    def run_chapter(chapter: int = typer.Option(..., "--chapter", help="Chapter number to run.")) -> None:
+        """Run the single-chapter pipeline."""
+        try:
+            _run_chapter(chapter)
         except (FileNotFoundError, RuntimeError, ValueError) as exc:
             raise typer.BadParameter(str(exc)) from exc
 

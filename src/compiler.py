@@ -4,15 +4,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-FINAL_DIR = Path("chapters/final")
+from src.handbook import resolve_chapter
+
 OUTPUT_PATH = Path("output/AppSec_Authentication_Authorization_Handbook_Phase1.docx")
 TITLE = "AppSec Authentication & Authorization Handbook v2.0"
 SUBTITLE = "Phase 1: Foundations & JWT"
-
-
-def chapter_filename(chapter: int) -> str:
-    """Return the standard chapter filename."""
-    return f"chapter-{chapter:02d}.md"
 
 
 def add_markdown_line(document: object, line: str) -> None:
@@ -31,7 +27,7 @@ def add_markdown_line(document: object, line: str) -> None:
 
 def compile_docx(chapters: list[int]) -> Path:
     """Compile final Markdown chapters into a DOCX file."""
-    chapter_paths = [FINAL_DIR / chapter_filename(chapter) for chapter in chapters]
+    chapter_paths = [resolve_chapter(chapter).final_path for chapter in chapters]
     for chapter_path in chapter_paths:
         if not chapter_path.exists():
             raise FileNotFoundError(f"Missing final chapter: {chapter_path}")

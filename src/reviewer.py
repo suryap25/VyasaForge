@@ -4,14 +4,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from src.handbook import resolve_chapter
+
 PROMPT_PATH = Path("prompts/chapter_review.md")
-DRAFTS_DIR = Path("chapters/drafts")
-REVIEWS_DIR = Path("reviews")
-
-
-def chapter_filename(chapter: int) -> str:
-    """Return the standard chapter filename."""
-    return f"chapter-{chapter:02d}.md"
 
 
 def ensure_required_file(path: Path, label: str) -> None:
@@ -22,9 +17,10 @@ def ensure_required_file(path: Path, label: str) -> None:
 
 def review_chapter(chapter: int) -> Path:
     """Review a chapter draft using the configured reviewer model."""
+    metadata = resolve_chapter(chapter)
     prompt_path = PROMPT_PATH
-    draft_path = DRAFTS_DIR / chapter_filename(chapter)
-    review_path = REVIEWS_DIR / f"chapter-{chapter:02d}-review.md"
+    draft_path = metadata.draft_path
+    review_path = metadata.review_path
 
     ensure_required_file(prompt_path, "chapter review prompt")
     ensure_required_file(draft_path, "chapter draft")
@@ -41,6 +37,6 @@ def review_chapter(chapter: int) -> Path:
 
     review = llm_gateway.call_llm(role="reviewer", messages=messages)
 
-    REVIEWS_DIR.mkdir(parents=True, exist_ok=True)
+    review_path.parent.mkdir(parents=True, exist_ok=True)
     review_path.write_text(review, encoding="utf-8")
     return review_path

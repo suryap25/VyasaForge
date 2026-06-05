@@ -1,0 +1,164 @@
+handbook:
+  title: AppSec Authentication & Authorization Handbook
+  version: "2.0"
+  chapters:
+    chapter_01:
+      number: 1
+      title: Authentication vs Authorization
+      brief_path: chapters/briefs/chapter-01.md
+      draft_path: chapters/drafts/chapter-01.md
+      reviewed_path: chapters/reviewed/chapter-01.md
+      final_path: chapters/final/chapter-01.md
+      review_path: reviews/chapter-01-review.md
+    chapter_02:
+      number: 2
+      title: Chapter 02
+      brief_path: chapters/briefs/chapter-02.md
+      draft_path: chapters/drafts/chapter-02.md
+      reviewed_path: chapters/reviewed/chapter-02.md
+      final_path: chapters/final/chapter-02.md
+      review_path: reviews/chapter-02-review.md
+    chapter_03:
+      number: 3
+      title: Chapter 03
+      brief_path: chapters/briefs/chapter-03.md
+      draft_path: chapters/drafts/chapter-03.md
+      reviewed_path: chapters/reviewed/chapter-03.md
+      final_path: chapters/final/chapter-03.md
+      review_path: reviews/chapter-03-review.md
+    chapter_04:
+      number: 4
+      title: Chapter 04
+      brief_path: chapters/briefs/chapter-04.md
+      draft_path: chapters/drafts/chapter-04.md
+      reviewed_path: chapters/reviewed/chapter-04.md
+      final_path: chapters/final/chapter-04.md
+      review_path: reviews/chapter-04-review.md
+    chapter_05:
+      number: 5
+      title: Chapter 05
+      brief_path: chapters/briefs/chapter-05.md
+      draft_path: chapters/drafts/chapter-05.md
+      reviewed_path: chapters/reviewed/chapter-05.md
+      final_path: chapters/final/chapter-05.md
+      review_path: reviews/chapter-05-review.md
+    chapter_06:
+      number: 6
+      title: Chapter 06
+      brief_path: chapters/briefs/chapter-06.md
+      draft_path: chapters/drafts/chapter-06.md
+      reviewed_path: chapters/reviewed/chapter-06.md
+      final_path: chapters/final/chapter-06.md
+      review_path: reviews/chapter-06-review.md
+    chapter_07:
+      number: 7
+      title: Chapter 07
+      brief_path: chapters/briefs/chapter-07.md
+      draft_path: chapters/drafts/chapter-07.md
+      reviewed_path: chapters/reviewed/chapter-07.md
+      final_path: chapters/final/chapter-07.md
+      review_path: reviews/chapter-07-review.md
+    chapter_08:
+      number: 8
+      title: Chapter 08
+      brief_path: chapters/briefs/chapter-08.md
+      draft_path: chapters/drafts/chapter-08.md
+      reviewed_path: chapters/reviewed/chapter-08.md
+      final_path: chapters/final/chapter-08.md
+      review_path: reviews/chapter-08-review.md
+    chapter_09:
+      number: 9
+      title: Chapter 09
+      brief_path: chapters/briefs/chapter-09.md
+      draft_path: chapters/drafts/chapter-09.md
+      reviewed_path: chapters/reviewed/chapter-09.md
+      final_path: chapters/final/chapter-09.md
+      review_path: reviews/chapter-09-review.md
+    chapter_10:
+      number: 10
+      title: Chapter 10
+      brief_path: chapters/briefs/chapter-10.md
+      draft_path: chapters/drafts/chapter-10.md
+      reviewed_path: chapters/reviewed/chapter-10.md
+      final_path: chapters/final/chapter-10.md
+      review_path: reviews/chapter-10-review.md
+    chapter_11:
+      number: 11
+      title: Chapter 11
+      brief_path: chapters/briefs/chapter-11.md
+      draft_path: chapters/drafts/chapter-11.md
+      reviewed_path: chapters/reviewed/chapter-11.md
+      final_path: chapters/final/chapter-11.md
+      review_path: reviews/chapter-11-review.md
+    chapter_12:
+      number: 12
+      title: Chapter 12
+      brief_path: chapters/briefs/chapter-12.md
+      draft_path: chapters/drafts/chapter-12.md
+      reviewed_path: chapters/reviewed/chapter-12.md
+      final_path: chapters/final/chapter-12.md
+      review_path: reviews/chapter-12-review.md
+    chapter_13:
+      number: 13
+      title: Chapter 13
+      brief_path: chapters/briefs/chapter-13.md
+      draft_path: chapters/drafts/chapter-13.md
+      reviewed_path: chapters/reviewed/chapter-13.md
+      final_path: chapters/final/chapter-13.md
+      review_path: reviews/chapter-13-review.md
+    chapter_14:
+      number: 14
+      title: Chapter 14
+      brief_path: chapters/briefs/chapter-14.md
+      draft_path: chapters/drafts/chapter-14.md
+      reviewed_path: chapters/reviewed/chapter-14.md
+      final_path: chapters/final/chapter-14.md
+      review_path: reviews/chapter-14-review.md
+    chapter_15:
+      number: 15
+      title: Chapter 15
+      brief_path: chapters/briefs/chapter-15.md
+      draft_path: chapters/drafts/chapter-15.md
+      reviewed_path: chapters/reviewed/chapter-15.md
+      final_path: chapters/final/chapter-15.md
+      review_path: reviews/chapter-15-review.md
+    chapter_16:
+      number: 16
+      title: Chapter 16
+      brief_path: chapters/briefs/chapter-16.md
+      draft_path: chapters/drafts/chapter-16.md
+      reviewed_path: chapters/reviewed/chapter-16.md
+      final_path: chapters/final/chapter-16.md
+      review_path: reviews/chapter-16-review.md
+    chapter_17:
+      number: 17
+      title: Chapter 17
+      brief_path: chapters/briefs/chapter-17.md
+      draft_path: chapters/drafts/chapter-17.md
+      reviewed_path: chapters/reviewed/chapter-17.md
+      final_path: chapters/final/chapter-17.md
+      review_path: reviews/chapter-17-review.md
+    chapter_18:
+      number: 18
+      title: Chapter 18
+      brief_path: chapters/briefs/chapter-18.md
+      draft_path: chapters/drafts/chapter-18.md
+      reviewed_path: chapters/reviewed/chapter-18.md
+      final_path: chapters/final/chapter-18.md
+      review_path: reviews/chapter-18-review.md
+    chapter_19:
+      number: 19
+      title: Chapter 19
+      brief_path: chapters/briefs/chapter-19.md
+      draft_path: chapters/drafts/chapter-19.md
+      reviewed_path: chapters/reviewed/chapter-19.md
+      final_path: chapters/final/chapter-19.md
+      review_path: reviews/chapter-19-review.md
+    chapter_20:
+      number: 20
+      title: Chapter 20
+      brief_path: chapters/briefs/chapter-20.md
+      draft_path: chapters/drafts/chapter-20.md
+      reviewed_path: chapters/reviewed/chapter-20.md
+      final_path: chapters/final/chapter-20.md
+      review_path: reviews/chapter-20-review.md

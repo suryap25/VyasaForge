@@ -4,20 +4,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from src.handbook import resolve_chapter
+
 PROMPT_PATH = Path("prompts/chapter_revision.md")
-DRAFTS_DIR = Path("chapters/drafts")
-REVIEWS_DIR = Path("reviews")
-REVIEWED_DIR = Path("chapters/reviewed")
-
-
-def chapter_filename(chapter: int) -> str:
-    """Return the standard chapter filename."""
-    return f"chapter-{chapter:02d}.md"
-
-
-def review_filename(chapter: int) -> str:
-    """Return the standard review filename."""
-    return f"chapter-{chapter:02d}-review.md"
 
 
 def ensure_required_file(path: Path, label: str) -> None:
@@ -28,10 +17,11 @@ def ensure_required_file(path: Path, label: str) -> None:
 
 def revise_chapter(chapter: int) -> Path:
     """Revise a chapter draft using review comments."""
+    metadata = resolve_chapter(chapter)
     prompt_path = PROMPT_PATH
-    draft_path = DRAFTS_DIR / chapter_filename(chapter)
-    review_path = REVIEWS_DIR / review_filename(chapter)
-    revised_path = REVIEWED_DIR / chapter_filename(chapter)
+    draft_path = metadata.draft_path
+    review_path = metadata.review_path
+    revised_path = metadata.reviewed_path
 
     ensure_required_file(prompt_path, "chapter revision prompt")
     ensure_required_file(draft_path, "chapter draft")
@@ -53,6 +43,6 @@ def revise_chapter(chapter: int) -> Path:
 
     revised = llm_gateway.call_llm(role="editor", messages=messages)
 
-    REVIEWED_DIR.mkdir(parents=True, exist_ok=True)
+    revised_path.parent.mkdir(parents=True, exist_ok=True)
     revised_path.write_text(revised, encoding="utf-8")
     return revised_path
