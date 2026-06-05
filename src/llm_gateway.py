@@ -6,7 +6,6 @@ import json
 from pathlib import Path
 from typing import Any
 
-from litellm import completion
 from pydantic import BaseModel, Field
 
 DEFAULT_CONFIG_PATH = Path("configs/phase1.example.json")
@@ -41,6 +40,11 @@ def load_config(config_path: Path = DEFAULT_CONFIG_PATH) -> Phase1Config:
 
 def call_llm(role: str, messages: list[dict[str, Any]]) -> str:
     """Call the configured model for a role and return text content."""
+    try:
+        from litellm import completion
+    except ImportError as exc:
+        raise RuntimeError("LiteLLM is required. Install project dependencies with `pip install -e .`.") from exc
+
     config = load_config()
     role_config = config.llm.roles.get(role)
     if role_config is None:
