@@ -36,7 +36,7 @@ def write_chapter(chapter: int) -> Path:
         {"role": "system", "content": prompt},
         {"role": "user", "content": f"Write the chapter from this brief:\n\n{brief}"},
     ]
-    draft = llm_gateway.call_llm(role="writer", messages=messages)
+    draft = llm_gateway.call_llm(role="writer", messages=messages, chapter=metadata.number)
 
     draft_path.parent.mkdir(parents=True, exist_ok=True)
     draft_path.write_text(draft, encoding="utf-8")

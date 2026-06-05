@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from src.handbook import resolve_chapter
 from src.validator import has_section, resolve_chapter_stage_path, validate_chapter
 
 SKETCHNOTE_SECTION = "Sketchnote Placeholder"
@@ -18,6 +19,7 @@ def append_section(path: Path, section_markdown: str) -> None:
 
 def repair_chapter(chapter: int, stage: str = "drafts") -> Path:
     """Append missing required sections to an existing chapter file."""
+    metadata = resolve_chapter(chapter)
     chapter_path = resolve_chapter_stage_path(chapter, stage=stage)
     result = validate_chapter(chapter, stage=stage)
     if not chapter_path.exists():
@@ -54,7 +56,7 @@ def repair_chapter(chapter: int, stage: str = "drafts") -> Path:
 
     from src import llm_gateway
 
-    repair = llm_gateway.call_llm(role="writer", messages=messages)
+    repair = llm_gateway.call_llm(role="writer", messages=messages, chapter=metadata.number)
     chapter_path.write_text(existing.rstrip() + "\n\n" + repair.strip() + "\n", encoding="utf-8")
 
     repaired = chapter_path.read_text(encoding="utf-8")

@@ -70,7 +70,7 @@ def revise_chapter(chapter: int) -> Path:
 
     from src import llm_gateway
 
-    revised = llm_gateway.call_llm(role="editor", messages=messages)
+    revised = llm_gateway.call_llm(role="editor", messages=messages, chapter=metadata.number)
     revised_word_count = count_words(revised)
     missing_sections = missing_required_sections(revised)
     too_short = revised_word_count < original_word_count * MIN_REVISED_WORD_RATIO

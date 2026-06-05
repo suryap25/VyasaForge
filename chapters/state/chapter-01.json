@@ -1,0 +1,16 @@
+{
+  "chapter": 1,
+  "stages": {
+    "validate": {
+      "details": {
+        "errors": [],
+        "missing_sections": [],
+        "path": "chapters\\drafts\\chapter-01.md",
+        "stage": "drafts",
+        "word_count": 5805
+      },
+      "status": "passed",
+      "updated_at": "2026-06-05T14:04:57.432947+00:00"
+    }
+  }
+}

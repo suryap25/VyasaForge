@@ -35,7 +35,7 @@ def review_chapter(chapter: int) -> Path:
 
     from src import llm_gateway
 
-    review = llm_gateway.call_llm(role="reviewer", messages=messages)
+    review = llm_gateway.call_llm(role="reviewer", messages=messages, chapter=metadata.number)
 
     review_path.parent.mkdir(parents=True, exist_ok=True)
     review_path.write_text(review, encoding="utf-8")

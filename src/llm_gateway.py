@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 DEFAULT_CONFIG_PATH = Path("configs/phase1.example.json")
+USAGE_LOG_PATH = Path("logs/llm-usage.jsonl")
 
 
 class LLMRoleConfig:
@@ -61,7 +63,52 @@ def load_config(config_path: Path = DEFAULT_CONFIG_PATH) -> Phase1Config:
     return Phase1Config(llm=LLMConfig(roles=roles))
 
 
-def call_llm(role: str, messages: list[dict[str, Any]]) -> str:
+def _usage_value(usage: Any, *keys: str) -> int | None:
+    """Extract a token usage value from dict-like or attribute-like usage."""
+    for key in keys:
+        if isinstance(usage, dict) and key in usage:
+            return usage[key]
+        if hasattr(usage, key):
+            return getattr(usage, key)
+    return None
+
+
+def _response_usage(response: Any) -> tuple[int | None, int | None, int | None]:
+    """Extract input, output, and total token counts when available."""
+    usage = response.get("usage") if isinstance(response, dict) else getattr(response, "usage", None)
+    if usage is None:
+        return (None, None, None)
+
+    input_tokens = _usage_value(usage, "input_tokens", "prompt_tokens")
+    output_tokens = _usage_value(usage, "output_tokens", "completion_tokens")
+    total_tokens = _usage_value(usage, "total_tokens")
+    return (input_tokens, output_tokens, total_tokens)
+
+
+def _log_usage(
+    chapter: int | None,
+    role: str,
+    model: str,
+    input_tokens: int | None,
+    output_tokens: int | None,
+    total_tokens: int | None,
+) -> None:
+    """Append one LLM usage record as JSONL."""
+    USAGE_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    record = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "chapter": chapter,
+        "role": role,
+        "model": model,
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "total_tokens": total_tokens,
+    }
+    with USAGE_LOG_PATH.open("a", encoding="utf-8") as log_file:
+        log_file.write(json.dumps(record, sort_keys=True) + "\n")
+
+
+def call_llm(role: str, messages: list[dict[str, Any]], chapter: int | None = None) -> str:
     """Call the configured model for a role and return text content."""
     try:
         from litellm import completion
@@ -87,10 +134,14 @@ def call_llm(role: str, messages: list[dict[str, Any]]) -> str:
     try:
         response = completion(**request_args)
     except Exception as exc:
+        _log_usage(chapter, role, role_config.model, None, None, None)
         raise RuntimeError(
             f"LLM call failed for role '{role}' using model '{role_config.model}'. "
             "Check the provider API key environment variable and model configuration."
         ) from exc
+
+    input_tokens, output_tokens, total_tokens = _response_usage(response)
+    _log_usage(chapter, role, role_config.model, input_tokens, output_tokens, total_tokens)
 
     content = response.choices[0].message.content
     return content or ""
