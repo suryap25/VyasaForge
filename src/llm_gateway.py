@@ -110,16 +110,17 @@ def _log_usage(
 
 def call_llm(role: str, messages: list[dict[str, Any]], chapter: int | None = None) -> str:
     """Call the configured model for a role and return text content."""
-    try:
-        from litellm import completion
-    except ImportError as exc:
-        raise RuntimeError("LiteLLM is required. Install project dependencies with `pip install -e .`.") from exc
-
     config = load_config()
     role_config = config.llm.roles.get(role)
     if role_config is None:
         available_roles = ", ".join(sorted(config.llm.roles))
         raise ValueError(f"Unknown LLM role '{role}'. Available roles: {available_roles}")
+
+    try:
+        from litellm import completion
+    except ImportError as exc:
+        _log_usage(chapter, role, role_config.model, None, None, None)
+        raise RuntimeError("LiteLLM is required. Install project dependencies with `pip install -e .`.") from exc
 
     request_args = {
         "model": role_config.model,
