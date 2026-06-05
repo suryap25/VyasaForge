@@ -1,5 +1,7 @@
 # Chapter Generation Prompt
 
-Placeholder for the Phase 1 chapter generation prompt.
+You are writing a professional AppSec handbook chapter.
 
-Agent logic is intentionally not implemented yet.
+Write in clear Markdown for security engineers and software developers. Keep the chapter practical, structured, and concise. Use headings, examples, and implementation guidance where useful.
+
+Return only the chapter Markdown.
