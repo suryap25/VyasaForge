@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 from pathlib import Path
 from typing import Callable
 
@@ -121,6 +122,47 @@ def _run_chapter(chapter: int) -> None:
     print(f"Chapter pipeline complete for chapter {chapter}")
 
 
+def _provider_env_var(model: str) -> tuple[str, str | None]:
+    """Return the likely provider and required environment variable for a model."""
+    model_name = model.lower()
+    if model_name.startswith("ollama/"):
+        return ("ollama", None)
+    if model_name.startswith("anthropic/") or "claude" in model_name:
+        return ("anthropic", "ANTHROPIC_API_KEY")
+    if model_name.startswith("openai/") or "gpt" in model_name:
+        return ("openai", "OPENAI_API_KEY")
+    if model_name.startswith("gemini/") or "gemini" in model_name:
+        return ("gemini", "GEMINI_API_KEY")
+    return ("unknown", None)
+
+
+def _doctor() -> None:
+    """Print provider and configuration diagnostics without calling the LLM."""
+    phase1_config = Path("configs/phase1.example.json")
+    handbook_config = Path("configs/handbook.yaml")
+
+    print("Config files:")
+    print(f"- {phase1_config}: {'FOUND' if phase1_config.exists() else 'MISSING'}")
+    print(f"- {handbook_config}: {'FOUND' if handbook_config.exists() else 'MISSING'}")
+
+    from src.llm_gateway import load_config
+
+    config = load_config(phase1_config)
+    print("LLM roles:")
+    for role, role_config in sorted(config.llm.roles.items()):
+        provider, env_var = _provider_env_var(role_config.model)
+        print(f"- {role}: {role_config.model}")
+        print(f"  provider: {provider}")
+        if env_var is None:
+            expected_env = "none" if provider == "ollama" else "unknown"
+            env_present = "yes" if provider == "ollama" else "no"
+        else:
+            expected_env = env_var
+            env_present = "yes" if os.environ.get(env_var) else "no"
+        print(f"  expected_env: {expected_env}")
+        print(f"  env_var_present: {env_present}")
+
+
 def _run_argparse() -> None:
     parser = argparse.ArgumentParser(description="AppSec handbook agent utilities.")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -150,6 +192,8 @@ def _run_argparse() -> None:
     run_parser = subparsers.add_parser("run-chapter")
     run_parser.add_argument("--chapter", type=int, required=True)
 
+    subparsers.add_parser("doctor")
+
     args = parser.parse_args()
     commands: dict[str, Callable[[], None]] = {
         "test-model": lambda: _test_model(args.role),
@@ -160,6 +204,7 @@ def _run_argparse() -> None:
         "finalize-chapter": lambda: _finalize_chapter(args.chapter),
         "compile-docx": lambda: _compile_docx(args.chapters),
         "run-chapter": lambda: _run_chapter(args.chapter),
+        "doctor": _doctor,
     }
 
     try:
@@ -235,6 +280,14 @@ if typer is not None:
         """Run the single-chapter pipeline."""
         try:
             _run_chapter(chapter)
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    @app.command()
+    def doctor() -> None:
+        """Print provider and configuration diagnostics."""
+        try:
+            _doctor()
         except (FileNotFoundError, RuntimeError, ValueError) as exc:
             raise typer.BadParameter(str(exc)) from exc
 
