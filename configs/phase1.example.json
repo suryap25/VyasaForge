@@ -1,0 +1,14 @@
+{
+  "configs_dir": "configs",
+  "prompts_dir": "prompts",
+  "chapters_dir": "chapters",
+  "llm": {
+    "roles": {
+      "writer": {
+        "model": "gpt-4o-mini",
+        "temperature": 0.2,
+        "max_tokens": 128
+      }
+    }
+  }
+}

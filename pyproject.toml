@@ -1,0 +1,21 @@
+[project]
+name = "appsec-handbook-agent"
+version = "0.1.0"
+description = "Scaffolding for an AppSec handbook agent."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "litellm>=1.0",
+    "pydantic>=2.0",
+    "typer>=0.12",
+]
+
+[project.scripts]
+appsec-handbook-agent = "appsec_handbook_agent.cli:app"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
