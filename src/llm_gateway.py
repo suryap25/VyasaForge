@@ -12,10 +12,17 @@ DEFAULT_CONFIG_PATH = Path("configs/phase1.example.json")
 class LLMRoleConfig:
     """Model settings for a configured role."""
 
-    def __init__(self, model: str, temperature: float | None = None, max_tokens: int | None = None) -> None:
+    def __init__(
+        self,
+        model: str,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
+        max_output_tokens: int | None = None,
+    ) -> None:
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
+        self.max_output_tokens = max_output_tokens
 
 
 class LLMConfig:
@@ -47,6 +54,7 @@ def load_config(config_path: Path = DEFAULT_CONFIG_PATH) -> Phase1Config:
             model=settings["model"],
             temperature=settings.get("temperature"),
             max_tokens=settings.get("max_tokens"),
+            max_output_tokens=settings.get("max_output_tokens"),
         )
         for role, settings in roles_config.items()
     }
@@ -66,13 +74,18 @@ def call_llm(role: str, messages: list[dict[str, Any]]) -> str:
         available_roles = ", ".join(sorted(config.llm.roles))
         raise ValueError(f"Unknown LLM role '{role}'. Available roles: {available_roles}")
 
+    request_args = {
+        "model": role_config.model,
+        "messages": messages,
+        "temperature": role_config.temperature,
+    }
+    if role_config.max_tokens is not None:
+        request_args["max_tokens"] = role_config.max_tokens
+    if role_config.max_output_tokens is not None:
+        request_args["max_output_tokens"] = role_config.max_output_tokens
+
     try:
-        response = completion(
-            model=role_config.model,
-            messages=messages,
-            temperature=role_config.temperature,
-            max_tokens=role_config.max_tokens,
-        )
+        response = completion(**request_args)
     except Exception as exc:
         raise RuntimeError(
             f"LLM call failed for role '{role}' using model '{role_config.model}'. "

@@ -39,6 +39,13 @@ def _validate_chapter(chapter: int, stage: str = "drafts") -> None:
     from src.validator import validate_chapter
 
     result = validate_chapter(chapter, stage=stage)
+    _print_validation_result(result)
+
+    if not result.passed:
+        raise SystemExit(1)
+
+
+def _print_validation_result(result: object) -> None:
     status = "PASS" if result.passed else "FAIL"
 
     print(f"{status}: {result.chapter_path}")
@@ -54,8 +61,15 @@ def _validate_chapter(chapter: int, stage: str = "drafts") -> None:
         if not error.startswith("Missing required section:"):
             print(f"- {error}")
 
-    if not result.passed:
-        raise SystemExit(1)
+
+def _is_repairable_validation_failure(result: object) -> bool:
+    """Return true when validation failed only for section or word count issues."""
+    if result.passed or not result.chapter_path.exists():
+        return False
+    return all(
+        error.startswith("Missing required section:") or error.startswith("Word count is ")
+        for error in result.errors
+    )
 
 
 def _review_chapter(chapter: int) -> None:
@@ -94,6 +108,13 @@ def _compile_docx(chapters: str) -> None:
     print(f"Wrote DOCX: {Path(output_path)}")
 
 
+def _repair_chapter(chapter: int, stage: str = "drafts") -> None:
+    from src.repairer import repair_chapter
+
+    chapter_path = repair_chapter(chapter, stage=stage)
+    print(f"Repaired chapter: {Path(chapter_path)}")
+
+
 def _run_step(name: str, action: Callable[[], None]) -> None:
     """Run one pipeline step with progress output."""
     print(f"START: {name}")
@@ -104,21 +125,29 @@ def _run_step(name: str, action: Callable[[], None]) -> None:
 def _run_chapter(chapter: int) -> None:
     """Run the single-chapter pipeline."""
     from src.handbook import resolve_chapter
+    from src.validator import validate_chapter
 
     metadata = resolve_chapter(chapter)
-    steps: list[tuple[str, Callable[[], None]]] = [
-        ("write-chapter", lambda: _write_chapter(chapter)),
-        ("validate-chapter --stage drafts", lambda: _validate_chapter(chapter, "drafts")),
-        ("review-chapter", lambda: _review_chapter(chapter)),
-        ("revise-chapter", lambda: _revise_chapter(chapter)),
-        ("validate-chapter --stage reviewed", lambda: _validate_chapter(chapter, "reviewed")),
-        ("finalize-chapter", lambda: _finalize_chapter(chapter)),
-        ("validate-chapter --stage final", lambda: _validate_chapter(chapter, "final")),
-    ]
-
     print(f"Running chapter pipeline for {metadata.chapter_id}: {metadata.title}")
-    for name, action in steps:
-        _run_step(name, action)
+    _run_step("write-chapter", lambda: _write_chapter(chapter))
+
+    print("START: validate-chapter --stage drafts")
+    draft_result = validate_chapter(chapter, stage="drafts")
+    _print_validation_result(draft_result)
+    if draft_result.passed:
+        print("DONE: validate-chapter --stage drafts")
+    elif _is_repairable_validation_failure(draft_result):
+        print("DONE: validate-chapter --stage drafts")
+        _run_step("repair-chapter --stage drafts", lambda: _repair_chapter(chapter, "drafts"))
+        _run_step("validate-chapter --stage drafts", lambda: _validate_chapter(chapter, "drafts"))
+    else:
+        raise SystemExit(1)
+
+    _run_step("review-chapter", lambda: _review_chapter(chapter))
+    _run_step("revise-chapter", lambda: _revise_chapter(chapter))
+    _run_step("validate-chapter --stage reviewed", lambda: _validate_chapter(chapter, "reviewed"))
+    _run_step("finalize-chapter", lambda: _finalize_chapter(chapter))
+    _run_step("validate-chapter --stage final", lambda: _validate_chapter(chapter, "final"))
     print(f"Chapter pipeline complete for chapter {chapter}")
 
 
@@ -177,6 +206,10 @@ def _run_argparse() -> None:
     validate_parser.add_argument("--chapter", type=int, required=True)
     validate_parser.add_argument("--stage", default="drafts")
 
+    repair_parser = subparsers.add_parser("repair-chapter")
+    repair_parser.add_argument("--chapter", type=int, required=True)
+    repair_parser.add_argument("--stage", default="drafts")
+
     review_parser = subparsers.add_parser("review-chapter")
     review_parser.add_argument("--chapter", type=int, required=True)
 
@@ -199,6 +232,7 @@ def _run_argparse() -> None:
         "test-model": lambda: _test_model(args.role),
         "write-chapter": lambda: _write_chapter(args.chapter),
         "validate-chapter": lambda: _validate_chapter(args.chapter, args.stage),
+        "repair-chapter": lambda: _repair_chapter(args.chapter, args.stage),
         "review-chapter": lambda: _review_chapter(args.chapter),
         "revise-chapter": lambda: _revise_chapter(args.chapter),
         "finalize-chapter": lambda: _finalize_chapter(args.chapter),
@@ -241,6 +275,17 @@ if typer is not None:
         try:
             _validate_chapter(chapter, stage)
         except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    @app.command()
+    def repair_chapter(
+        chapter: int = typer.Option(..., "--chapter", help="Chapter number to repair."),
+        stage: str = typer.Option("drafts", "--stage", help="Chapter stage: drafts, reviewed, or final."),
+    ) -> None:
+        """Append missing required sections to a chapter file."""
+        try:
+            _repair_chapter(chapter, stage)
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
             raise typer.BadParameter(str(exc)) from exc
 
     @app.command()

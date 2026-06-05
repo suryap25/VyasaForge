@@ -7,7 +7,7 @@
       "writer": {
         "model": "claude-haiku-4-5-20251001",
         "temperature": 0.2,
-        "max_tokens": 128
+        "max_tokens": 5000
       },
       "reviewer": {
         "model": "claude-haiku-4-5-20251001",
