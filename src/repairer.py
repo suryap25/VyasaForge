@@ -4,20 +4,35 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from src.validator import validate_chapter
+from src.validator import has_section, resolve_chapter_stage_path, validate_chapter
+
+SKETCHNOTE_SECTION = "Sketchnote Placeholder"
+SKETCHNOTE_MARKDOWN = "## Sketchnote Placeholder\n\n[SKETCHNOTE DIAGRAM PLACEHOLDER]"
+
+
+def append_section(path: Path, section_markdown: str) -> None:
+    """Append Markdown to a chapter file."""
+    existing = path.read_text(encoding="utf-8")
+    path.write_text(existing.rstrip() + "\n\n" + section_markdown.strip() + "\n", encoding="utf-8")
 
 
 def repair_chapter(chapter: int, stage: str = "drafts") -> Path:
     """Append missing required sections to an existing chapter file."""
+    chapter_path = resolve_chapter_stage_path(chapter, stage=stage)
     result = validate_chapter(chapter, stage=stage)
-    if not result.chapter_path.exists():
-        raise FileNotFoundError(f"Missing {stage} chapter file: {result.chapter_path}")
+    if not chapter_path.exists():
+        raise FileNotFoundError(f"Missing {stage} chapter file: {chapter_path}")
 
     if not result.missing_sections:
-        return result.chapter_path
+        return chapter_path
 
-    existing = result.chapter_path.read_text(encoding="utf-8")
-    missing_headings = "\n".join(f"## {section}" for section in result.missing_sections)
+    if result.missing_sections == [SKETCHNOTE_SECTION]:
+        append_section(chapter_path, SKETCHNOTE_MARKDOWN)
+        return chapter_path
+
+    existing = chapter_path.read_text(encoding="utf-8")
+    llm_sections = [section for section in result.missing_sections if section != SKETCHNOTE_SECTION]
+    missing_headings = "\n".join(f"## {section}" for section in llm_sections)
     messages = [
         {
             "role": "system",
@@ -40,5 +55,10 @@ def repair_chapter(chapter: int, stage: str = "drafts") -> Path:
     from src import llm_gateway
 
     repair = llm_gateway.call_llm(role="writer", messages=messages)
-    result.chapter_path.write_text(existing.rstrip() + "\n\n" + repair.strip() + "\n", encoding="utf-8")
-    return result.chapter_path
+    chapter_path.write_text(existing.rstrip() + "\n\n" + repair.strip() + "\n", encoding="utf-8")
+
+    repaired = chapter_path.read_text(encoding="utf-8")
+    if SKETCHNOTE_SECTION in result.missing_sections and not has_section(repaired, SKETCHNOTE_SECTION):
+        append_section(chapter_path, SKETCHNOTE_MARKDOWN)
+
+    return chapter_path

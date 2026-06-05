@@ -1,3 +1,10 @@
+---
+chapter: 1
+stage: final
+source: drafts
+generated_by: appsec-handbook-agent
+---
+
 # Authentication vs Authorization
 
 ## Learning Objectives

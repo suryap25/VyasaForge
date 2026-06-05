@@ -36,20 +36,21 @@ def _write_chapter(chapter: int) -> None:
 
 
 def _validate_chapter(chapter: int, stage: str = "drafts") -> None:
-    from src.validator import validate_chapter
+    from src.validator import resolve_chapter_stage_path, validate_chapter
 
     result = validate_chapter(chapter, stage=stage)
-    _print_validation_result(result)
+    chapter_path = resolve_chapter_stage_path(chapter, stage=stage)
+    _print_validation_result(result, chapter_path, stage)
 
     if not result.passed:
         raise SystemExit(1)
 
 
-def _print_validation_result(result: object) -> None:
+def _print_validation_result(result: object, chapter_path: Path, stage: str) -> None:
     status = "PASS" if result.passed else "FAIL"
 
-    print(f"{status}: {result.chapter_path}")
-    print(f"Stage: {result.stage}")
+    print(f"{status}: {chapter_path}")
+    print(f"Stage: {stage}")
     print(f"Word count: {result.word_count}")
 
     if result.missing_sections:
@@ -62,9 +63,9 @@ def _print_validation_result(result: object) -> None:
             print(f"- {error}")
 
 
-def _is_repairable_validation_failure(result: object) -> bool:
+def _is_repairable_validation_failure(result: object, chapter_path: Path) -> bool:
     """Return true when validation failed only for section or word count issues."""
-    if result.passed or not result.chapter_path.exists():
+    if result.passed or not chapter_path.exists():
         return False
     return all(
         error.startswith("Missing required section:") or error.startswith("Word count is ")
@@ -86,10 +87,10 @@ def _revise_chapter(chapter: int) -> None:
     print(f"Wrote revised chapter: {Path(revised_path)}")
 
 
-def _finalize_chapter(chapter: int) -> None:
+def _finalize_chapter(chapter: int, source: str = "reviewed") -> None:
     from src.finalizer import finalize_chapter
 
-    final_path = finalize_chapter(chapter)
+    final_path = finalize_chapter(chapter, source=source)
     print(f"Wrote final chapter: {Path(final_path)}")
 
 
@@ -125,7 +126,7 @@ def _run_step(name: str, action: Callable[[], None]) -> None:
 def _run_chapter(chapter: int) -> None:
     """Run the single-chapter pipeline."""
     from src.handbook import resolve_chapter
-    from src.validator import validate_chapter
+    from src.validator import resolve_chapter_stage_path, validate_chapter
 
     metadata = resolve_chapter(chapter)
     print(f"Running chapter pipeline for {metadata.chapter_id}: {metadata.title}")
@@ -133,10 +134,11 @@ def _run_chapter(chapter: int) -> None:
 
     print("START: validate-chapter --stage drafts")
     draft_result = validate_chapter(chapter, stage="drafts")
-    _print_validation_result(draft_result)
+    draft_path = resolve_chapter_stage_path(chapter, stage="drafts")
+    _print_validation_result(draft_result, draft_path, "drafts")
     if draft_result.passed:
         print("DONE: validate-chapter --stage drafts")
-    elif _is_repairable_validation_failure(draft_result):
+    elif _is_repairable_validation_failure(draft_result, draft_path):
         print("DONE: validate-chapter --stage drafts")
         _run_step("repair-chapter --stage drafts", lambda: _repair_chapter(chapter, "drafts"))
         _run_step("validate-chapter --stage drafts", lambda: _validate_chapter(chapter, "drafts"))
@@ -218,6 +220,7 @@ def _run_argparse() -> None:
 
     finalize_parser = subparsers.add_parser("finalize-chapter")
     finalize_parser.add_argument("--chapter", type=int, required=True)
+    finalize_parser.add_argument("--source", default="reviewed")
 
     compile_parser = subparsers.add_parser("compile-docx")
     compile_parser.add_argument("--chapters", required=True)
@@ -235,7 +238,7 @@ def _run_argparse() -> None:
         "repair-chapter": lambda: _repair_chapter(args.chapter, args.stage),
         "review-chapter": lambda: _review_chapter(args.chapter),
         "revise-chapter": lambda: _revise_chapter(args.chapter),
-        "finalize-chapter": lambda: _finalize_chapter(args.chapter),
+        "finalize-chapter": lambda: _finalize_chapter(args.chapter, args.source),
         "compile-docx": lambda: _compile_docx(args.chapters),
         "run-chapter": lambda: _run_chapter(args.chapter),
         "doctor": _doctor,
@@ -305,11 +308,14 @@ if typer is not None:
             raise typer.BadParameter(str(exc)) from exc
 
     @app.command()
-    def finalize_chapter(chapter: int = typer.Option(..., "--chapter", help="Chapter number to finalize.")) -> None:
-        """Copy a reviewed chapter into the final stage."""
+    def finalize_chapter(
+        chapter: int = typer.Option(..., "--chapter", help="Chapter number to finalize."),
+        source: str = typer.Option("reviewed", "--source", help="Source stage: drafts or reviewed."),
+    ) -> None:
+        """Copy a selected chapter source into the final stage."""
         try:
-            _finalize_chapter(chapter)
-        except FileNotFoundError as exc:
+            _finalize_chapter(chapter, source)
+        except (FileNotFoundError, ValueError) as exc:
             raise typer.BadParameter(str(exc)) from exc
 
     @app.command()

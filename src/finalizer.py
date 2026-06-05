@@ -6,23 +6,37 @@ from pathlib import Path
 
 from src.handbook import resolve_chapter
 
+SOURCE_FIELDS = {"drafts": "draft_path", "reviewed": "reviewed_path"}
 
-def metadata_header(chapter: int) -> str:
+
+def metadata_header(chapter: int, source: str) -> str:
     """Return final chapter metadata."""
-    return f"---\nchapter: {chapter}\nstage: final\ngenerated_by: appsec-handbook-agent\n---\n\n"
+    return (
+        "---\n"
+        f"chapter: {chapter}\n"
+        "stage: final\n"
+        f"source: {source}\n"
+        "generated_by: appsec-handbook-agent\n"
+        "---\n\n"
+    )
 
 
-def finalize_chapter(chapter: int) -> Path:
-    """Copy a reviewed chapter into the final stage with metadata."""
+def finalize_chapter(chapter: int, source: str = "reviewed") -> Path:
+    """Copy a selected chapter source into the final stage with metadata."""
     metadata = resolve_chapter(chapter)
-    reviewed_path = metadata.reviewed_path
+    source_field = SOURCE_FIELDS.get(source)
+    if source_field is None:
+        available_sources = ", ".join(sorted(SOURCE_FIELDS))
+        raise ValueError(f"Unknown finalizer source '{source}'. Available sources: {available_sources}")
+
+    source_path = getattr(metadata, source_field)
     final_path = metadata.final_path
 
-    if not reviewed_path.exists():
-        raise FileNotFoundError(f"Missing reviewed chapter: {reviewed_path}")
+    if not source_path.exists():
+        raise FileNotFoundError(f"Missing {source} chapter: {source_path}")
 
-    reviewed = reviewed_path.read_text(encoding="utf-8")
+    source_content = source_path.read_text(encoding="utf-8")
 
     final_path.parent.mkdir(parents=True, exist_ok=True)
-    final_path.write_text(metadata_header(chapter) + reviewed, encoding="utf-8")
+    final_path.write_text(metadata_header(chapter, source) + source_content, encoding="utf-8")
     return final_path

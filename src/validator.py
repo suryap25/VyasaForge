@@ -28,8 +28,6 @@ REQUIRED_SECTIONS = [
 class ValidationResult:
     """Validation outcome for a chapter draft."""
 
-    chapter_path: Path
-    stage: str
     passed: bool
     word_count: int
     missing_sections: list[str]
@@ -47,22 +45,25 @@ def has_section(text: str, section: str) -> bool:
     return re.search(pattern, text) is not None
 
 
-def validate_chapter(chapter: int, stage: str = "drafts") -> ValidationResult:
-    """Validate a chapter Markdown file without calling the LLM."""
+def resolve_chapter_stage_path(chapter: int, stage: str = "drafts") -> Path:
+    """Resolve the registered chapter path for a stage."""
     stage_field = STAGE_FIELDS.get(stage)
     if stage_field is None:
         available_stages = ", ".join(sorted(STAGE_FIELDS))
         raise ValueError(f"Unknown validation stage '{stage}'. Available stages: {available_stages}")
 
     metadata = resolve_chapter(chapter)
-    chapter_path = getattr(metadata, stage_field)
+    return getattr(metadata, stage_field)
+
+
+def validate_chapter(chapter: int, stage: str = "drafts") -> ValidationResult:
+    """Validate a chapter Markdown file without calling the LLM."""
+    chapter_path = resolve_chapter_stage_path(chapter, stage)
     errors: list[str] = []
     missing_sections: list[str] = []
 
     if not chapter_path.exists():
         return ValidationResult(
-            chapter_path=chapter_path,
-            stage=stage,
             passed=False,
             word_count=0,
             missing_sections=[],
@@ -79,8 +80,6 @@ def validate_chapter(chapter: int, stage: str = "drafts") -> ValidationResult:
         errors.append(f"Missing required section: {section}")
 
     return ValidationResult(
-        chapter_path=chapter_path,
-        stage=stage,
         passed=not errors,
         word_count=word_count,
         missing_sections=missing_sections,
