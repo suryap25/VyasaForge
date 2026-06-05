@@ -61,5 +61,18 @@ def validate_chapter(chapter: int = typer.Option(..., "--chapter", help="Chapter
         raise typer.Exit(code=1)
 
 
+@app.command()
+def review_chapter(chapter: int = typer.Option(..., "--chapter", help="Chapter number to review.")) -> None:
+    """Review a Markdown chapter draft."""
+    from src.reviewer import review_chapter as review_chapter_draft
+
+    try:
+        review_path = review_chapter_draft(chapter)
+    except FileNotFoundError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    typer.echo(f"Wrote review: {Path(review_path)}")
+
+
 if __name__ == "__main__":
     app()
