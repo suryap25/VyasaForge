@@ -1,16 +1,28 @@
 {
-  "chapter": 1,
-  "stages": {
-    "validate": {
-      "details": {
-        "errors": [],
-        "missing_sections": [],
-        "path": "chapters\\drafts\\chapter-01.md",
-        "stage": "drafts",
-        "word_count": 5805
-      },
-      "status": "passed",
-      "updated_at": "2026-06-05T14:04:57.432947+00:00"
-    }
-  }
+  "chapter_id": "chapter_01",
+  "docx": {
+    "status": "passed",
+    "updated_at": "2026-06-05T15:30:06.844293+00:00"
+  },
+  "draft": {
+    "status": "not_started",
+    "updated_at": null,
+    "word_count": null
+  },
+  "final": {
+    "source": "drafts",
+    "status": "passed",
+    "updated_at": "2026-06-05T15:30:06.333932+00:00",
+    "word_count": 5813
+  },
+  "review": {
+    "status": "not_started",
+    "updated_at": null
+  },
+  "revision": {
+    "reason": null,
+    "status": "not_started",
+    "updated_at": null
+  },
+  "title": "Authentication vs Authorization"
 }

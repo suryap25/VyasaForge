@@ -30,37 +30,24 @@ def _test_model(role: str) -> None:
 
 def _write_chapter(chapter: int) -> None:
     from src.writer import write_chapter
-    from src.state_manager import update_stage
+    from src.state_manager import update_draft
 
     try:
         draft_path = write_chapter(chapter)
     except Exception as exc:
-        update_stage(chapter, "write", "failed", {"error": str(exc)})
+        update_draft(chapter, "failed")
         raise
 
-    update_stage(chapter, "write", "passed", {"path": str(draft_path)})
+    update_draft(chapter, "passed", Path(draft_path))
     print(f"Wrote draft: {Path(draft_path)}")
 
 
 def _validate_chapter(chapter: int, stage: str = "drafts") -> None:
-    from src.state_manager import update_stage
     from src.validator import resolve_chapter_stage_path, validate_chapter
 
     result = validate_chapter(chapter, stage=stage)
     chapter_path = resolve_chapter_stage_path(chapter, stage=stage)
     _print_validation_result(result, chapter_path, stage)
-    update_stage(
-        chapter,
-        "validate",
-        "passed" if result.passed else "failed",
-        {
-            "stage": stage,
-            "path": str(chapter_path),
-            "word_count": result.word_count,
-            "missing_sections": result.missing_sections,
-            "errors": result.errors,
-        },
-    )
 
     if not result.passed:
         raise SystemExit(1)
@@ -95,49 +82,49 @@ def _is_repairable_validation_failure(result: object, chapter_path: Path) -> boo
 
 def _review_chapter(chapter: int) -> None:
     from src.reviewer import review_chapter
-    from src.state_manager import update_stage
+    from src.state_manager import update_review
 
     try:
         review_path = review_chapter(chapter)
     except Exception as exc:
-        update_stage(chapter, "review", "failed", {"error": str(exc)})
+        update_review(chapter, "failed")
         raise
 
-    update_stage(chapter, "review", "passed", {"path": str(review_path)})
+    update_review(chapter, "passed")
     print(f"Wrote review: {Path(review_path)}")
 
 
 def _revise_chapter(chapter: int) -> None:
     from src.reviser import revise_chapter
-    from src.state_manager import update_stage
+    from src.state_manager import update_revision
 
     try:
         revised_path = revise_chapter(chapter)
     except Exception as exc:
-        update_stage(chapter, "revise", "failed", {"error": str(exc)})
+        update_revision(chapter, "rejected", str(exc))
         raise
 
-    update_stage(chapter, "revise", "passed", {"path": str(revised_path)})
+    update_revision(chapter, "passed")
     print(f"Wrote revised chapter: {Path(revised_path)}")
 
 
 def _finalize_chapter(chapter: int, source: str = "reviewed") -> None:
     from src.finalizer import finalize_chapter
-    from src.state_manager import update_stage
+    from src.state_manager import update_final
 
     try:
         final_path = finalize_chapter(chapter, source=source)
     except Exception as exc:
-        update_stage(chapter, "finalize", "failed", {"source": source, "error": str(exc)})
+        update_final(chapter, "failed", source=source)
         raise
 
-    update_stage(chapter, "finalize", "passed", {"source": source, "path": str(final_path)})
+    update_final(chapter, "passed", source=source, path=Path(final_path))
     print(f"Wrote final chapter: {Path(final_path)}")
 
 
 def _compile_docx(chapters: str) -> None:
     from src.compiler import compile_docx
-    from src.state_manager import update_stage
+    from src.state_manager import update_docx
 
     try:
         chapter_numbers = [int(chapter.strip()) for chapter in chapters.split(",") if chapter.strip()]
@@ -151,11 +138,11 @@ def _compile_docx(chapters: str) -> None:
         output_path = compile_docx(chapter_numbers)
     except Exception as exc:
         for chapter in chapter_numbers:
-            update_stage(chapter, "compile", "failed", {"error": str(exc)})
+            update_docx(chapter, "failed")
         raise
 
     for chapter in chapter_numbers:
-        update_stage(chapter, "compile", "passed", {"path": str(output_path)})
+        update_docx(chapter, "passed")
     print(f"Wrote DOCX: {Path(output_path)}")
 
 
@@ -170,6 +157,57 @@ def _show_state(chapter: int) -> None:
     from src.state_manager import formatted_state
 
     print(formatted_state(chapter))
+
+
+def _display_status(status: str | None, generated_label: bool = False) -> str:
+    """Return compact dashboard status text."""
+    if status == "passed":
+        return "GENERATED" if generated_label else "PASS"
+    if status == "failed":
+        return "FAIL"
+    if status == "rejected":
+        return "REJECTED"
+    if status == "not_started" or status is None:
+        return "-"
+    return status.upper()
+
+
+def _handbook_status() -> None:
+    import json
+
+    state_dir = Path("chapters/state")
+    rows = []
+    completed = 0
+
+    for state_file in sorted(state_dir.glob("chapter-*.json")):
+        state = json.loads(state_file.read_text(encoding="utf-8"))
+        final_status = _display_status(state.get("final", {}).get("status"))
+        docx_status = _display_status(state.get("docx", {}).get("status"), generated_label=True)
+        if final_status == "PASS" and docx_status == "GENERATED":
+            completed += 1
+
+        rows.append(
+            [
+                state.get("chapter_id", state_file.stem),
+                state.get("title", "-"),
+                _display_status(state.get("draft", {}).get("status")),
+                _display_status(state.get("review", {}).get("status")),
+                _display_status(state.get("revision", {}).get("status")),
+                final_status,
+                docx_status,
+            ]
+        )
+
+    headers = ["Chapter", "Title", "Draft", "Review", "Revision", "Final", "DOCX"]
+    widths = [
+        max(len(str(row[index])) for row in rows + [headers])
+        for index in range(len(headers))
+    ]
+    print(" | ".join(header.ljust(widths[index]) for index, header in enumerate(headers)))
+    print("-+-".join("-" * width for width in widths))
+    for row in rows:
+        print(" | ".join(str(value).ljust(widths[index]) for index, value in enumerate(row)))
+    print(f"\nTotal completed chapters: {completed}")
 
 
 def _diff_chapter(chapter: int = 1, from_stage: str = "drafts", to_stage: str = "reviewed") -> None:
@@ -209,7 +247,6 @@ def _run_step(name: str, action: Callable[[], None]) -> None:
 def _run_chapter(chapter: int) -> None:
     """Run the single-chapter pipeline."""
     from src.handbook import resolve_chapter
-    from src.state_manager import update_stage
     from src.validator import resolve_chapter_stage_path, validate_chapter
 
     metadata = resolve_chapter(chapter)
@@ -220,18 +257,6 @@ def _run_chapter(chapter: int) -> None:
     draft_result = validate_chapter(chapter, stage="drafts")
     draft_path = resolve_chapter_stage_path(chapter, stage="drafts")
     _print_validation_result(draft_result, draft_path, "drafts")
-    update_stage(
-        chapter,
-        "validate",
-        "passed" if draft_result.passed else "failed",
-        {
-            "stage": "drafts",
-            "path": str(draft_path),
-            "word_count": draft_result.word_count,
-            "missing_sections": draft_result.missing_sections,
-            "errors": draft_result.errors,
-        },
-    )
     if draft_result.passed:
         print("DONE: validate-chapter --stage drafts")
     elif _is_repairable_validation_failure(draft_result, draft_path):
@@ -324,6 +349,8 @@ def _run_argparse() -> None:
     show_state_parser = subparsers.add_parser("show-state")
     show_state_parser.add_argument("--chapter", type=int, required=True)
 
+    subparsers.add_parser("handbook-status")
+
     diff_parser = subparsers.add_parser("diff-chapter")
     diff_parser.add_argument("--chapter", type=int, default=1)
     diff_parser.add_argument("--from-stage", default="drafts")
@@ -345,6 +372,7 @@ def _run_argparse() -> None:
         "finalize-chapter": lambda: _finalize_chapter(args.chapter, args.source),
         "compile-docx": lambda: _compile_docx(args.chapters),
         "show-state": lambda: _show_state(args.chapter),
+        "handbook-status": _handbook_status,
         "diff-chapter": lambda: _diff_chapter(args.chapter, args.from_stage, args.to_stage),
         "run-chapter": lambda: _run_chapter(args.chapter),
         "doctor": _doctor,
@@ -436,6 +464,11 @@ if typer is not None:
     def show_state(chapter: int = typer.Option(..., "--chapter", help="Chapter number to show state for.")) -> None:
         """Print persisted chapter state as JSON."""
         _show_state(chapter)
+
+    @app.command()
+    def handbook_status() -> None:
+        """Print compact handbook state dashboard."""
+        _handbook_status()
 
     @app.command()
     def diff_chapter(
