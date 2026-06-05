@@ -74,5 +74,18 @@ def review_chapter(chapter: int = typer.Option(..., "--chapter", help="Chapter n
     typer.echo(f"Wrote review: {Path(review_path)}")
 
 
+@app.command()
+def revise_chapter(chapter: int = typer.Option(..., "--chapter", help="Chapter number to revise.")) -> None:
+    """Revise a Markdown chapter draft using review comments."""
+    from src.reviser import revise_chapter as revise_chapter_draft
+
+    try:
+        revised_path = revise_chapter_draft(chapter)
+    except FileNotFoundError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    typer.echo(f"Wrote revised chapter: {Path(revised_path)}")
+
+
 if __name__ == "__main__":
     app()

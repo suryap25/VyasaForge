@@ -13,6 +13,11 @@
         "model": "gpt-4o-mini",
         "temperature": 0.1,
         "max_tokens": 1000
+      },
+      "editor": {
+        "model": "gpt-4o-mini",
+        "temperature": 0.2,
+        "max_tokens": 2000
       }
     }
   }
