@@ -7,7 +7,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 MIN_WORD_COUNT = 1500
-DRAFTS_DIR = Path("chapters/drafts")
+STAGE_DIRS = {
+    "drafts": Path("chapters/drafts"),
+    "reviewed": Path("chapters/reviewed"),
+    "final": Path("chapters/final"),
+}
 REQUIRED_SECTIONS = [
     "Learning Objectives",
     "Conceptual Foundation",
@@ -32,7 +36,8 @@ def chapter_filename(chapter: int) -> str:
 class ValidationResult:
     """Validation outcome for a chapter draft."""
 
-    draft_path: Path
+    chapter_path: Path
+    stage: str
     passed: bool
     word_count: int
     missing_sections: list[str]
@@ -50,32 +55,39 @@ def has_section(text: str, section: str) -> bool:
     return re.search(pattern, text) is not None
 
 
-def validate_chapter(chapter: int) -> ValidationResult:
-    """Validate a chapter draft without calling the LLM."""
-    draft_path = DRAFTS_DIR / chapter_filename(chapter)
+def validate_chapter(chapter: int, stage: str = "drafts") -> ValidationResult:
+    """Validate a chapter Markdown file without calling the LLM."""
+    stage_dir = STAGE_DIRS.get(stage)
+    if stage_dir is None:
+        available_stages = ", ".join(sorted(STAGE_DIRS))
+        raise ValueError(f"Unknown validation stage '{stage}'. Available stages: {available_stages}")
+
+    chapter_path = stage_dir / chapter_filename(chapter)
     errors: list[str] = []
     missing_sections: list[str] = []
 
-    if not draft_path.exists():
+    if not chapter_path.exists():
         return ValidationResult(
-            draft_path=draft_path,
+            chapter_path=chapter_path,
+            stage=stage,
             passed=False,
             word_count=0,
             missing_sections=[],
-            errors=[f"Missing draft file: {draft_path}"],
+            errors=[f"Missing {stage} chapter file: {chapter_path}"],
         )
 
-    draft = draft_path.read_text(encoding="utf-8")
-    word_count = count_words(draft)
+    chapter_text = chapter_path.read_text(encoding="utf-8")
+    word_count = count_words(chapter_text)
     if word_count < MIN_WORD_COUNT:
         errors.append(f"Word count is {word_count}; expected at least {MIN_WORD_COUNT}.")
 
-    missing_sections = [section for section in REQUIRED_SECTIONS if not has_section(draft, section)]
+    missing_sections = [section for section in REQUIRED_SECTIONS if not has_section(chapter_text, section)]
     for section in missing_sections:
         errors.append(f"Missing required section: {section}")
 
     return ValidationResult(
-        draft_path=draft_path,
+        chapter_path=chapter_path,
+        stage=stage,
         passed=not errors,
         word_count=word_count,
         missing_sections=missing_sections,

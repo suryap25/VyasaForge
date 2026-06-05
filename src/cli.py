@@ -38,14 +38,22 @@ def write_chapter(chapter: int = typer.Option(..., "--chapter", help="Chapter nu
 
 
 @app.command()
-def validate_chapter(chapter: int = typer.Option(..., "--chapter", help="Chapter number to validate.")) -> None:
-    """Validate a Markdown chapter draft."""
+def validate_chapter(
+    chapter: int = typer.Option(..., "--chapter", help="Chapter number to validate."),
+    stage: str = typer.Option("drafts", "--stage", help="Chapter stage: drafts, reviewed, or final."),
+) -> None:
+    """Validate a Markdown chapter file."""
     from src.validator import validate_chapter as validate_chapter_draft
 
-    result = validate_chapter_draft(chapter)
+    try:
+        result = validate_chapter_draft(chapter, stage=stage)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
     status = "PASS" if result.passed else "FAIL"
 
-    typer.echo(f"{status}: {result.draft_path}")
+    typer.echo(f"{status}: {result.chapter_path}")
+    typer.echo(f"Stage: {result.stage}")
     typer.echo(f"Word count: {result.word_count}")
 
     if result.missing_sections:
