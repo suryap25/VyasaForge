@@ -42,6 +42,13 @@ def _write_chapter(chapter: int) -> None:
     print(f"Wrote draft: {Path(draft_path)}")
 
 
+def _create_chapter(chapter: int, overwrite: bool = False) -> None:
+    from src.briefs import create_chapter_brief
+
+    brief_path = create_chapter_brief(chapter, overwrite=overwrite)
+    print(f"Chapter brief ready: {Path(brief_path)}")
+
+
 def _validate_chapter(chapter: int, stage: str = "drafts") -> None:
     from src.validator import resolve_chapter_stage_path, validate_chapter
 
@@ -331,6 +338,10 @@ def _run_argparse() -> None:
     test_model_parser = subparsers.add_parser("test-model")
     test_model_parser.add_argument("--role", default="writer")
 
+    create_parser = subparsers.add_parser("create-chapter")
+    create_parser.add_argument("--chapter", type=int, required=True)
+    create_parser.add_argument("--overwrite", action="store_true")
+
     write_parser = subparsers.add_parser("write-chapter")
     write_parser.add_argument("--chapter", type=int, required=True)
 
@@ -373,6 +384,7 @@ def _run_argparse() -> None:
     args = parser.parse_args()
     commands: dict[str, Callable[[], None]] = {
         "test-model": lambda: _test_model(args.role),
+        "create-chapter": lambda: _create_chapter(args.chapter, args.overwrite),
         "write-chapter": lambda: _write_chapter(args.chapter),
         "validate-chapter": lambda: _validate_chapter(args.chapter, args.stage),
         "repair-chapter": lambda: _repair_chapter(args.chapter, args.stage),
@@ -402,6 +414,17 @@ if typer is not None:
         try:
             _test_model(role)
         except (RuntimeError, ValueError) as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    @app.command()
+    def create_chapter(
+        chapter: int = typer.Option(..., "--chapter", help="Chapter number to create a brief for."),
+        overwrite: bool = typer.Option(False, "--overwrite", help="Overwrite an existing chapter brief."),
+    ) -> None:
+        """Create a structured chapter brief from the handbook registry."""
+        try:
+            _create_chapter(chapter, overwrite)
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
             raise typer.BadParameter(str(exc)) from exc
 
     @app.command()
