@@ -2,104 +2,80 @@
 
 ## Overall Verdict
 
-**STRONG DRAFT** – This is a well-structured, technically sound chapter that covers authentication and authorization comprehensively. It balances conceptual clarity with practical implementation guidance and maintains good separation between different audience perspectives (developers, architects, pentesters). The chapter is suitable for an AppSec handbook with minor refinements needed.
+**STRONG DRAFT** with excellent foundational content and comprehensive coverage. The chapter successfully establishes the conceptual distinction between authentication and authorization, provides practical code examples, and includes well-designed interview questions. However, there are gaps in emerging authentication methods, insufficient coverage of modern authorization patterns, and some sections that could be tightened for clarity.
+
+**Recommendation**: Approve with revisions addressing the issues below.
 
 ---
 
 ## Strengths
 
-1. **Clear conceptual foundation**: The distinction between "Who are you?" (authentication) and "What are you allowed to do?" (authorization) is immediately clear and reinforced throughout.
+1. **Clear Conceptual Foundation**: The "Who are you?" vs. "What are you allowed to do?" framing is accessible and memorable. The explanation of why confusion occurs is particularly valuable.
 
-2. **Multiple perspectives**: The chapter effectively addresses developers, architects, security engineers, and pentesters with tailored sections and examples. This multi-lens approach is valuable for a handbook.
+2. **Multi-Perspective Approach**: Organizing content by AppSec, Developer, and Pentest lenses provides relevant context for different audiences. This is a strong pedagogical choice.
 
-3. **Practical code examples**: Python and JavaScript examples are concrete, realistic, and demonstrate both vulnerable and secure patterns. The bcrypt example and RBAC implementation are particularly useful.
+3. **Practical Code Examples**: The Python examples (weak vs. strong implementations) are concrete and immediately applicable. They clearly demonstrate the vulnerability and fix.
 
-4. **Comprehensive vulnerability coverage**: The "Common Findings" section accurately reflects real-world assessment results and provides severity ratings.
+4. **Comprehensive Interview Questions**: 20 questions with evaluation criteria and "look for" guidance. Questions span conceptual understanding, practical experience, and scenario-based reasoning.
 
-5. **Strong interview questions**: Questions are well-calibrated for different roles and test both conceptual understanding and practical experience.
+5. **Real-World Vulnerability Catalog**: The "Common Findings" section accurately reflects what appears in actual assessments (IDOR, weak hashing, missing checks).
 
-6. **Trust boundary emphasis**: The section on trust boundaries and the client-side authorization example directly address a critical AppSec principle that developers often misunderstand.
+6. **Strong Key Takeaways**: The summary section effectively reinforces core concepts and provides role-specific guidance.
 
-7. **Actionable guidance**: The "Secure Design Guidance" and "Key Takeaways" sections provide clear, implementable recommendations.
+7. **Vendor-Neutral**: No vendor lock-in; recommendations favor open standards (OAuth 2.0, SAML, bcrypt, Argon2).
 
 ---
 
 ## Issues to Fix
 
-### 1. **Incomplete Monitoring Section**
-The chapter mentions "Monitor for suspicious activity" but doesn't provide concrete examples of what to monitor or how to detect attacks in progress.
+### 1. **Incomplete Coverage of Modern Authentication Methods**
+- **Issue**: Chapter emphasizes passwords, MFA, and OAuth 2.0 but omits:
+  - Passwordless authentication (WebAuthn/FIDO2, passkeys)
+  - Biometric authentication beyond brief mention
+  - Certificate-based authentication (mTLS) mentioned but not explained
+  - Risk-based/adaptive authentication
+  
+- **Impact**: Readers may not understand current industry direction toward passwordless auth.
+- **Fix**: Add a subsection on emerging authentication methods with brief explanations and when to use each.
 
-**Recommendation**: Add specific examples:
-- Failed login attempts from unusual locations
-- Authorization failures followed by successful access
-- Rapid role/permission changes
-- Access patterns inconsistent with user behavior
+### 2. **Authorization Patterns Underexplored**
+- **Issue**: RBAC and ABAC are mentioned but not deeply explained:
+  - No discussion of ACL (Access Control Lists) implementation details
+  - ABAC section is minimal; no examples of attribute-based policies
+  - Missing: Policy-as-Code, fine-grained authorization frameworks (e.g., Zanzibar model, OPA)
+  - No guidance on choosing between models for different scenarios
+  
+- **Impact**: Developers may not know how to implement authorization beyond simple role checks.
+- **Fix**: Expand authorization patterns section with concrete examples and decision trees.
 
-### 2. **Missing OAuth 2.0 / OIDC Implementation Details**
-The chapter recommends OAuth 2.0 and OIDC but provides no implementation guidance or code examples. This is a significant gap for developers.
+### 3. **Session Management Underspecified**
+- **Issue**: Session security is mentioned but lacks depth:
+  - No discussion of session storage (in-memory, Redis, database)
+  - Missing: session fixation prevention details
+  - No coverage of distributed session management
+  - CSRF protection mentioned only in cookie flags, not as separate concern
+  
+- **Impact**: Developers may implement sessions insecurely in distributed systems.
+- **Fix**: Add a dedicated subsection on session management architecture and security.
 
-**Recommendation**: Add a subsection under "Authentication Implementation" with:
-- OAuth 2.0 authorization code flow diagram
-- Token validation example
-- Common OAuth 2.0 vulnerabilities (redirect URI validation, state parameter, PKCE)
+### 4. **API Authentication Gaps**
+- **Issue**: API authentication coverage is scattered:
+  - JWT section is brief; no discussion of JWT refresh token patterns
+  - API key management mentioned in interview Q20 but not in main content
+  - Missing: mutual TLS (mTLS) implementation guidance
+  - No discussion of API gateway authentication patterns
+  
+- **Impact**: API developers may not understand token lifecycle or key rotation.
+- **Fix**: Consolidate API authentication into a dedicated section with lifecycle diagrams.
 
-### 3. **Insufficient Coverage of Token Revocation**
-JWT section mentions tokens can be "stolen or forged" but doesn't address the practical challenge of revoking tokens before expiration.
+### 5. **Weak Coverage of Authorization Bypass Techniques**
+- **Issue**: Authorization failures are listed but not explained deeply:
+  - Parameter pollution not mentioned
+  - HTTP method override (POST → PUT) not discussed
+  - Path traversal in authorization context not covered
+  - Race conditions in authorization checks not mentioned
+  
+- **Impact**: Pentesters and reviewers may miss subtle authorization bypasses.
+- **Fix**: Expand "Authorization Failures" section with bypass techniques and detection methods.
 
-**Recommendation**: Discuss:
-- Token blacklist/denylist strategies
-- Logout implementation with JWTs
-- Performance implications of revocation
-
-### 4. **Missing Multi-Tenant Authorization Depth**
-While mentioned in interview questions, the chapter lacks a dedicated section on multi-tenant authorization patterns, which is increasingly common.
-
-**Recommendation**: Add a subsection covering:
-- Tenant isolation at authorization layer
-- Tenant context propagation
-- Common multi-tenant authorization vulnerabilities
-
-### 5. **Weak Coverage of Passwordless Authentication**
-Only mentioned in interview questions; no implementation guidance provided.
-
-**Recommendation**: Add a subsection on:
-- FIDO2/WebAuthn basics
-- Magic link implementation
-- Recovery mechanisms for passwordless auth
-
-### 6. **Missing API Key Authentication**
-The chapter covers passwords and tokens but not API key authentication, which is critical for API security.
-
-**Recommendation**: Add guidance on:
-- API key generation and storage
-- API key rotation
-- API key scope/permission binding
-- Preventing API key exposure in logs/errors
-
----
-
-## Missing or Weak Sections
-
-### 1. **Authorization in Asynchronous/Event-Driven Systems**
-The chapter assumes synchronous request-response patterns. Modern applications use message queues, webhooks, and event streams.
-
-**Missing**: How to enforce authorization when:
-- Processing async jobs
-- Handling webhooks
-- Publishing to event streams
-- Consuming from message queues
-
-### 2. **Authorization Caching and Consistency**
-Mentioned briefly in "Common Findings" but not addressed in design guidance.
-
-**Missing**: 
-- When to cache authorization decisions
-- Cache invalidation strategies
-- Consistency guarantees
-- TTL recommendations
-
-### 3. **Cross-Origin Authentication (CORS, CSRF)**
-Not mentioned despite being critical for web application security.
-
-**Missing**:
--
+###

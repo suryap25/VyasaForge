@@ -6,23 +6,23 @@
   },
   "draft": {
     "status": "passed",
-    "updated_at": "2026-06-06T02:12:01.984786+00:00",
-    "word_count": 2773
+    "updated_at": "2026-06-06T02:24:26.232731+00:00",
+    "word_count": 3132
   },
   "final": {
-    "source": "drafts",
+    "source": "reviewed",
     "status": "passed",
-    "updated_at": "2026-06-06T02:04:57.501197+00:00",
-    "word_count": 5234
+    "updated_at": "2026-06-06T02:25:44.101477+00:00",
+    "word_count": 7243
   },
   "review": {
     "status": "passed",
-    "updated_at": "2026-06-06T02:12:44.202009+00:00"
+    "updated_at": "2026-06-06T02:25:14.168566+00:00"
   },
   "revision": {
-    "reason": "Revision safety gate failed: revised chapter is less than 80% of original word count (original: 4902, revised: 1331); revised chapter is missing required sections: Developer Lens, Pentest Lens, Common Findings, Secure Design Guidance, Interview Questions, Key Takeaways, Sketchnote Placeholder. Failed attempt saved to reviews\\chapter-01-revision-failed.md.",
-    "status": "rejected",
-    "updated_at": "2026-06-06T02:13:05.586552+00:00"
+    "reason": null,
+    "status": "passed",
+    "updated_at": "2026-06-06T02:25:44.019419+00:00"
   },
   "title": "Authentication vs Authorization"
 }

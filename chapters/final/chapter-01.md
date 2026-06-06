@@ -1,3 +1,10 @@
+---
+chapter: 1
+stage: final
+source: reviewed
+generated_by: appsec-handbook-agent
+---
+
 # Authentication vs Authorization
 
 ## Learning Objectives
@@ -565,3 +572,219 @@ When designing authentication and authorization systems, follow these principles
 ## Sketchnote Placeholder
 
 [SKETCHNOTE DIAGRAM PLACEHOLDER]
+
+## Revision Additions
+
+# Additive Revisions for Authentication vs Authorization Chapter
+
+## Addition: Modern Authentication Methods (Insert after "Authentication Layer" subsection in Architecture Perspective)
+
+### Emerging Authentication Methods
+
+Beyond passwords and traditional MFA, modern applications increasingly adopt passwordless and risk-based authentication approaches:
+
+**WebAuthn/FIDO2 and Passkeys**
+
+WebAuthn (Web Authentication) is a W3C standard that enables passwordless authentication using cryptographic keys stored on user devices (phones, security keys, laptops). Passkeys are a user-friendly implementation of WebAuthn that sync across devices.
+
+- **How it works**: User registers a public key with the application; authentication requires the user to prove possession of the corresponding private key through a biometric or PIN.
+- **Security properties**: Resistant to phishing (keys are origin-bound), credential stuffing (no password to compromise), and man-in-the-middle attacks.
+- **When to use**: High-security applications, financial services, applications with high-value accounts. Increasingly recommended as primary authentication method.
+- **Implementation**: Use established libraries (e.g., webauthn.io, Duo Security, Okta) rather than implementing from scratch.
+
+**Certificate-Based Authentication (mTLS)**
+
+Mutual TLS (mTLS) uses X.509 certificates for both client and server authentication. The client presents a certificate to prove identity; the server verifies the certificate chain.
+
+- **How it works**: Client certificate is validated against a trusted certificate authority; the certificate contains identity information (CN, SAN, or custom attributes).
+- **Security properties**: Strong cryptographic authentication, resistant to credential compromise (private key is not transmitted), suitable for machine-to-machine authentication.
+- **When to use**: API authentication between services, high-security environments, regulatory requirements (e.g., government systems).
+- **Implementation considerations**: Certificate lifecycle management (issuance, renewal, revocation), certificate storage and protection, CRL/OCSP checking for revocation.
+
+**Biometric Authentication**
+
+Biometric authentication uses biological characteristics (fingerprint, face, iris) to verify identity. Typically implemented as a second factor or in combination with other methods.
+
+- **Security properties**: Difficult to forge or steal (though not impossible), user-friendly (no passwords to remember).
+- **Limitations**: Cannot be changed if compromised (unlike passwords), privacy concerns, accuracy varies by implementation.
+- **When to use**: Mobile applications, high-security environments, accessibility improvements.
+- **Implementation**: Use platform-provided biometric APIs (iOS Face ID/Touch ID, Android BiometricPrompt) rather than implementing custom biometric processing.
+
+**Risk-Based and Adaptive Authentication**
+
+Risk-based authentication adjusts authentication requirements based on contextual factors (login location, device, time, user behavior). If risk is low, authentication may be streamlined; if risk is high, additional factors are required.
+
+- **Factors considered**: Geographic location, device fingerprint, login time, user behavior patterns, network characteristics.
+- **When to use**: Applications with large user bases, fraud-sensitive operations (banking, e-commerce), balancing security with user experience.
+- **Implementation**: Requires behavioral analytics and risk scoring engines; often implemented through identity platforms (Okta, Auth0, Azure AD) rather than custom code.
+
+---
+
+## Addition: Authorization Patterns and Models (Insert after "Authorization Layer" subsection in Architecture Perspective)
+
+### Authorization Models in Depth
+
+Different authorization models suit different application architectures and complexity levels. Understanding the tradeoffs helps in selecting the right model.
+
+**Role-Based Access Control (RBAC)**
+
+RBAC assigns users to roles, and roles have permissions. Authorization checks verify whether the user's role has permission for the requested action.
+
+```
+User → Role → Permissions → Action
+```
+
+- **Advantages**: Simple to understand and implement, scales well for hierarchical organizations, easy to audit.
+- **Disadvantages**: Coarse-grained (all users with a role get the same permissions), difficult to express complex policies, requires role explosion for fine-grained control.
+- **Example**: Admin role has permission to "delete user"; Editor role has permission to "edit document"; Viewer role has permission to "view document".
+- **When to use**: Applications with clear role hierarchies, simple permission structures, small to medium permission matrices.
+
+**Attribute-Based Access Control (ABAC)**
+
+ABAC makes authorization decisions based on attributes of the user, resource, action, and environment. Policies are expressed as rules that evaluate these attributes.
+
+```
+Policy: IF (user.department == "Finance" AND resource.classification == "Financial" AND action == "view") THEN allow
+```
+
+- **Advantages**: Highly flexible, can express complex policies, scales to large permission matrices, supports dynamic attributes.
+- **Disadvantages**: Complex to implement and understand, harder to audit, requires careful policy design to avoid unintended access.
+- **Example**: Allow access to financial reports if user is in Finance department, report is marked Financial, and user has completed compliance training.
+- **When to use**: Complex authorization requirements, multi-tenant systems, applications with dynamic attributes, regulatory compliance requirements.
+
+**Access Control Lists (ACLs)**
+
+ACLs define which users or groups have access to specific resources. Each resource maintains a list of principals (users, groups) and their permissions.
+
+```
+Resource: /documents/report.pdf
+ACL:
+  - user:alice → read, write
+  - user:bob → read
+  - group:finance → read, write
+```
+
+- **Advantages**: Fine-grained control per resource, intuitive for file-system-like access, easy to understand who has access to what.
+- **Disadvantages**: Does not scale well to large numbers of resources, difficult to express policies that apply across many resources, can lead to inconsistent permissions.
+- **When to use**: File sharing systems, document management, resource-specific access control, small to medium numbers of resources.
+
+**Policy-as-Code**
+
+Policy-as-Code treats authorization policies as code that can be versioned, tested, and deployed. Policies are written in domain-specific languages (DSLs) or general-purpose languages.
+
+- **Examples**: Open Policy Agent (OPA) with Rego language, AWS IAM policies, Kubernetes RBAC policies.
+- **Advantages**: Policies are version-controlled, testable, auditable, can be deployed through CI/CD pipelines.
+- **Disadvantages**: Requires expertise in policy language, can be complex for non-technical stakeholders, testing policies is non-trivial.
+- **When to use**: Large organizations with complex policies, infrastructure-as-code environments, applications requiring policy auditability.
+
+**Zanzibar-Inspired Fine-Grained Authorization**
+
+Google's Zanzibar model (used internally for authorization) provides a scalable approach to fine-grained authorization. It uses a tuple-based model: (user, relation, resource).
+
+```
+Tuples:
+  (alice, owner, document:123)
+  (bob, editor, document:123)
+  (group:finance, viewer, document:123)
+
+Query: Does alice have "edit" permission on document:123?
+Answer: Check if alice has "owner" or "editor" relation; if so, allow.
+```
+
+- **Advantages**: Highly scalable, supports complex relationships, efficient querying, supports delegation and inheritance.
+- **Disadvantages**: Requires careful schema design, not suitable for simple applications, requires specialized systems (e.g., Authzed, Ory Keto).
+- **When to use**: Large-scale systems with complex permission hierarchies, multi-tenant platforms, applications requiring delegation.
+
+### Choosing an Authorization Model
+
+| Model | Complexity | Scalability | Use Case |
+|-------|-----------|-------------|----------|
+| RBAC | Low | Medium | Simple hierarchies, clear roles |
+| ABAC | High | High | Complex policies, dynamic attributes |
+| ACL | Medium | Low | Resource-specific access, file sharing |
+| Policy-as-Code | High | High | Large organizations, infrastructure |
+| Zanzibar | High | Very High | Large-scale platforms, complex relationships |
+
+**Decision Framework**:
+1. Start with RBAC if your permission structure is simple and hierarchical.
+2. Move to ABAC if you need to express policies based on user, resource, or environmental attributes.
+3. Use ACLs for resource-specific access control (file sharing, document management).
+4. Adopt Policy-as-Code if you need version control, testing, and auditability of policies.
+5. Consider Zanzibar-inspired models for large-scale systems with complex permission relationships.
+
+---
+
+## Addition: Session Management Architecture (Insert after "Authorization Layer" subsection in Architecture Perspective)
+
+### Session Management Security
+
+Session management is a critical component of authentication that deserves dedicated attention. Sessions bridge the gap between initial authentication and subsequent requests.
+
+**Session Storage Strategies**
+
+Different storage mechanisms have different security and scalability tradeoffs:
+
+- **In-Memory Storage**: Sessions stored in application memory. Fast, simple, but not suitable for distributed systems (sessions lost on restart, not shared across instances).
+- **Server-Side Database**: Sessions stored in a database (SQL or NoSQL). Scalable, persistent, but slower than in-memory. Suitable for distributed systems.
+- **Distributed Cache (Redis, Memcached)**: Sessions stored in a fast, distributed cache. Good balance of performance and scalability. Requires cache security (authentication, encryption).
+- **Stateless Sessions (JWT)**: No server-side storage; session data is encoded in a signed token. Highly scalable, but token cannot be revoked immediately (revocation requires a blacklist).
+
+**Session Security Properties**
+
+Regardless of storage mechanism, sessions must have these security properties:
+
+- **Secure Generation**: Session IDs must be cryptographically random, not predictable. Use `os.urandom()` or equivalent, not sequential or time-based IDs.
+- **HttpOnly Flag**: Session cookies must have the HttpOnly flag to prevent JavaScript access. This prevents XSS attacks from stealing session cookies.
+- **Secure Flag**: Session cookies must have the Secure flag to ensure transmission only over HTTPS.
+- **SameSite Flag**: Session cookies must have the SameSite flag (Strict or Lax) to prevent CSRF attacks.
+- **Session Timeout**: Sessions must expire after a period of inactivity. Implement both absolute timeout (maximum session duration) and idle timeout (inactivity duration).
+- **Session Regeneration**: Session IDs must be regenerated after successful authentication to prevent session fixation attacks.
+- **Secure Transmission**: Sessions must be transmitted only over HTTPS. Never transmit session IDs over HTTP.
+
+**Session Fixation Prevention**
+
+Session fixation attacks occur when an attacker forces a user to use a known session ID. Prevention strategies:
+
+- **Regenerate Session ID After Login**: Create a new session ID after successful authentication. Invalidate the old session ID.
+- **Validate Session ID Format**: Reject session IDs that do not match the expected format (length, character set).
+- **Bind Session to IP Address or User-Agent**: Optionally bind sessions to the client's IP address or User-Agent header. This adds friction for attackers but can cause issues for legitimate users with dynamic IPs.
+
+**Distributed Session Management**
+
+In distributed systems with multiple application instances, sessions must be shared across instances:
+
+- **Sticky Sessions**: Route requests from the same user to the same application instance. Simple but reduces load balancing flexibility.
+- **Shared Session Store**: Store sessions in a centralized store (Redis, database) accessible to all instances. Requires session store security and availability.
+- **Stateless Sessions (JWT)**: Encode session data in a signed token. No server-side storage needed, but token cannot be revoked immediately.
+
+**Session Revocation and Logout**
+
+Logout must invalidate the session:
+
+- **Server-Side Logout**: Delete the session from the session store. Immediate revocation.
+- **Token Blacklist**: For JWT tokens, maintain a blacklist of revoked tokens. Requires checking the blacklist on every request.
+- **Token Expiration**: Rely on token expiration. Tokens are valid until expiration; revocation is delayed until expiration.
+
+---
+
+## Addition: API Authentication Lifecycle (Insert after "Authentication Layer" subsection in Architecture Perspective)
+
+### API Authentication Patterns and Token Lifecycle
+
+API authentication differs from web application authentication in important ways. APIs typically use tokens (OAuth 2.0 access tokens, JWT, API keys) rather than session cookies.
+
+**OAuth 2.0 Token Lifecycle**
+
+OAuth 2.0 is the industry standard for API authentication. Understanding the token lifecycle is essential for secure implementation.
+
+```
+1. Client requests access token (with credentials or refresh token)
+2. Authorization server validates credentials and issues access token
+3. Client includes access token in API requests (Authorization: Bearer <token>)
+4. API server validates token signature and expiration
+5. If token expires, client uses refresh token to obtain new access token
+6. Refresh token is long-lived; access token is short-lived
+```
+
+**Access Token Design**:
+- **Short Lifetime**: Access tokens should expire quickly (minutes to
