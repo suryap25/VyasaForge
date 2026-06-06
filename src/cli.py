@@ -267,9 +267,16 @@ def _run_chapter(chapter: int) -> None:
         raise SystemExit(1)
 
     _run_step("review-chapter", lambda: _review_chapter(chapter))
-    _run_step("revise-chapter", lambda: _revise_chapter(chapter))
-    _run_step("validate-chapter --stage reviewed", lambda: _validate_chapter(chapter, "reviewed"))
-    _run_step("finalize-chapter", lambda: _finalize_chapter(chapter))
+
+    final_source = "reviewed"
+    try:
+        _run_step("revise-chapter", lambda: _revise_chapter(chapter))
+        _run_step("validate-chapter --stage reviewed", lambda: _validate_chapter(chapter, "reviewed"))
+    except (RuntimeError, SystemExit) as exc:
+        final_source = "drafts"
+        print(f"Revision unavailable or rejected; falling back to validated draft. Reason: {exc}")
+
+    _run_step("finalize-chapter", lambda: _finalize_chapter(chapter, final_source))
     _run_step("validate-chapter --stage final", lambda: _validate_chapter(chapter, "final"))
     print(f"Chapter pipeline complete for chapter {chapter}")
 

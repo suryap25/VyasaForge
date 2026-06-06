@@ -9,12 +9,39 @@ from src.handbook import resolve_chapter
 
 CONFIG_PATH = Path("configs/phase1.example.json")
 PROMPT_PATH = Path("prompts/chapter_generation.md")
+CHAPTER_1_SAMPLE_BRIEF = """# Chapter 1: Authentication vs Authorization
+
+## Goal
+Explain the difference between authentication and authorization in a practical AppSec handbook style.
+
+## Audience
+Software engineers, security engineers, and technical leads who design or review application security controls.
+
+## Include
+- Clear definitions of authentication and authorization.
+- Why teams often confuse them.
+- Concrete examples from web applications and APIs.
+- Common failure modes, such as trusting identity without checking permissions.
+- Practical implementation guidance.
+- A short checklist for design and review.
+
+## Tone
+Professional, direct, and implementation-focused.
+"""
 
 
 def ensure_required_file(path: Path, label: str) -> None:
     """Raise a clear error if a required file is missing."""
     if not path.exists():
         raise FileNotFoundError(f"Missing {label}: {path}")
+
+
+def ensure_sample_brief(metadata: object) -> None:
+    """Create the sample Chapter 1 brief when starting from an empty workspace."""
+    if metadata.chapter_id != "chapter_01" or metadata.brief_path.exists():
+        return
+    metadata.brief_path.parent.mkdir(parents=True, exist_ok=True)
+    metadata.brief_path.write_text(CHAPTER_1_SAMPLE_BRIEF, encoding="utf-8")
 
 
 def write_chapter(chapter: int) -> Path:
@@ -27,6 +54,7 @@ def write_chapter(chapter: int) -> Path:
 
     ensure_required_file(config_path, "model configuration")
     ensure_required_file(prompt_path, "chapter generation prompt")
+    ensure_sample_brief(metadata)
     ensure_required_file(brief_path, "chapter brief")
 
     prompt = prompt_path.read_text(encoding="utf-8")

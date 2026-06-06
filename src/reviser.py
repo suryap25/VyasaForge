@@ -23,7 +23,7 @@ def missing_required_sections(markdown: str) -> list[str]:
 
 
 def revise_chapter(chapter: int) -> Path:
-    """Revise a chapter draft using review comments."""
+    """Revise a chapter draft by appending review-driven improvements."""
     metadata = resolve_chapter(chapter)
     prompt_path = PROMPT_PATH
     draft_path = metadata.draft_path
@@ -51,7 +51,7 @@ def revise_chapter(chapter: int) -> Path:
                 "Review Comments:\n"
                 f"{review}\n\n"
                 "INSTRUCTION:\n"
-                "Improve the chapter.\n\n"
+                "Improve the chapter in safe additive mode.\n\n"
                 "Do not remove sections.\n"
                 "Do not shorten content.\n"
                 "Do not rewrite from scratch.\n\n"
@@ -63,14 +63,17 @@ def revise_chapter(chapter: int) -> Path:
                 "Only:\n"
                 "- fix issues\n"
                 "- add missing material\n"
-                "- improve weak sections\n"
+                "- improve weak sections\n\n"
+                "Return only Markdown additions and targeted correction notes that can be appended to the original "
+                "chapter. Do not return a full rewritten chapter.\n"
             ),
         },
     ]
 
     from src import llm_gateway
 
-    revised = llm_gateway.call_llm(role="editor", messages=messages, chapter=metadata.number)
+    additions = llm_gateway.call_llm(role="editor", messages=messages, chapter=metadata.number)
+    revised = draft.rstrip() + "\n\n## Revision Additions\n\n" + additions.strip() + "\n"
     revised_word_count = count_words(revised)
     missing_sections = missing_required_sections(revised)
     too_short = revised_word_count < original_word_count * MIN_REVISED_WORD_RATIO

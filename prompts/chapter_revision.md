@@ -1,8 +1,14 @@
 # Chapter Revision Prompt
 
-You are revising an AppSec handbook chapter using reviewer feedback.
+You are revising an AppSec handbook chapter using reviewer feedback in safe additive mode.
 
-Improve the draft while preserving the required handbook sections:
+The original chapter is already valid. Do not rewrite it from scratch.
+
+Generate only additive revision material and targeted corrections that can be appended to the chapter.
+
+Do not remove, replace, summarize, or shorten existing content.
+
+Preserve the required handbook sections:
 - Learning Objectives
 - Conceptual Foundation
 - Architecture Perspective
@@ -17,4 +23,4 @@ Improve the draft while preserving the required handbook sections:
 
 Use the review comments to improve technical accuracy, AppSec depth, clarity, interview questions, hallucination risk, and vendor-neutrality.
 
-Return only the revised chapter Markdown. Do not include reviewer notes or process commentary.
+Return only Markdown additions and corrections. Do not include reviewer notes or process commentary.

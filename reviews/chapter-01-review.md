@@ -2,75 +2,104 @@
 
 ## Overall Verdict
 
-**STRONG DRAFT** – This is a well-structured, technically sound chapter with excellent depth and practical guidance. It successfully balances conceptual clarity with implementation details and real-world context. The separation into multiple lenses (architecture, developer, pentest, AppSec) is pedagogically effective. Minor refinements needed around hallucination risk and some weak interview questions.
+**STRONG DRAFT** – This is a well-structured, technically sound chapter that covers authentication and authorization comprehensively. It balances conceptual clarity with practical implementation guidance and maintains good separation between different audience perspectives (developers, architects, pentesters). The chapter is suitable for an AppSec handbook with minor refinements needed.
 
 ---
 
 ## Strengths
 
-1. **Clear Conceptual Foundation**: The opening distinction between authentication ("Who are you?") and authorization ("What are you allowed to do?") is crisp and immediately useful. The banking example effectively illustrates why this matters.
+1. **Clear conceptual foundation**: The distinction between "Who are you?" (authentication) and "What are you allowed to do?" (authorization) is immediately clear and reinforced throughout.
 
-2. **Comprehensive Architecture Coverage**: The section on authentication and authorization architecture is well-organized, covering IdP, credential storage, session management, RBAC/ABAC/ACLs, PEP/PDP concepts. The microservices example demonstrates practical separation of concerns.
+2. **Multiple perspectives**: The chapter effectively addresses developers, architects, security engineers, and pentesters with tailored sections and examples. This multi-lens approach is valuable for a handbook.
 
-3. **Multiple Perspectives**: The chapter effectively uses different lenses (architecture, developer, pentest, AppSec) to address different audiences. This is pedagogically sound.
+3. **Practical code examples**: Python and JavaScript examples are concrete, realistic, and demonstrate both vulnerable and secure patterns. The bcrypt example and RBAC implementation are particularly useful.
 
-4. **Practical Code Examples**: Python examples are concrete and demonstrate both good and bad patterns clearly. The bcrypt, rate limiting, and decorator-based authorization examples are immediately useful.
+4. **Comprehensive vulnerability coverage**: The "Common Findings" section accurately reflects real-world assessment results and provides severity ratings.
 
-5. **Real-World Examples**: The four examples (IDOR, missing auth, conflation, client-side trust) are realistic and illustrative of actual vulnerabilities.
+5. **Strong interview questions**: Questions are well-calibrated for different roles and test both conceptual understanding and practical experience.
 
-6. **Secure Design Principles**: The 10 principles section is well-reasoned and actionable. Principle 3 (default deny) and Principle 4 (defense in depth) are particularly strong.
+6. **Trust boundary emphasis**: The section on trust boundaries and the client-side authorization example directly address a critical AppSec principle that developers often misunderstand.
 
-7. **Common Findings Section**: Grounding the chapter in actual assessment data (Finding 1-3) adds credibility and relevance.
-
-8. **Vendor Neutrality**: The chapter avoids endorsing specific vendors while naming examples (Okta, Azure AD) appropriately as illustrative.
+7. **Actionable guidance**: The "Secure Design Guidance" and "Key Takeaways" sections provide clear, implementable recommendations.
 
 ---
 
 ## Issues to Fix
 
-### 1. **Incomplete Privilege Escalation Example (Critical Finding)**
-The "Finding 3: Privilege Escalation" section cuts off mid-sentence:
-> "**Impact**: Critical. An attacker can gain administrative access"
+### 1. **Incomplete Monitoring Section**
+The chapter mentions "Monitor for suspicious activity" but doesn't provide concrete examples of what to monitor or how to detect attacks in progress.
 
-This needs completion. Finish the thought and add a concrete example.
+**Recommendation**: Add specific examples:
+- Failed login attempts from unusual locations
+- Authorization failures followed by successful access
+- Rapid role/permission changes
+- Access patterns inconsistent with user behavior
 
-### 2. **Hallucination Risk: JWT Token Revocation Claims**
-In the "Secure Design Guidance" section, the JWT discussion states:
-> "JWTs are stateless but cannot be revoked immediately."
+### 2. **Missing OAuth 2.0 / OIDC Implementation Details**
+The chapter recommends OAuth 2.0 and OIDC but provides no implementation guidance or code examples. This is a significant gap for developers.
 
-This is partially misleading. While JWTs cannot be revoked at the token level without additional infrastructure, token revocation *is* possible through:
-- Token blacklisting (maintains a revocation list)
-- Short expiration times + refresh tokens
-- Stateful session stores (defeating the "stateless" benefit)
+**Recommendation**: Add a subsection under "Authentication Implementation" with:
+- OAuth 2.0 authorization code flow diagram
+- Token validation example
+- Common OAuth 2.0 vulnerabilities (redirect URI validation, state parameter, PKCE)
 
-**Recommendation**: Clarify that JWTs require additional mechanisms for revocation and explain the trade-offs.
+### 3. **Insufficient Coverage of Token Revocation**
+JWT section mentions tokens can be "stolen or forged" but doesn't address the practical challenge of revoking tokens before expiration.
 
-### 3. **Missing HTTPS/TLS Emphasis**
-While HTTPS is mentioned, the chapter doesn't emphasize strongly enough that **all authentication and authorization traffic must use TLS 1.2+**. This is critical for preventing credential interception and session hijacking.
+**Recommendation**: Discuss:
+- Token blacklist/denylist strategies
+- Logout implementation with JWTs
+- Performance implications of revocation
 
-**Recommendation**: Add a dedicated subsection on transport security or strengthen existing mentions.
+### 4. **Missing Multi-Tenant Authorization Depth**
+While mentioned in interview questions, the chapter lacks a dedicated section on multi-tenant authorization patterns, which is increasingly common.
 
-### 4. **Incomplete Session Management Discussion**
-The session management code example is good, but the chapter doesn't discuss:
-- CSRF protection (critical for session-based auth)
-- Cross-origin considerations (CORS + cookies)
-- Token refresh mechanisms (for long-lived sessions)
+**Recommendation**: Add a subsection covering:
+- Tenant isolation at authorization layer
+- Tenant context propagation
+- Common multi-tenant authorization vulnerabilities
 
-**Recommendation**: Add a brief section on CSRF and token refresh patterns.
+### 5. **Weak Coverage of Passwordless Authentication**
+Only mentioned in interview questions; no implementation guidance provided.
 
-### 5. **OAuth 2.0 / OpenID Connect Absent**
-The chapter mentions these in interview question 15 but doesn't cover them in the main content. For modern applications, OAuth 2.0 and OIDC are increasingly important.
+**Recommendation**: Add a subsection on:
+- FIDO2/WebAuthn basics
+- Magic link implementation
+- Recovery mechanisms for passwordless auth
 
-**Recommendation**: Add a section on OAuth 2.0 / OIDC flows, or explicitly note that this chapter focuses on custom authentication systems.
+### 6. **Missing API Key Authentication**
+The chapter covers passwords and tokens but not API key authentication, which is critical for API security.
+
+**Recommendation**: Add guidance on:
+- API key generation and storage
+- API key rotation
+- API key scope/permission binding
+- Preventing API key exposure in logs/errors
 
 ---
 
 ## Missing or Weak Sections
 
-### 1. **Password Reset / Account Recovery**
-This is a critical attack surface (often weaker than initial authentication) but is completely absent. Password reset vulnerabilities are common findings.
+### 1. **Authorization in Asynchronous/Event-Driven Systems**
+The chapter assumes synchronous request-response patterns. Modern applications use message queues, webhooks, and event streams.
 
-**Recommendation**: Add a section covering:
-- Secure token generation for password reset links
-- Token expiration
-- One-time use enforcement
+**Missing**: How to enforce authorization when:
+- Processing async jobs
+- Handling webhooks
+- Publishing to event streams
+- Consuming from message queues
+
+### 2. **Authorization Caching and Consistency**
+Mentioned briefly in "Common Findings" but not addressed in design guidance.
+
+**Missing**: 
+- When to cache authorization decisions
+- Cache invalidation strategies
+- Consistency guarantees
+- TTL recommendations
+
+### 3. **Cross-Origin Authentication (CORS, CSRF)**
+Not mentioned despite being critical for web application security.
+
+**Missing**:
+-
