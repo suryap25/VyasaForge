@@ -278,6 +278,8 @@ def _run_chapter(chapter: int) -> None:
 
     _run_step("finalize-chapter", lambda: _finalize_chapter(chapter, final_source))
     _run_step("validate-chapter --stage final", lambda: _validate_chapter(chapter, "final"))
+    _run_step("compile-docx", lambda: _compile_docx(str(chapter)))
+    _handbook_status()
     print(f"Chapter pipeline complete for chapter {chapter}")
 
 
