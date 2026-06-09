@@ -11,6 +11,35 @@ SKETCHNOTE_SECTION = "Sketchnote Placeholder"
 SKETCHNOTE_MARKDOWN = "## Sketchnote Placeholder\n\n[SKETCHNOTE DIAGRAM PLACEHOLDER]"
 
 
+def deterministic_section_markdown(section: str) -> str:
+    """Return a small deterministic fallback for a missing required section."""
+    if section == SKETCHNOTE_SECTION:
+        return SKETCHNOTE_MARKDOWN
+    if section == "Interview Questions":
+        return (
+            "## Interview Questions\n\n"
+            "- How do authentication and authorization failures show up differently in application logs?\n"
+            "- What controls would you expect around session creation, token validation, and privilege checks?\n"
+            "- How would you review an API endpoint to confirm that authorization is enforced server-side?\n"
+            "- What is the risk of relying on client-side checks for access control?\n"
+            "- How should teams test for horizontal and vertical privilege escalation?"
+        )
+    if section == "Key Takeaways":
+        return (
+            "## Key Takeaways\n\n"
+            "- Authentication verifies identity; authorization decides what that identity can access.\n"
+            "- Strong authentication does not compensate for missing or inconsistent authorization checks.\n"
+            "- Authorization belongs on the server side and should be enforced close to protected resources.\n"
+            "- AppSec reviews should trace identity, session, role, permission, and object ownership decisions.\n"
+            "- Secure design requires clear access-control models, centralized policy logic, and repeatable tests."
+        )
+    return (
+        f"## {section}\n\n"
+        "This section requires additional handbook content. Cover the topic with vendor-neutral guidance, "
+        "practical AppSec examples, implementation considerations, and testing notes."
+    )
+
+
 def append_section(path: Path, section_markdown: str) -> None:
     """Append Markdown to a chapter file."""
     existing = path.read_text(encoding="utf-8")
@@ -60,7 +89,9 @@ def repair_chapter(chapter: int, stage: str = "drafts") -> Path:
     chapter_path.write_text(existing.rstrip() + "\n\n" + repair.strip() + "\n", encoding="utf-8")
 
     repaired = chapter_path.read_text(encoding="utf-8")
-    if SKETCHNOTE_SECTION in result.missing_sections and not has_section(repaired, SKETCHNOTE_SECTION):
-        append_section(chapter_path, SKETCHNOTE_MARKDOWN)
+    for section in result.missing_sections:
+        if not has_section(repaired, section):
+            append_section(chapter_path, deterministic_section_markdown(section))
+            repaired = chapter_path.read_text(encoding="utf-8")
 
     return chapter_path

@@ -1,18 +1,54 @@
-# Chapter 1: Authentication vs Authorization
+---
+chapter_id: chapter_01
+chapter_number: 1
+title: Authentication vs Authorization
+handbook_title: AppSec Authentication & Authorization Handbook
+---
+
+# Chapter 01: Authentication vs Authorization
 
 ## Goal
-Explain the difference between authentication and authorization in a practical AppSec handbook style.
+Write a practical, vendor-neutral handbook chapter about Authentication vs Authorization.
 
 ## Audience
-Software engineers, security engineers, and technical leads who design or review application security controls.
+- AppSec Engineers
+- Developers
+- Security Champions
 
-## Include
-- Clear definitions of authentication and authorization.
-- Why teams often confuse them.
-- Concrete examples from web applications and APIs.
-- Common failure modes, such as trusting identity without checking permissions.
-- Practical implementation guidance.
-- A short checklist for design and review.
+## Target Word Count
+3000-4500 words
 
-## Tone
-Professional, direct, and implementation-focused.
+## Required Sections
+- Learning Objectives
+- Conceptual Foundation
+- Architecture Perspective
+- AppSec Lens
+- Developer Lens
+- Pentest Lens
+- Common Findings
+- Secure Design Guidance
+- Interview Questions
+- Key Takeaways
+- Sketchnote Placeholder
+
+## Must-Cover Topics
+- Core concepts for Authentication vs Authorization
+- Architecture considerations for Authentication vs Authorization
+- Application security risks related to Authentication vs Authorization
+- Developer implementation guidance for Authentication vs Authorization
+- Testing and assessment guidance for Authentication vs Authorization
+
+## Examples Required
+- At least one practical implementation example
+- At least one common failure mode
+- At least one secure design pattern
+- At least one testing or review checklist
+
+## Interview Questions Required
+Yes
+
+## References Needed
+Include vendor-neutral standards or concepts when useful; do not invent citations.
+
+## Diagram Placeholder
+Include the required Sketchnote Placeholder section.

@@ -166,6 +166,12 @@ def _show_state(chapter: int) -> None:
     print(formatted_state(chapter))
 
 
+def _llm_usage(chapter: int | None = None) -> None:
+    from src.usage_report import usage_summary
+
+    print(usage_summary(chapter=chapter))
+
+
 def _display_status(status: str | None, generated_label: bool = False) -> str:
     """Return compact dashboard status text."""
     if status == "passed":
@@ -287,6 +293,7 @@ def _run_chapter(chapter: int) -> None:
     _run_step("validate-chapter --stage final", lambda: _validate_chapter(chapter, "final"))
     _run_step("compile-docx", lambda: _compile_docx(str(chapter)))
     _handbook_status()
+    _llm_usage(chapter)
     print(f"Chapter pipeline complete for chapter {chapter}")
 
 
@@ -369,6 +376,9 @@ def _run_argparse() -> None:
     show_state_parser = subparsers.add_parser("show-state")
     show_state_parser.add_argument("--chapter", type=int, required=True)
 
+    usage_parser = subparsers.add_parser("llm-usage")
+    usage_parser.add_argument("--chapter", type=int)
+
     subparsers.add_parser("handbook-status")
 
     diff_parser = subparsers.add_parser("diff-chapter")
@@ -393,6 +403,7 @@ def _run_argparse() -> None:
         "finalize-chapter": lambda: _finalize_chapter(args.chapter, args.source),
         "compile-docx": lambda: _compile_docx(args.chapters),
         "show-state": lambda: _show_state(args.chapter),
+        "llm-usage": lambda: _llm_usage(args.chapter),
         "handbook-status": _handbook_status,
         "diff-chapter": lambda: _diff_chapter(args.chapter, args.from_stage, args.to_stage),
         "run-chapter": lambda: _run_chapter(args.chapter),
@@ -496,6 +507,11 @@ if typer is not None:
     def show_state(chapter: int = typer.Option(..., "--chapter", help="Chapter number to show state for.")) -> None:
         """Print persisted chapter state as JSON."""
         _show_state(chapter)
+
+    @app.command()
+    def llm_usage(chapter: int | None = typer.Option(None, "--chapter", help="Optional chapter number.")) -> None:
+        """Print LLM token usage totals."""
+        _llm_usage(chapter)
 
     @app.command()
     def handbook_status() -> None:

@@ -2,80 +2,82 @@
 
 ## Overall Verdict
 
-**STRONG DRAFT** with excellent foundational content and comprehensive coverage. The chapter successfully establishes the conceptual distinction between authentication and authorization, provides practical code examples, and includes well-designed interview questions. However, there are gaps in emerging authentication methods, insufficient coverage of modern authorization patterns, and some sections that could be tightened for clarity.
+**STRONG DRAFT** with solid foundational content, good depth in AppSec and developer perspectives, and comprehensive testing guidance. However, there are gaps in coverage, some weak interview questions, and areas where technical accuracy could be tightened. The chapter is well-structured but needs refinement before publication.
 
-**Recommendation**: Approve with revisions addressing the issues below.
+**Recommendation**: Approve with revisions addressing issues below.
 
 ---
 
 ## Strengths
 
-1. **Clear Conceptual Foundation**: The "Who are you?" vs. "What are you allowed to do?" framing is accessible and memorable. The explanation of why confusion occurs is particularly valuable.
+1. **Clear Conceptual Foundation**
+   - The distinction between authentication and authorization is well-explained with the airport analogy
+   - Common misconceptions are explicitly addressed (strong point for learner clarity)
+   - Real-world relevance is maintained throughout
 
-2. **Multi-Perspective Approach**: Organizing content by AppSec, Developer, and Pentest lenses provides relevant context for different audiences. This is a strong pedagogical choice.
+2. **Comprehensive Architecture Patterns**
+   - Good coverage of centralized, decentralized, and federated authentication
+   - RBAC, ABAC, and ReBAC are all explained with trade-offs
+   - Session vs. token-based authentication comparison is practical
 
-3. **Practical Code Examples**: The Python examples (weak vs. strong implementations) are concrete and immediately applicable. They clearly demonstrate the vulnerability and fix.
+3. **Strong AppSec Lens**
+   - Vulnerable code examples are clear and paired with secure implementations
+   - Common findings section is well-organized with severity levels
+   - IDOR, privilege escalation, and session fixation are properly explained
 
-4. **Comprehensive Interview Questions**: 20 questions with evaluation criteria and "look for" guidance. Questions span conceptual understanding, practical experience, and scenario-based reasoning.
+4. **Developer-Focused Implementation**
+   - Code examples are practical and language-agnostic (Python, JavaScript, Flask)
+   - Password hashing, MFA, and session management guidance is sound
+   - Decorator-based authorization pattern is a useful design pattern
 
-5. **Real-World Vulnerability Catalog**: The "Common Findings" section accurately reflects what appears in actual assessments (IDOR, weak hashing, missing checks).
+5. **Thorough Penetration Testing Section**
+   - Test cases are specific and actionable
+   - Covers both positive and negative scenarios
+   - Includes timing attacks and session prediction (advanced topics)
 
-6. **Strong Key Takeaways**: The summary section effectively reinforces core concepts and provides role-specific guidance.
-
-7. **Vendor-Neutral**: No vendor lock-in; recommendations favor open standards (OAuth 2.0, SAML, bcrypt, Argon2).
+6. **Secure Design Guidance**
+   - Principles are clearly stated with implementation guidance
+   - Architecture diagrams (text-based) help visualize flows
+   - Backup codes for MFA recovery is mentioned (good practice)
 
 ---
 
 ## Issues to Fix
 
-### 1. **Incomplete Coverage of Modern Authentication Methods**
-- **Issue**: Chapter emphasizes passwords, MFA, and OAuth 2.0 but omits:
-  - Passwordless authentication (WebAuthn/FIDO2, passkeys)
-  - Biometric authentication beyond brief mention
-  - Certificate-based authentication (mTLS) mentioned but not explained
-  - Risk-based/adaptive authentication
-  
-- **Impact**: Readers may not understand current industry direction toward passwordless auth.
-- **Fix**: Add a subsection on emerging authentication methods with brief explanations and when to use each.
+### 1. **Technical Accuracy Issues**
 
-### 2. **Authorization Patterns Underexplored**
-- **Issue**: RBAC and ABAC are mentioned but not deeply explained:
-  - No discussion of ACL (Access Control Lists) implementation details
-  - ABAC section is minimal; no examples of attribute-based policies
-  - Missing: Policy-as-Code, fine-grained authorization frameworks (e.g., Zanzibar model, OPA)
-  - No guidance on choosing between models for different scenarios
-  
-- **Impact**: Developers may not know how to implement authorization beyond simple role checks.
-- **Fix**: Expand authorization patterns section with concrete examples and decision trees.
+**Issue 1a: TOTP Time Window Explanation**
+- Line in Python code: `return totp.verify(code, valid_window=1)`
+- The `valid_window=1` allows ±1 time window (30-second windows), which is standard, but the comment should clarify this is ±30 seconds, not ±1 second.
+- **Fix**: Add clarification: "valid_window=1 allows codes from the previous, current, and next 30-second window"
 
-### 3. **Session Management Underspecified**
-- **Issue**: Session security is mentioned but lacks depth:
-  - No discussion of session storage (in-memory, Redis, database)
-  - Missing: session fixation prevention details
-  - No coverage of distributed session management
-  - CSRF protection mentioned only in cookie flags, not as separate concern
-  
-- **Impact**: Developers may implement sessions insecurely in distributed systems.
-- **Fix**: Add a dedicated subsection on session management architecture and security.
+**Issue 1b: Session Timeout Configuration**
+- The Flask example shows `app.permanent_session_lifetime = timedelta(hours=1)` but doesn't mention idle timeout
+- Idle timeout (inactivity timeout) is equally important and often overlooked
+- **Fix**: Add separate configuration for idle timeout and explain the difference between absolute and idle timeouts
 
-### 4. **API Authentication Gaps**
-- **Issue**: API authentication coverage is scattered:
-  - JWT section is brief; no discussion of JWT refresh token patterns
-  - API key management mentioned in interview Q20 but not in main content
-  - Missing: mutual TLS (mTLS) implementation guidance
-  - No discussion of API gateway authentication patterns
-  
-- **Impact**: API developers may not understand token lifecycle or key rotation.
-- **Fix**: Consolidate API authentication into a dedicated section with lifecycle diagrams.
+**Issue 1c: Argon2 Not Mentioned in Developer Section**
+- Argon2 is mentioned in the conceptual section but not in the "Password Hashing Best Practices" developer section
+- **Fix**: Add Argon2 implementation example (Python: `argon2-cffi` library)
 
-### 5. **Weak Coverage of Authorization Bypass Techniques**
-- **Issue**: Authorization failures are listed but not explained deeply:
-  - Parameter pollution not mentioned
-  - HTTP method override (POST → PUT) not discussed
-  - Path traversal in authorization context not covered
-  - Race conditions in authorization checks not mentioned
-  
-- **Impact**: Pentesters and reviewers may miss subtle authorization bypasses.
-- **Fix**: Expand "Authorization Failures" section with bypass techniques and detection methods.
+**Issue 1d: JWT Token Validation**
+- The chapter mentions "token-based authentication" but doesn't address JWT signature verification or expiration claims
+- **Fix**: Add explicit guidance on validating JWT signatures and checking `exp` claim
 
-###
+### 2. **Missing or Weak Sections**
+
+**Issue 2a: OAuth 2.0 and OpenID Connect**
+- Federated authentication is mentioned but OAuth 2.0 / OpenID Connect are not explained
+- These are critical for modern applications and should be covered
+- **Fix**: Add a subsection on OAuth 2.0 flows (Authorization Code, PKCE) and OpenID Connect for authentication
+
+**Issue 2b: Password Reset/Recovery Flows**
+- No coverage of secure password reset mechanisms
+- This is a common vulnerability vector (token expiration, email verification, etc.)
+- **Fix**: Add section on secure password reset design (time-limited tokens, email verification, etc.)
+
+**Issue 2c: Account Enumeration**
+- Mentioned briefly in federated auth disadvantages but not covered as a standalone vulnerability
+- **Fix**: Add explicit section on account enumeration attacks and mitigation (consistent error messages, rate limiting)
+
+**Issue 2d: Cross-Site Request Forg

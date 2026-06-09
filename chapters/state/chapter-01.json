@@ -2,27 +2,27 @@
   "chapter_id": "chapter_01",
   "docx": {
     "status": "passed",
-    "updated_at": "2026-06-06T02:39:16.711335+00:00"
+    "updated_at": "2026-06-09T04:57:05.294482+00:00"
   },
   "draft": {
     "status": "passed",
-    "updated_at": "2026-06-06T02:24:26.232731+00:00",
-    "word_count": 3132
+    "updated_at": "2026-06-09T04:00:43.336147+00:00",
+    "word_count": 2444
   },
   "final": {
     "source": "reviewed",
     "status": "passed",
-    "updated_at": "2026-06-06T02:25:44.101477+00:00",
-    "word_count": 7243
+    "updated_at": "2026-06-09T04:01:55.818864+00:00",
+    "word_count": 6445
   },
   "review": {
     "status": "passed",
-    "updated_at": "2026-06-06T02:25:14.168566+00:00"
+    "updated_at": "2026-06-09T04:01:32.546620+00:00"
   },
   "revision": {
     "reason": null,
     "status": "passed",
-    "updated_at": "2026-06-06T02:25:44.019419+00:00"
+    "updated_at": "2026-06-09T04:01:55.597557+00:00"
   },
   "title": "Authentication vs Authorization"
 }
