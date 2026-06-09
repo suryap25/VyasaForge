@@ -28,6 +28,18 @@ def _test_model(role: str) -> None:
     print(response)
 
 
+def _parse_chapter_numbers(chapters: str) -> list[int]:
+    """Parse a comma-separated chapter list."""
+    try:
+        chapter_numbers = [int(chapter.strip()) for chapter in chapters.split(",") if chapter.strip()]
+    except ValueError as exc:
+        raise ValueError("--chapters must contain chapter numbers, such as 1 or 1,2.") from exc
+
+    if not chapter_numbers:
+        raise ValueError("--chapters must include at least one chapter number.")
+    return chapter_numbers
+
+
 def _write_chapter(chapter: int) -> None:
     from src.writer import write_chapter
     from src.state_manager import update_draft
@@ -47,6 +59,20 @@ def _create_chapter(chapter: int, overwrite: bool = False) -> None:
 
     brief_path = create_chapter_brief(chapter, overwrite=overwrite)
     print(f"Chapter brief ready: {Path(brief_path)}")
+
+
+def _generate_briefs(chapters: str | None = None, overwrite: bool = False) -> None:
+    from src.briefs import create_chapter_briefs
+    from src.handbook import load_handbook_registry
+
+    if chapters is None:
+        chapter_numbers = [metadata.number for metadata in load_handbook_registry().chapters.values()]
+    else:
+        chapter_numbers = _parse_chapter_numbers(chapters)
+
+    brief_paths = create_chapter_briefs(chapter_numbers, overwrite=overwrite)
+    for brief_path in brief_paths:
+        print(f"Chapter brief ready: {Path(brief_path)}")
 
 
 def _validate_chapter(chapter: int, stage: str = "drafts") -> None:
@@ -133,13 +159,7 @@ def _compile_docx(chapters: str) -> None:
     from src.compiler import compile_docx
     from src.state_manager import update_docx
 
-    try:
-        chapter_numbers = [int(chapter.strip()) for chapter in chapters.split(",") if chapter.strip()]
-    except ValueError as exc:
-        raise ValueError("--chapters must contain chapter numbers, such as 1 or 1,2.") from exc
-
-    if not chapter_numbers:
-        raise ValueError("--chapters must include at least one chapter number.")
+    chapter_numbers = _parse_chapter_numbers(chapters)
 
     try:
         output_path = compile_docx(chapter_numbers)
@@ -170,6 +190,33 @@ def _llm_usage(chapter: int | None = None) -> None:
     from src.usage_report import usage_summary
 
     print(usage_summary(chapter=chapter))
+
+
+def _plan_handbook(
+    topic: str,
+    chapters: int | None = None,
+    audience: str | None = None,
+    depth: str | None = None,
+    pages: int | None = None,
+) -> None:
+    from src.toc_manager import plan_handbook
+
+    registry_path = plan_handbook(
+        topic=topic,
+        chapters=chapters,
+        audience=audience,
+        depth=depth,
+        pages=pages,
+    )
+    print(f"Wrote handbook registry: {Path(registry_path)}")
+
+
+def _update_toc(input_path: str) -> None:
+    from src.toc_manager import update_toc
+
+    registry_path, summary_path = update_toc(Path(input_path))
+    print(f"Wrote handbook registry: {Path(registry_path)}")
+    print(f"Wrote change summary: {Path(summary_path)}")
 
 
 def _display_status(status: str | None, generated_label: bool = False) -> str:
@@ -264,6 +311,7 @@ def _run_chapter(chapter: int) -> None:
 
     metadata = resolve_chapter(chapter)
     print(f"Running chapter pipeline for {metadata.chapter_id}: {metadata.title}")
+    _run_step("create-chapter", lambda: _create_chapter(chapter))
     _run_step("write-chapter", lambda: _write_chapter(chapter))
 
     print("START: validate-chapter --stage drafts")
@@ -295,6 +343,13 @@ def _run_chapter(chapter: int) -> None:
     _handbook_status()
     _llm_usage(chapter)
     print(f"Chapter pipeline complete for chapter {chapter}")
+
+
+def _run_chapters(chapters: str) -> None:
+    """Run the chapter pipeline for multiple chapters in order."""
+    chapter_numbers = _parse_chapter_numbers(chapters)
+    for chapter in chapter_numbers:
+        _run_chapter(chapter)
 
 
 def _provider_env_var(model: str) -> tuple[str, str | None]:
@@ -349,6 +404,10 @@ def _run_argparse() -> None:
     create_parser.add_argument("--chapter", type=int, required=True)
     create_parser.add_argument("--overwrite", action="store_true")
 
+    generate_briefs_parser = subparsers.add_parser("generate-briefs")
+    generate_briefs_parser.add_argument("--chapters")
+    generate_briefs_parser.add_argument("--overwrite", action="store_true")
+
     write_parser = subparsers.add_parser("write-chapter")
     write_parser.add_argument("--chapter", type=int, required=True)
 
@@ -379,6 +438,16 @@ def _run_argparse() -> None:
     usage_parser = subparsers.add_parser("llm-usage")
     usage_parser.add_argument("--chapter", type=int)
 
+    plan_parser = subparsers.add_parser("plan-handbook")
+    plan_parser.add_argument("--topic", required=True)
+    plan_parser.add_argument("--chapters", type=int)
+    plan_parser.add_argument("--audience")
+    plan_parser.add_argument("--depth")
+    plan_parser.add_argument("--pages", type=int)
+
+    update_toc_parser = subparsers.add_parser("update-toc")
+    update_toc_parser.add_argument("--input", required=True)
+
     subparsers.add_parser("handbook-status")
 
     diff_parser = subparsers.add_parser("diff-chapter")
@@ -389,12 +458,16 @@ def _run_argparse() -> None:
     run_parser = subparsers.add_parser("run-chapter")
     run_parser.add_argument("--chapter", type=int, required=True)
 
+    run_chapters_parser = subparsers.add_parser("run-chapters")
+    run_chapters_parser.add_argument("--chapters", required=True)
+
     subparsers.add_parser("doctor")
 
     args = parser.parse_args()
     commands: dict[str, Callable[[], None]] = {
         "test-model": lambda: _test_model(args.role),
         "create-chapter": lambda: _create_chapter(args.chapter, args.overwrite),
+        "generate-briefs": lambda: _generate_briefs(args.chapters, args.overwrite),
         "write-chapter": lambda: _write_chapter(args.chapter),
         "validate-chapter": lambda: _validate_chapter(args.chapter, args.stage),
         "repair-chapter": lambda: _repair_chapter(args.chapter, args.stage),
@@ -404,9 +477,12 @@ def _run_argparse() -> None:
         "compile-docx": lambda: _compile_docx(args.chapters),
         "show-state": lambda: _show_state(args.chapter),
         "llm-usage": lambda: _llm_usage(args.chapter),
+        "plan-handbook": lambda: _plan_handbook(args.topic, args.chapters, args.audience, args.depth, args.pages),
+        "update-toc": lambda: _update_toc(args.input),
         "handbook-status": _handbook_status,
         "diff-chapter": lambda: _diff_chapter(args.chapter, args.from_stage, args.to_stage),
         "run-chapter": lambda: _run_chapter(args.chapter),
+        "run-chapters": lambda: _run_chapters(args.chapters),
         "doctor": _doctor,
     }
 
@@ -435,6 +511,17 @@ if typer is not None:
         """Create a structured chapter brief from the handbook registry."""
         try:
             _create_chapter(chapter, overwrite)
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    @app.command()
+    def generate_briefs(
+        chapters: str | None = typer.Option(None, "--chapters", help="Optional comma-separated chapter numbers."),
+        overwrite: bool = typer.Option(False, "--overwrite", help="Overwrite existing chapter briefs."),
+    ) -> None:
+        """Create structured chapter briefs from the handbook registry."""
+        try:
+            _generate_briefs(chapters, overwrite)
         except (FileNotFoundError, RuntimeError, ValueError) as exc:
             raise typer.BadParameter(str(exc)) from exc
 
@@ -514,6 +601,28 @@ if typer is not None:
         _llm_usage(chapter)
 
     @app.command()
+    def plan_handbook(
+        topic: str = typer.Option(..., "--topic", help="Handbook topic to plan."),
+        chapters: int | None = typer.Option(None, "--chapters", help="Optional exact number of chapters."),
+        audience: str | None = typer.Option(None, "--audience", help="Optional target audience."),
+        depth: str | None = typer.Option(None, "--depth", help="Optional depth, such as beginner or advanced."),
+        pages: int | None = typer.Option(None, "--pages", help="Optional target page count."),
+    ) -> None:
+        """Generate handbook registry YAML from a topic."""
+        try:
+            _plan_handbook(topic, chapters, audience, depth, pages)
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    @app.command()
+    def update_toc(input: str = typer.Option(..., "--input", help="User requirements Markdown file.")) -> None:
+        """Update handbook registry YAML from user requirements."""
+        try:
+            _update_toc(input)
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    @app.command()
     def handbook_status() -> None:
         """Print compact handbook state dashboard."""
         _handbook_status()
@@ -535,6 +644,14 @@ if typer is not None:
         """Run the single-chapter pipeline."""
         try:
             _run_chapter(chapter)
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    @app.command()
+    def run_chapters(chapters: str = typer.Option(..., "--chapters", help="Comma-separated chapter numbers.")) -> None:
+        """Run the chapter pipeline for multiple chapters."""
+        try:
+            _run_chapters(chapters)
         except (FileNotFoundError, RuntimeError, ValueError) as exc:
             raise typer.BadParameter(str(exc)) from exc
 

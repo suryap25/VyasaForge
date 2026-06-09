@@ -47,8 +47,8 @@ def load_handbook_registry(path: str = str(REGISTRY_PATH)) -> HandbookRegistry:
     """Load handbook chapter metadata from YAML."""
     try:
         import yaml
-    except ImportError as exc:
-        raise RuntimeError("PyYAML is required. Install project dependencies with `pip install -e .`.") from exc
+    except ImportError:
+        from src import simple_yaml as yaml
 
     registry_path = Path(path)
     if not registry_path.exists():

@@ -121,6 +121,7 @@ output/AppSec_Authentication_Authorization_Handbook_Phase1.docx
 
 ```powershell
 python -m src.cli test-model --role writer
+python -m src.cli generate-briefs --chapters 1,2 --overwrite
 python -m src.cli write-chapter --chapter 1
 python -m src.cli repair-chapter --chapter 1 --stage drafts
 python -m src.cli review-chapter --chapter 1
@@ -129,10 +130,59 @@ python -m src.cli finalize-chapter --chapter 1 --source reviewed
 python -m src.cli finalize-chapter --chapter 1 --source drafts
 python -m src.cli compile-docx --chapters 1
 python -m src.cli diff-chapter --chapter 1 --from-stage drafts --to-stage final
+python -m src.cli llm-usage --chapter 1
+```
+
+## Configurable Engine Commands
+
+Create or refresh structured chapter briefs from `configs/handbook.yaml`:
+
+```powershell
+python -m src.cli generate-briefs --chapters 1,2,3 --overwrite
+```
+
+Run multiple registered chapters in order:
+
+```powershell
+python -m src.cli run-chapters --chapters 1,2,3
+```
+
+Plan a new handbook TOC from a topic:
+
+```powershell
+python -m src.cli plan-handbook --topic "AppSec Authentication and Authorization"
+```
+
+The planner chooses the recommended chapter count when `--chapters` is omitted. Optional constraints can guide the recommendation:
+
+```powershell
+python -m src.cli plan-handbook `
+  --topic "Cloud Security for Product Security Engineers" `
+  --audience "AppSec Engineers, Developers" `
+  --depth intermediate `
+  --pages 120
+```
+
+Use `--chapters` only when you want to force an exact chapter count:
+
+```powershell
+python -m src.cli plan-handbook --topic "OAuth 2.0 for Developers" --chapters 6
+```
+
+Update the TOC from user requirements:
+
+```powershell
+python -m src.cli update-toc --input user_requirements.md
+```
+
+If the requirements are ambiguous, the TOC is not changed. Clarification questions are written to:
+
+```text
+configs/handbook-clarification-questions.md
 ```
 
 ## Notes
 
-- `run-chapter` currently expects the chapter brief to exist, so run `create-chapter --chapter 1` first after deleting `chapters/briefs`.
+- `run-chapter` creates the chapter brief automatically before writing.
 - LLM prompts and API keys are not written to the usage log.
 - Token usage is logged to `logs/llm-usage.jsonl` when available from the provider.

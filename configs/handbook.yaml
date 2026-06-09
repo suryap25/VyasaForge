@@ -12,7 +12,7 @@ handbook:
       review_path: reviews/chapter-01-review.md
     chapter_02:
       number: 2
-      title: Chapter 02
+      title: Identity Fundamentals
       brief_path: chapters/briefs/chapter-02.md
       draft_path: chapters/drafts/chapter-02.md
       reviewed_path: chapters/reviewed/chapter-02.md
@@ -20,7 +20,7 @@ handbook:
       review_path: reviews/chapter-02-review.md
     chapter_03:
       number: 3
-      title: Chapter 03
+      title: Session Management Fundamentals
       brief_path: chapters/briefs/chapter-03.md
       draft_path: chapters/drafts/chapter-03.md
       reviewed_path: chapters/reviewed/chapter-03.md
@@ -28,7 +28,7 @@ handbook:
       review_path: reviews/chapter-03-review.md
     chapter_04:
       number: 4
-      title: Chapter 04
+      title: Passwords and Credential Security
       brief_path: chapters/briefs/chapter-04.md
       draft_path: chapters/drafts/chapter-04.md
       reviewed_path: chapters/reviewed/chapter-04.md
@@ -36,7 +36,7 @@ handbook:
       review_path: reviews/chapter-04-review.md
     chapter_05:
       number: 5
-      title: Chapter 05
+      title: Multi-Factor Authentication
       brief_path: chapters/briefs/chapter-05.md
       draft_path: chapters/drafts/chapter-05.md
       reviewed_path: chapters/reviewed/chapter-05.md
@@ -44,7 +44,7 @@ handbook:
       review_path: reviews/chapter-05-review.md
     chapter_06:
       number: 6
-      title: Chapter 06
+      title: JWT Fundamentals
       brief_path: chapters/briefs/chapter-06.md
       draft_path: chapters/drafts/chapter-06.md
       reviewed_path: chapters/reviewed/chapter-06.md
@@ -52,7 +52,7 @@ handbook:
       review_path: reviews/chapter-06-review.md
     chapter_07:
       number: 7
-      title: Chapter 07
+      title: OAuth 2.0 Fundamentals
       brief_path: chapters/briefs/chapter-07.md
       draft_path: chapters/drafts/chapter-07.md
       reviewed_path: chapters/reviewed/chapter-07.md
@@ -60,7 +60,7 @@ handbook:
       review_path: reviews/chapter-07-review.md
     chapter_08:
       number: 8
-      title: Chapter 08
+      title: OpenID Connect Fundamentals
       brief_path: chapters/briefs/chapter-08.md
       draft_path: chapters/drafts/chapter-08.md
       reviewed_path: chapters/reviewed/chapter-08.md

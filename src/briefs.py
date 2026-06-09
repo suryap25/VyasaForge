@@ -2,30 +2,56 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 
-from pydantic import BaseModel, Field
+try:
+    from pydantic import BaseModel, Field
+except ImportError:
+    BaseModel = object
+
+    def Field(**_: object) -> None:
+        return None
 
 from src.handbook import load_handbook_registry, resolve_chapter
 from src.validator import REQUIRED_SECTIONS
 
 
-class ChapterBrief(BaseModel):
-    """Execution contract for generating one handbook chapter."""
+if BaseModel is object:
+    @dataclass
+    class ChapterBrief:
+        """Execution contract for generating one handbook chapter."""
 
-    chapter_id: str
-    chapter_number: int = Field(gt=0)
-    handbook_title: str
-    title: str
-    goal: str
-    audience: list[str]
-    target_word_count: str
-    required_sections: list[str]
-    must_cover_topics: list[str]
-    examples_required: list[str]
-    interview_questions_required: bool = True
-    references_needed: str
-    diagram_placeholder: str
+        chapter_id: str
+        chapter_number: int
+        handbook_title: str
+        title: str
+        goal: str
+        audience: list[str]
+        target_word_count: str
+        required_sections: list[str]
+        must_cover_topics: list[str]
+        examples_required: list[str]
+        interview_questions_required: bool = True
+        references_needed: str = ""
+        diagram_placeholder: str = ""
+else:
+    class ChapterBrief(BaseModel):
+        """Execution contract for generating one handbook chapter."""
+
+        chapter_id: str
+        chapter_number: int = Field(gt=0)
+        handbook_title: str
+        title: str
+        goal: str
+        audience: list[str]
+        target_word_count: str
+        required_sections: list[str]
+        must_cover_topics: list[str]
+        examples_required: list[str]
+        interview_questions_required: bool = True
+        references_needed: str
+        diagram_placeholder: str
 
 
 def build_chapter_brief(chapter: int) -> ChapterBrief:
@@ -117,3 +143,8 @@ def create_chapter_brief(chapter: int, overwrite: bool = False) -> Path:
     brief = build_chapter_brief(chapter)
     brief_path.write_text(render_chapter_brief(brief), encoding="utf-8")
     return brief_path
+
+
+def create_chapter_briefs(chapters: list[int], overwrite: bool = False) -> list[Path]:
+    """Create chapter brief files for multiple chapters."""
+    return [create_chapter_brief(chapter, overwrite=overwrite) for chapter in chapters]
