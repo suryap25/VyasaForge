@@ -52,3 +52,9 @@ Include vendor-neutral standards or concepts when useful; do not invent citation
 
 ## Diagram Placeholder
 Include the required Sketchnote Placeholder section.
+
+## Quality Gates
+- Draft must pass chapter validator before review.
+- Draft must contain every required handbook section.
+- Revision must preserve at least 80% of original draft word count.
+- Final chapter must pass validation before compilation.

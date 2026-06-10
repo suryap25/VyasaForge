@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -15,6 +16,19 @@ except ImportError:
 
 from src.handbook import load_handbook_registry, resolve_chapter
 from src.validator import REQUIRED_SECTIONS
+
+BRIEF_SECTIONS = [
+    "Goal",
+    "Audience",
+    "Target Word Count",
+    "Required Sections",
+    "Must-Cover Topics",
+    "Examples Required",
+    "Interview Questions Required",
+    "References Needed",
+    "Diagram Placeholder",
+    "Quality Gates",
+]
 
 
 if BaseModel is object:
@@ -35,6 +49,7 @@ if BaseModel is object:
         interview_questions_required: bool = True
         references_needed: str = ""
         diagram_placeholder: str = ""
+        quality_gates: list[str] | None = None
 else:
     class ChapterBrief(BaseModel):
         """Execution contract for generating one handbook chapter."""
@@ -52,6 +67,16 @@ else:
         interview_questions_required: bool = True
         references_needed: str
         diagram_placeholder: str
+        quality_gates: list[str] = Field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class BriefValidationResult:
+    """Validation outcome for a chapter brief execution contract."""
+
+    passed: bool
+    missing_sections: list[str]
+    errors: list[str]
 
 
 def build_chapter_brief(chapter: int) -> ChapterBrief:
@@ -86,6 +111,12 @@ def build_chapter_brief(chapter: int) -> ChapterBrief:
         ],
         references_needed="Include vendor-neutral standards or concepts when useful; do not invent citations.",
         diagram_placeholder="Include the required Sketchnote Placeholder section.",
+        quality_gates=[
+            "Draft must pass chapter validator before review.",
+            "Draft must contain every required handbook section.",
+            "Revision must preserve at least 80% of original draft word count.",
+            "Final chapter must pass validation before compilation.",
+        ],
     )
 
 
@@ -128,6 +159,9 @@ def render_chapter_brief(brief: ChapterBrief) -> str:
         "## Diagram Placeholder",
         brief.diagram_placeholder,
         "",
+        "## Quality Gates",
+        *[f"- {gate}" for gate in (brief.quality_gates or [])],
+        "",
     ]
     return "\n".join(lines)
 
@@ -148,3 +182,37 @@ def create_chapter_brief(chapter: int, overwrite: bool = False) -> Path:
 def create_chapter_briefs(chapters: list[int], overwrite: bool = False) -> list[Path]:
     """Create chapter brief files for multiple chapters."""
     return [create_chapter_brief(chapter, overwrite=overwrite) for chapter in chapters]
+
+
+def _has_markdown_section(text: str, section: str) -> bool:
+    pattern = rf"(?im)^##\s+{re.escape(section)}\s*$"
+    return re.search(pattern, text) is not None
+
+
+def validate_chapter_brief(chapter: int) -> BriefValidationResult:
+    """Validate that a chapter brief has the expected execution-contract shape."""
+    metadata = resolve_chapter(chapter)
+    errors: list[str] = []
+    if not metadata.brief_path.exists():
+        return BriefValidationResult(
+            passed=False,
+            missing_sections=[],
+            errors=[f"Missing chapter brief: {metadata.brief_path}"],
+        )
+
+    text = metadata.brief_path.read_text(encoding="utf-8")
+    missing_sections = [section for section in BRIEF_SECTIONS if not _has_markdown_section(text, section)]
+    for section in missing_sections:
+        errors.append(f"Missing brief section: {section}")
+
+    missing_required = [
+        section for section in REQUIRED_SECTIONS if f"- {section}" not in text
+    ]
+    if missing_required:
+        errors.append("Brief does not list required handbook sections: " + ", ".join(missing_required))
+
+    return BriefValidationResult(
+        passed=not errors,
+        missing_sections=missing_sections,
+        errors=errors,
+    )

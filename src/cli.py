@@ -75,6 +75,23 @@ def _generate_briefs(chapters: str | None = None, overwrite: bool = False) -> No
         print(f"Chapter brief ready: {Path(brief_path)}")
 
 
+def _validate_brief(chapter: int) -> None:
+    from src.briefs import validate_chapter_brief
+    from src.handbook import resolve_chapter
+
+    result = validate_chapter_brief(chapter)
+    brief_path = resolve_chapter(chapter).brief_path
+    print(f"{'PASS' if result.passed else 'FAIL'}: {brief_path}")
+    if result.missing_sections:
+        print("Missing brief sections:")
+        for section in result.missing_sections:
+            print(f"- {section}")
+    for error in result.errors:
+        print(f"- {error}")
+    if not result.passed:
+        raise SystemExit(1)
+
+
 def _validate_chapter(chapter: int, stage: str = "drafts") -> None:
     from src.validator import resolve_chapter_stage_path, validate_chapter
 
@@ -173,6 +190,26 @@ def _compile_docx(chapters: str) -> None:
     print(f"Wrote DOCX: {Path(output_path)}")
 
 
+def _compile_handbook(chapters: str, output_format: str = "docx") -> None:
+    from src.compiler import compile_handbook
+    from src.state_manager import update_docx
+
+    chapter_numbers = _parse_chapter_numbers(chapters)
+
+    try:
+        output_path = compile_handbook(chapter_numbers, output_format=output_format)
+    except Exception:
+        if output_format == "docx":
+            for chapter in chapter_numbers:
+                update_docx(chapter, "failed")
+        raise
+
+    if output_format == "docx":
+        for chapter in chapter_numbers:
+            update_docx(chapter, "passed")
+    print(f"Wrote {output_format.upper()}: {Path(output_path)}")
+
+
 def _repair_chapter(chapter: int, stage: str = "drafts") -> None:
     from src.repairer import repair_chapter
 
@@ -190,6 +227,54 @@ def _llm_usage(chapter: int | None = None) -> None:
     from src.usage_report import usage_summary
 
     print(usage_summary(chapter=chapter))
+
+
+def _agent_status() -> None:
+    from src.agents import agent_status_rows
+
+    headers = ["Agent", "Role", "Enabled", "Validation Gate"]
+    rows = agent_status_rows()
+    widths = [
+        max(len(str(row[index])) for row in rows + [headers])
+        for index in range(len(headers))
+    ]
+    print(" | ".join(header.ljust(widths[index]) for index, header in enumerate(headers)))
+    print("-+-".join("-" * width for width in widths))
+    for row in rows:
+        print(" | ".join(str(value).ljust(widths[index]) for index, value in enumerate(row)))
+
+
+def _qa_handbook(chapters: str, stage: str = "final") -> None:
+    from src.qa import qa_handbook, write_qa_report
+
+    chapter_numbers = _parse_chapter_numbers(chapters)
+    result = qa_handbook(chapter_numbers, stage=stage)
+    report_path = write_qa_report(result)
+    print(f"{'PASS' if result.passed else 'FAIL'}: handbook QA")
+    print(f"Stage: {stage}")
+    print(f"Chapters checked: {len(chapter_numbers)}")
+    print(f"Word count range: {result.word_count_min} - {result.word_count_max}")
+    print(f"Wrote QA report: {Path(report_path)}")
+    if not result.passed:
+        raise SystemExit(1)
+
+
+def _generate_sketchnote_prompts(chapters: str, stage: str = "final") -> None:
+    from src.sketchnotes import generate_all_sketchnote_prompts
+
+    chapter_numbers = _parse_chapter_numbers(chapters)
+    for chapter in chapter_numbers:
+        for prompt_path in generate_all_sketchnote_prompts(chapter, stage=stage):
+            print(f"Wrote sketchnote prompt: {Path(prompt_path)}")
+
+
+def _generate_sketchnotes(chapters: str, stage: str = "final") -> None:
+    from src.sketchnotes import generate_all_sketchnote_images
+
+    chapter_numbers = _parse_chapter_numbers(chapters)
+    for chapter in chapter_numbers:
+        for image_path in generate_all_sketchnote_images(chapter, stage=stage):
+            print(f"Wrote sketchnote image: {Path(image_path)}")
 
 
 def _plan_handbook(
@@ -339,6 +424,8 @@ def _run_chapter(chapter: int) -> None:
 
     _run_step("finalize-chapter", lambda: _finalize_chapter(chapter, final_source))
     _run_step("validate-chapter --stage final", lambda: _validate_chapter(chapter, "final"))
+    _run_step("generate-sketchnote-prompts", lambda: _generate_sketchnote_prompts(str(chapter), "final"))
+    _run_step("generate-sketchnotes", lambda: _generate_sketchnotes(str(chapter), "final"))
     _run_step("compile-docx", lambda: _compile_docx(str(chapter)))
     _handbook_status()
     _llm_usage(chapter)
@@ -408,6 +495,9 @@ def _run_argparse() -> None:
     generate_briefs_parser.add_argument("--chapters")
     generate_briefs_parser.add_argument("--overwrite", action="store_true")
 
+    validate_brief_parser = subparsers.add_parser("validate-brief")
+    validate_brief_parser.add_argument("--chapter", type=int, required=True)
+
     write_parser = subparsers.add_parser("write-chapter")
     write_parser.add_argument("--chapter", type=int, required=True)
 
@@ -432,11 +522,29 @@ def _run_argparse() -> None:
     compile_parser = subparsers.add_parser("compile-docx")
     compile_parser.add_argument("--chapters", required=True)
 
+    compile_handbook_parser = subparsers.add_parser("compile-handbook")
+    compile_handbook_parser.add_argument("--chapters", required=True)
+    compile_handbook_parser.add_argument("--format", default="docx")
+
     show_state_parser = subparsers.add_parser("show-state")
     show_state_parser.add_argument("--chapter", type=int, required=True)
 
     usage_parser = subparsers.add_parser("llm-usage")
     usage_parser.add_argument("--chapter", type=int)
+
+    subparsers.add_parser("agent-status")
+
+    qa_parser = subparsers.add_parser("qa-handbook")
+    qa_parser.add_argument("--chapters", required=True)
+    qa_parser.add_argument("--stage", default="final")
+
+    sketchnote_prompt_parser = subparsers.add_parser("generate-sketchnote-prompts")
+    sketchnote_prompt_parser.add_argument("--chapters", required=True)
+    sketchnote_prompt_parser.add_argument("--stage", default="final")
+
+    sketchnote_parser = subparsers.add_parser("generate-sketchnotes")
+    sketchnote_parser.add_argument("--chapters", required=True)
+    sketchnote_parser.add_argument("--stage", default="final")
 
     plan_parser = subparsers.add_parser("plan-handbook")
     plan_parser.add_argument("--topic", required=True)
@@ -468,6 +576,7 @@ def _run_argparse() -> None:
         "test-model": lambda: _test_model(args.role),
         "create-chapter": lambda: _create_chapter(args.chapter, args.overwrite),
         "generate-briefs": lambda: _generate_briefs(args.chapters, args.overwrite),
+        "validate-brief": lambda: _validate_brief(args.chapter),
         "write-chapter": lambda: _write_chapter(args.chapter),
         "validate-chapter": lambda: _validate_chapter(args.chapter, args.stage),
         "repair-chapter": lambda: _repair_chapter(args.chapter, args.stage),
@@ -475,8 +584,13 @@ def _run_argparse() -> None:
         "revise-chapter": lambda: _revise_chapter(args.chapter),
         "finalize-chapter": lambda: _finalize_chapter(args.chapter, args.source),
         "compile-docx": lambda: _compile_docx(args.chapters),
+        "compile-handbook": lambda: _compile_handbook(args.chapters, args.format),
         "show-state": lambda: _show_state(args.chapter),
         "llm-usage": lambda: _llm_usage(args.chapter),
+        "agent-status": _agent_status,
+        "qa-handbook": lambda: _qa_handbook(args.chapters, args.stage),
+        "generate-sketchnote-prompts": lambda: _generate_sketchnote_prompts(args.chapters, args.stage),
+        "generate-sketchnotes": lambda: _generate_sketchnotes(args.chapters, args.stage),
         "plan-handbook": lambda: _plan_handbook(args.topic, args.chapters, args.audience, args.depth, args.pages),
         "update-toc": lambda: _update_toc(args.input),
         "handbook-status": _handbook_status,
@@ -522,6 +636,14 @@ if typer is not None:
         """Create structured chapter briefs from the handbook registry."""
         try:
             _generate_briefs(chapters, overwrite)
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    @app.command()
+    def validate_brief(chapter: int = typer.Option(..., "--chapter", help="Chapter number to validate brief for.")) -> None:
+        """Validate a chapter brief execution contract."""
+        try:
+            _validate_brief(chapter)
         except (FileNotFoundError, RuntimeError, ValueError) as exc:
             raise typer.BadParameter(str(exc)) from exc
 
@@ -591,6 +713,17 @@ if typer is not None:
             raise typer.BadParameter(str(exc)) from exc
 
     @app.command()
+    def compile_handbook(
+        chapters: str = typer.Option(..., "--chapters", help="Comma-separated chapter numbers."),
+        format: str = typer.Option("docx", "--format", help="Output format: docx or pdf."),
+    ) -> None:
+        """Compile final Markdown chapters into a DOCX or PDF document."""
+        try:
+            _compile_handbook(chapters, output_format=format)
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    @app.command()
     def show_state(chapter: int = typer.Option(..., "--chapter", help="Chapter number to show state for.")) -> None:
         """Print persisted chapter state as JSON."""
         _show_state(chapter)
@@ -599,6 +732,44 @@ if typer is not None:
     def llm_usage(chapter: int | None = typer.Option(None, "--chapter", help="Optional chapter number.")) -> None:
         """Print LLM token usage totals."""
         _llm_usage(chapter)
+
+    @app.command()
+    def agent_status() -> None:
+        """Print controlled agent contracts."""
+        _agent_status()
+
+    @app.command()
+    def qa_handbook(
+        chapters: str = typer.Option(..., "--chapters", help="Comma-separated chapter numbers."),
+        stage: str = typer.Option("final", "--stage", help="Chapter stage to QA."),
+    ) -> None:
+        """Run deterministic handbook QA checks."""
+        try:
+            _qa_handbook(chapters, stage)
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    @app.command()
+    def generate_sketchnote_prompts(
+        chapters: str = typer.Option(..., "--chapters", help="Comma-separated chapter numbers."),
+        stage: str = typer.Option("final", "--stage", help="Chapter stage to use."),
+    ) -> None:
+        """Generate sketchnote image prompts from chapter content."""
+        try:
+            _generate_sketchnote_prompts(chapters, stage)
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    @app.command()
+    def generate_sketchnotes(
+        chapters: str = typer.Option(..., "--chapters", help="Comma-separated chapter numbers."),
+        stage: str = typer.Option("final", "--stage", help="Chapter stage to use."),
+    ) -> None:
+        """Generate deterministic local SVG sketchnotes from chapter content."""
+        try:
+            _generate_sketchnotes(chapters, stage)
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
+            raise typer.BadParameter(str(exc)) from exc
 
     @app.command()
     def plan_handbook(

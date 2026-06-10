@@ -181,6 +181,113 @@ If the requirements are ambiguous, the TOC is not changed. Clarification questio
 configs/handbook-clarification-questions.md
 ```
 
+## Phase 5: Chapter Brief Factory
+
+Generate execution contracts from the current handbook registry:
+
+```powershell
+python -m src.cli generate-briefs --chapters 1,2,3 --overwrite
+```
+
+Validate a generated brief:
+
+```powershell
+python -m src.cli validate-brief --chapter 1
+```
+
+Expected output:
+
+```text
+PASS: chapters\briefs\chapter-01.md
+```
+
+Each brief includes the chapter goal, audience, target word count, required handbook sections, must-cover topics, examples required, references guidance, diagram placeholder expectations, and quality gates.
+
+## Phase 6: Controlled Agent Contracts
+
+Show the controlled multi-agent contract registry:
+
+```powershell
+python -m src.cli agent-status
+```
+
+This does not call the LLM. It prints each agent, its configured LLM role if any, and the validation gate that controls its output.
+
+## Phase 7: Handbook QA
+
+Run deterministic book-level QA after final chapters exist:
+
+```powershell
+python -m src.cli qa-handbook --chapters 1 --stage final
+```
+
+Expected output:
+
+```text
+PASS: handbook QA
+Stage: final
+Chapters checked: 1
+Wrote QA report: reports\handbook-qa.md
+```
+
+The QA report checks chapter validation status, missing sections, weak interview-question sections, sketchnote placeholder issues, duplicate chapter titles, and large chapter-length imbalance. It does not call the LLM.
+
+## Phase 8: Document Compiler v2
+
+Compile a native DOCX with Pandoc, table of contents, and numbered sections:
+
+```powershell
+python -m src.cli compile-handbook --chapters 1 --format docx
+```
+
+Optional PDF output:
+
+```powershell
+python -m src.cli compile-handbook --chapters 1 --format pdf
+```
+
+PDF support depends on the local Pandoc PDF toolchain. DOCX remains the primary supported output.
+
+## Phase 9: Sketchnotes
+
+Generate reusable sketchnote prompts from final chapter content:
+
+```powershell
+python -m src.cli generate-sketchnote-prompts --chapters 1 --stage final
+```
+
+Expected output:
+
+```text
+sketchnotes/prompts/chapter-01-prompt.md
+```
+
+Generate deterministic local sketchnote SVGs:
+
+```powershell
+python -m src.cli generate-sketchnotes --chapters 1 --stage final
+```
+
+Expected output:
+
+```text
+sketchnotes/images/chapter-01.svg
+```
+
+Compile the handbook after sketchnotes exist:
+
+```powershell
+python -m src.cli compile-handbook --chapters 1 --format docx
+```
+
+The compiler replaces `[SKETCHNOTE DIAGRAM PLACEHOLDER]` with the generated chapter SVG when the image exists. If the image does not exist, the placeholder remains visible.
+
+The normal chapter pipeline now runs sketchnote prompt generation and local SVG generation before DOCX compilation:
+
+```powershell
+python -m src.cli run-chapter --chapter 1
+```
+
 ## Notes
 
 - `run-chapter` creates the chapter brief automatically before writing.

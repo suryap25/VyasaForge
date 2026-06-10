@@ -2,82 +2,86 @@
 
 ## Overall Verdict
 
-**STRONG DRAFT** with solid foundational content, good depth in AppSec and developer perspectives, and comprehensive testing guidance. However, there are gaps in coverage, some weak interview questions, and areas where technical accuracy could be tightened. The chapter is well-structured but needs refinement before publication.
-
-**Recommendation**: Approve with revisions addressing issues below.
+**STRONG DRAFT** with excellent technical depth and practical security focus. This is a well-structured, comprehensive chapter that balances conceptual clarity with actionable AppSec guidance. The code examples are realistic and the testing sections are thorough. Minor refinements needed around edge cases and some organizational clarity.
 
 ---
 
 ## Strengths
 
-1. **Clear Conceptual Foundation**
-   - The distinction between authentication and authorization is well-explained with the airport analogy
-   - Common misconceptions are explicitly addressed (strong point for learner clarity)
-   - Real-world relevance is maintained throughout
+1. **Clear conceptual foundation**: The distinction between authentication and authorization is explained plainly without oversimplification. The sequential relationship diagram is helpful.
 
-2. **Comprehensive Architecture Patterns**
-   - Good coverage of centralized, decentralized, and federated authentication
-   - RBAC, ABAC, and ReBAC are all explained with trade-offs
-   - Session vs. token-based authentication comparison is practical
+2. **Architecture patterns well-explained**: The centralized vs. distributed authentication/authorization patterns include realistic trade-offs (latency, dependency, scalability). Hybrid approaches are acknowledged.
 
-3. **Strong AppSec Lens**
-   - Vulnerable code examples are clear and paired with secure implementations
-   - Common findings section is well-organized with severity levels
-   - IDOR, privilege escalation, and session fixation are properly explained
+3. **Practical code examples**: Python/Flask examples are realistic and show both vulnerable and secure implementations. The bcrypt example with cost factor 12 is correct. The TOTP setup code is functional.
 
-4. **Developer-Focused Implementation**
-   - Code examples are practical and language-agnostic (Python, JavaScript, Flask)
-   - Password hashing, MFA, and session management guidance is sound
-   - Decorator-based authorization pattern is a useful design pattern
+4. **Comprehensive testing section**: The "Pentest Lens" covers BOLA, privilege escalation, IDOR, session fixation, JWT attacks, and ABAC edge cases. Test cases are specific and actionable.
 
-5. **Thorough Penetration Testing Section**
-   - Test cases are specific and actionable
-   - Covers both positive and negative scenarios
-   - Includes timing attacks and session prediction (advanced topics)
+5. **CWE mapping**: Common findings are mapped to CWE IDs with clear impact statements and remediation guidance.
 
-6. **Secure Design Guidance**
-   - Principles are clearly stated with implementation guidance
-   - Architecture diagrams (text-based) help visualize flows
-   - Backup codes for MFA recovery is mentioned (good practice)
+6. **Defense-in-depth framing**: The authentication design section layers controls logically (credential strength → protection → MFA → session → monitoring).
+
+7. **Vendor-neutral**: No specific product endorsements; recommendations use open standards (FIDO2, TOTP, JWT, XACML, Rego).
 
 ---
 
 ## Issues to Fix
 
-### 1. **Technical Accuracy Issues**
+### 1. **Incomplete MFA Implementation Example**
+The TOTP setup code is cut off mid-function:
+```python
+return {
+    'qr_code': qr_code_base64,
+    'secret': secret  # For manual entry if QR fails
+},  # ← Missing closing brace and function body
+```
 
-**Issue 1a: TOTP Time Window Explanation**
-- Line in Python code: `return totp.verify(code, valid_window=1)`
-- The `valid_window=1` allows ±1 time window (30-second windows), which is standard, but the comment should clarify this is ±30 seconds, not ±1 second.
-- **Fix**: Add clarification: "valid_window=1 allows codes from the previous, current, and next 30-second window"
+**Fix**: Complete the function and add the verification endpoint:
+```python
+@app.route('/api/auth/mfa/verify', methods=['POST'])
+def verify_mfa():
+    user = current_user
+    code = request.json['code']
+    totp = pyotp.TOTP(user.mfa_secret)
+    if not totp.verify(code):
+        return {'error': 'Invalid code'}, 401
+    user.mfa_enabled = True
+    db.session.commit()
+    return {'status': 'MFA enabled'}, 200
+```
 
-**Issue 1b: Session Timeout Configuration**
-- The Flask example shows `app.permanent_session_lifetime = timedelta(hours=1)` but doesn't mention idle timeout
-- Idle timeout (inactivity timeout) is equally important and often overlooked
-- **Fix**: Add separate configuration for idle timeout and explain the difference between absolute and idle timeouts
+### 2. **AuthLog.create() Method Not Defined**
+The login example calls `AuthLog.create(user.id, 'login_success', client_ip)` but the method is never defined.
 
-**Issue 1c: Argon2 Not Mentioned in Developer Section**
-- Argon2 is mentioned in the conceptual section but not in the "Password Hashing Best Practices" developer section
-- **Fix**: Add Argon2 implementation example (Python: `argon2-cffi` library)
+**Fix**: Add the helper method:
+```python
+@staticmethod
+def create(user_id, event, ip_address):
+    log = AuthLog(user_id=user_id, event=event, ip_address=ip_address)
+    db.session.add(log)
+    db.session.commit()
+```
 
-**Issue 1d: JWT Token Validation**
-- The chapter mentions "token-based authentication" but doesn't address JWT signature verification or expiration claims
-- **Fix**: Add explicit guidance on validating JWT signatures and checking `exp` claim
+### 3. **Missing Token Generation Function**
+The login endpoint calls `generate_secure_token()` without defining it.
 
-### 2. **Missing or Weak Sections**
+**Fix**: Add implementation:
+```python
+import secrets
+def generate_secure_token(length=32):
+    return secrets.token_urlsafe(length)
+```
 
-**Issue 2a: OAuth 2.0 and OpenID Connect**
-- Federated authentication is mentioned but OAuth 2.0 / OpenID Connect are not explained
-- These are critical for modern applications and should be covered
-- **Fix**: Add a subsection on OAuth 2.0 flows (Authorization Code, PKCE) and OpenID Connect for authentication
+### 4. **JWT Signature Validation Testing Incomplete**
+The "JWT signature validation" test case mentions testing with `alg: none` but doesn't explain the vulnerability clearly.
 
-**Issue 2b: Password Reset/Recovery Flows**
-- No coverage of secure password reset mechanisms
-- This is a common vulnerability vector (token expiration, email verification, etc.)
-- **Fix**: Add section on secure password reset design (time-limited tokens, email verification, etc.)
+**Enhance**: Add explanation:
+> The `alg: none` vulnerability allows attackers to create unsigned tokens that some libraries accept. Always validate that the algorithm matches your expected signing method (RS256, HS256, etc.). Never accept `alg: none`.
 
-**Issue 2c: Account Enumeration**
-- Mentioned briefly in federated auth disadvantages but not covered as a standalone vulnerability
-- **Fix**: Add explicit section on account enumeration attacks and mitigation (consistent error messages, rate limiting)
+### 5. **Weak Guidance on Token Storage**
+The chapter recommends storing tokens in "secure, HttpOnly cookies" but doesn't address the CSRF risk that comes with cookie-based token storage.
 
-**Issue 2d: Cross-Site Request Forg
+**Fix**: Clarify:
+> Store tokens in HttpOnly cookies for XSS protection, but implement CSRF tokens or use the SameSite=Strict attribute. Alternatively, use the double-submit cookie pattern with SameSite=Lax.
+
+### 6. **Missing Guidance on Stateless vs. Stateful Sessions**
+The chapter mentions

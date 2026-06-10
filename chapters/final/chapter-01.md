@@ -5,77 +5,72 @@ source: reviewed
 generated_by: appsec-handbook-agent
 ---
 
-# Chapter 01: Authentication vs Authorization
+# Chapter 1: Authentication vs Authorization
 
 ## Learning Objectives
 
 After completing this chapter, you will be able to:
 
 - **Distinguish** between authentication and authorization and explain why both are essential to application security
-- **Design** authentication mechanisms that verify user identity while maintaining security and usability
-- **Implement** authorization controls that enforce principle of least privilege across application resources
+- **Design** authentication mechanisms that verify user identity with appropriate strength for your threat model
+- **Implement** authorization controls that enforce access policies consistently across your application
 - **Identify** common authentication and authorization failures in code review and penetration testing
 - **Evaluate** authentication and authorization architectures for security gaps and design flaws
-- **Apply** secure design patterns for both authentication and authorization in modern applications
-- **Assess** the security posture of authentication and authorization systems using industry-standard testing approaches
+- **Apply** secure design patterns for both authentication and authorization in web applications and APIs
+- **Assess** whether your organization's authentication and authorization controls meet security requirements
 
 ---
 
 ## Conceptual Foundation
 
-Authentication and authorization are foundational security concepts that are frequently confused, conflated, or implemented incorrectly. Understanding the distinction between them is critical for building secure applications.
+Authentication and authorization are foundational security concepts that are frequently confused, conflated, or implemented incorrectly. Understanding the distinction between them is critical to building secure applications.
 
 ### Authentication: Proving Identity
 
-**Authentication** is the process of verifying that a user is who they claim to be. It answers the question: *"Who are you?"*
+**Authentication** is the process of verifying that a user is who they claim to be. It answers the question: "Who are you?"
 
-Authentication establishes identity through one or more factors:
+When you log into your email account, you provide credentials—typically a username and password. The authentication system verifies that the password matches the account, confirming your identity. Authentication establishes a verified identity that the application can trust for the duration of a session or request.
 
-- **Something you know**: A password, PIN, or security question answer
-- **Something you have**: A hardware token, mobile device, or cryptographic key
-- **Something you are**: Biometric data such as fingerprints, facial recognition, or iris scans
-- **Somewhere you are**: Geographic location or network context
+Authentication mechanisms include:
 
-When a user provides credentials (username and password), the application verifies those credentials against a stored record. If the credentials match, the user is authenticated. The application now knows (or believes it knows) the identity of the user.
+- **Password-based authentication**: User provides a secret (password) that only they should know
+- **Multi-factor authentication (MFA)**: User provides multiple independent factors (something you know, something you have, something you are)
+- **Certificate-based authentication**: User proves possession of a private key corresponding to a trusted certificate
+- **Token-based authentication**: User exchanges credentials for a token (JWT, OAuth token) that represents their authenticated identity
+- **Biometric authentication**: User provides a biological characteristic (fingerprint, face recognition)
+- **Social authentication**: User authenticates through a trusted third party (OAuth 2.0 with Google, GitHub, etc.)
 
-### Authorization: Granting Access
+The strength of authentication depends on the mechanism used and how well it resists attacks. A password-only system is weaker than a system requiring both a password and a time-based one-time password (TOTP). A system vulnerable to credential stuffing attacks is weaker than one with rate limiting and account lockout.
 
-**Authorization** is the process of determining what an authenticated user is allowed to do. It answers the question: *"What are you allowed to access?"*
+### Authorization: Enforcing Access Policy
 
-Authorization is based on:
+**Authorization** is the process of determining what an authenticated user is allowed to do. It answers the question: "What are you allowed to access?"
 
-- **User identity**: Who the user is (established through authentication)
-- **User roles**: Assigned roles such as "admin," "editor," or "viewer"
-- **User attributes**: Properties like department, location, or clearance level
-- **Resource attributes**: Properties of the resource being accessed
-- **Context**: Time of day, network location, or device type
+After authentication establishes your identity, authorization controls determine which resources you can access and what actions you can perform. If you authenticate as a regular user in a banking application, authorization prevents you from viewing other customers' accounts or transferring funds from accounts you don't own.
 
-After authentication succeeds, the application checks authorization policies to determine whether the authenticated user can perform the requested action on the requested resource.
+Authorization mechanisms include:
 
-### The Critical Distinction
+- **Role-based access control (RBAC)**: Users are assigned roles (admin, user, viewer), and roles have permissions
+- **Attribute-based access control (ABAC)**: Access decisions based on attributes of the user, resource, action, and environment
+- **Access control lists (ACLs)**: Explicit lists defining which users or groups can access specific resources
+- **Policy-based access control**: Formal policies define who can do what under what conditions
 
-Consider a real-world analogy: A passport control officer at an airport performs authentication by checking your passport and verifying your identity. Once your identity is confirmed, a border agent performs authorization by checking whether you are allowed to enter the country (based on visa status, travel restrictions, or other policies).
+Authorization is enforced at multiple layers:
 
-In application security:
+- **API level**: The backend service checks permissions before returning data or performing actions
+- **Database level**: Row-level security or views restrict which records a user can access
+- **UI level**: The frontend hides or disables features the user cannot access (this is not a security control, only a UX improvement)
+- **Business logic level**: Application code enforces domain-specific rules about what actions are permitted
 
-- **Authentication failure** means an attacker can impersonate a legitimate user
-- **Authorization failure** means an authenticated user (or attacker who has compromised a user account) can access resources they should not be able to access
+### The Relationship Between Authentication and Authorization
 
-Both failures are critical security vulnerabilities, but they require different mitigation strategies.
+Authentication and authorization are sequential and interdependent:
 
-### Common Misconceptions
+1. **Authentication first**: The application must verify the user's identity before making any authorization decisions
+2. **Authorization second**: Once identity is established, the application checks permissions
+3. **Both required**: An application that authenticates users but fails to authorize access is insecure. An application that authorizes without authenticating is also insecure.
 
-**Misconception 1**: "If authentication is strong, authorization doesn't matter."
-
-This is false. A user with a strong password can still be compromised through phishing, malware, or credential stuffing. Even if authentication is perfect, weak authorization allows compromised accounts to cause significant damage.
-
-**Misconception 2**: "Authorization is just role-based access control (RBAC)."
-
-RBAC is one authorization model, but modern applications often require more sophisticated models such as attribute-based access control (ABAC), policy-based access control, or relationship-based access control.
-
-**Misconception 3**: "Authentication and authorization happen once at login."
-
-In modern applications, both authentication and authorization are continuous processes. A user may be authenticated but lose authorization to a resource if their role changes. A session may be revoked. Permissions may be updated in real-time.
+A common failure is treating authentication as sufficient for security. For example, an application might correctly authenticate a user but then fail to check whether that user owns the resource they're requesting. This is a **broken object-level authorization** vulnerability—the user is authenticated, but authorization is missing.
 
 ---
 
@@ -83,372 +78,319 @@ In modern applications, both authentication and authorization are continuous pro
 
 ### Authentication Architecture Patterns
 
-#### Centralized Authentication
+Modern applications use several authentication architecture patterns, each with different security and operational characteristics.
 
-In a centralized authentication architecture, a single authentication service validates credentials and issues tokens or sessions. All applications trust this central service.
+#### Centralized Authentication Service
 
-**Example**: An organization uses a central identity provider (IdP) such as LDAP, Active Directory, or a custom authentication service. All applications delegate authentication to this service.
+In this pattern, a dedicated authentication service handles all identity verification. Applications delegate authentication to this service rather than implementing it themselves.
 
-**Advantages**:
-- Single source of truth for user credentials
-- Consistent authentication policy across applications
-- Easier to implement multi-factor authentication (MFA) globally
-- Simplified credential rotation and revocation
+```
+User → Application → Auth Service → Identity Provider
+                          ↓
+                    Session/Token
+                          ↓
+                    Application
+```
 
-**Disadvantages**:
-- Single point of failure
-- Requires network connectivity to the central service
-- Potential performance bottleneck
-- Increased complexity in distributed systems
+**Advantages:**
+- Single implementation reduces bugs and inconsistencies
+- Easier to update authentication mechanisms globally
+- Centralized audit logging of authentication events
+- Supports single sign-on (SSO) across multiple applications
 
-#### Decentralized Authentication
+**Considerations:**
+- The auth service becomes a critical dependency
+- Network latency for every authentication check
+- Requires secure communication between application and auth service
+- Token validation must be fast and reliable
 
-In a decentralized architecture, each application manages its own authentication. Users may have separate credentials for each application.
+#### Distributed Token-Based Authentication
 
-**Advantages**:
-- No single point of failure
-- Applications can implement authentication independently
-- Reduced dependency on central infrastructure
+Applications validate tokens (JWTs, OAuth tokens) locally without contacting a central service for every request.
 
-**Disadvantages**:
-- Credential management burden on users
-- Inconsistent authentication policies
-- Difficult to enforce MFA globally
-- Higher operational overhead
+```
+User → Auth Service → Token (JWT)
+                          ↓
+User + Token → Application (validates locally)
+```
 
-#### Federated Authentication
+**Advantages:**
+- No dependency on auth service for every request
+- Scales horizontally—each application validates independently
+- Reduced latency for request processing
+- Stateless—no session storage required
 
-Federated authentication allows users to authenticate using credentials from an external identity provider. The application trusts the external provider to perform authentication.
+**Considerations:**
+- Token revocation is difficult (tokens remain valid until expiration)
+- Clock skew between servers can cause validation failures
+- Token compromise affects all applications until expiration
+- Requires secure token signing and validation
 
-**Example**: A web application allows users to "Sign in with Google" or "Sign in with GitHub." The application delegates authentication to Google or GitHub.
+#### Hybrid Approach
 
-**Advantages**:
-- Users do not need to create new credentials
-- Reduces credential management burden
-- Leverages security investments of large identity providers
-- Enables single sign-on (SSO) across multiple applications
+Many organizations use both patterns: centralized authentication for login, distributed token validation for requests.
 
-**Disadvantages**:
-- Dependency on external provider availability
-- Privacy concerns about sharing user data with external providers
-- Limited control over authentication mechanisms
-- Potential for account enumeration attacks
+```
+User → Auth Service (login) → Token
+                                  ↓
+User + Token → Application (validates token locally)
+                                  ↓
+            (Optional: periodic validation with auth service)
+```
 
 ### Authorization Architecture Patterns
 
-#### Role-Based Access Control (RBAC)
+#### Centralized Policy Engine
 
-In RBAC, users are assigned roles, and roles are granted permissions. Authorization decisions are based on role membership.
+A dedicated service evaluates all authorization decisions.
 
-**Example**:
 ```
-User: alice
-Roles: [editor, reviewer]
-
-Role: editor
-Permissions: [create_post, edit_own_post, delete_own_post]
-
-Role: reviewer
-Permissions: [view_all_posts, approve_posts]
-
-Resource: /posts/123
-Required permission: edit_own_post
+Application → Policy Engine → Decision (Allow/Deny)
 ```
 
-Alice can edit post 123 if she created it (owns it) and has the editor role.
+**Advantages:**
+- Consistent policy enforcement across all applications
+- Easier to audit and modify policies
+- Supports complex policy languages (XACML, Rego)
+- Separation of policy from application logic
 
-**Advantages**:
-- Simple to understand and implement
-- Scales well with moderate numbers of users and roles
-- Aligns with organizational structure
+**Considerations:**
+- Every authorization check requires a network call
+- Policy engine becomes a critical dependency
+- Latency impact on application performance
+- Requires caching for acceptable performance
 
-**Disadvantages**:
-- Difficult to express complex policies
-- Role explosion as organizations grow
-- Cannot easily express attribute-based conditions
-- Difficult to implement fine-grained access control
+#### Distributed Authorization
+
+Applications make authorization decisions locally using policies distributed to them.
+
+```
+Policy Distribution → Application (evaluates locally)
+```
+
+**Advantages:**
+- No network dependency for authorization checks
+- Low latency
+- Scales horizontally
+- Applications can make decisions offline
+
+**Considerations:**
+- Policy updates have propagation delay
+- Inconsistent enforcement if policies diverge
+- Harder to audit across applications
+- Requires careful policy versioning
 
 #### Attribute-Based Access Control (ABAC)
 
-In ABAC, authorization decisions are based on attributes of the user, resource, action, and environment.
+Authorization decisions based on attributes of the user, resource, action, and environment.
 
-**Example**:
 ```
-Policy: A user can edit a document if:
-  - User.role == "editor" AND
-  - Document.owner == User.id AND
-  - Document.classification <= User.clearance_level AND
-  - CurrentTime.hour >= 9 AND CurrentTime.hour <= 17
-```
-
-**Advantages**:
-- Expresses complex policies flexibly
-- Reduces role explosion
-- Supports fine-grained access control
-- Adapts to changing organizational needs
-
-**Disadvantages**:
-- More complex to implement and maintain
-- Performance overhead from policy evaluation
-- Requires careful policy design to avoid unintended access
-- Difficult to audit and understand policy decisions
-
-#### Relationship-Based Access Control (ReBAC)
-
-In ReBAC, authorization decisions are based on relationships between users and resources.
-
-**Example**:
-```
-User: alice
-Relationships:
-  - alice is_owner_of document_123
-  - alice is_member_of team_engineering
-  - team_engineering has_access_to project_backend
-
-Authorization: alice can view project_backend because:
-  alice is_member_of team_engineering AND
-  team_engineering has_access_to project_backend
+User Attributes + Resource Attributes + Action + Environment
+                          ↓
+                    Policy Engine
+                          ↓
+                    Decision (Allow/Deny)
 ```
 
-**Advantages**:
-- Naturally expresses organizational relationships
-- Scales to large numbers of users and resources
-- Supports dynamic relationship changes
-- Enables efficient permission queries
-
-**Disadvantages**:
-- Requires careful relationship modeling
-- Performance considerations for large relationship graphs
-- Complexity in policy evaluation
-- Potential for unintended access through relationship chains
-
-### Session and Token Management
-
-After authentication succeeds, the application must maintain the authenticated state. Two primary approaches exist:
-
-**Session-Based Authentication**:
-- Server creates a session object and stores it in memory or a session store
-- Server sends a session identifier (session ID) to the client, typically in a cookie
-- Client includes the session ID in subsequent requests
-- Server looks up the session to verify the user is authenticated
-
-**Token-Based Authentication**:
-- Server creates a cryptographically signed token containing user information
-- Server sends the token to the client
-- Client includes the token in subsequent requests (typically in an Authorization header)
-- Server verifies the token signature and extracts user information
-
-Token-based authentication is more suitable for distributed systems, APIs, and mobile applications. Session-based authentication is simpler for traditional web applications but requires server-side state.
+ABAC is more flexible than RBAC but requires careful policy design to avoid complexity and security gaps.
 
 ---
 
 ## AppSec Lens
 
-### Authentication Vulnerabilities
+### Authentication Security Risks
 
 #### Weak Credential Storage
 
-**Vulnerability**: Passwords stored in plaintext or with weak hashing algorithms.
+**Risk**: Passwords stored in plaintext or with weak hashing allow attackers to compromise accounts.
 
-**Risk**: If the database is compromised, attackers can immediately use passwords to access user accounts.
-
-**Example of Vulnerable Code**:
+**Example failure**:
 ```python
-# VULNERABLE: Storing plaintext password
-def register_user(username, password):
+# INSECURE: Storing password in plaintext
+def create_user(username, password):
     user = User(username=username, password=password)
     db.session.add(user)
     db.session.commit()
-
-# VULNERABLE: Using weak hash (MD5)
-import hashlib
-def register_user(username, password):
-    hashed = hashlib.md5(password.encode()).hexdigest()
-    user = User(username=username, password_hash=hashed)
-    db.session.add(user)
-    db.session.commit()
 ```
 
-**Secure Implementation**:
+**Secure approach**:
 ```python
-# SECURE: Using bcrypt with salt
+# SECURE: Using bcrypt with proper salt and cost factor
 import bcrypt
 
-def register_user(username, password):
-    salt = bcrypt.gensalt(rounds=12)
-    hashed = bcrypt.hashpw(password.encode(), salt)
+def create_user(username, password):
+    hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(rounds=12))
     user = User(username=username, password_hash=hashed)
     db.session.add(user)
     db.session.commit()
-
-def verify_password(stored_hash, provided_password):
-    return bcrypt.checkpw(provided_password.encode(), stored_hash)
-```
-
-#### Broken Authentication Logic
-
-**Vulnerability**: Flaws in the authentication mechanism that allow bypassing authentication.
-
-**Examples**:
-- SQL injection in login form: `SELECT * FROM users WHERE username = 'admin' --' AND password = '...'`
-- Logic flaws: Checking only username without verifying password
-- Session fixation: Reusing session IDs without regeneration after login
-- Insufficient session timeout: Sessions remain valid indefinitely
-
-**Example of Vulnerable Code**:
-```python
-# VULNERABLE: No password verification
-@app.route('/login', methods=['POST'])
-def login():
-    username = request.form.get('username')
-    user = User.query.filter_by(username=username).first()
-    if user:
-        session['user_id'] = user.id
-        return redirect('/dashboard')
-    return 'Login failed'
-
-# VULNERABLE: Session not regenerated after login
-@app.route('/login', methods=['POST'])
-def login():
-    username = request.form.get('username')
-    password = request.form.get('password')
-    user = User.query.filter_by(username=username).first()
-    if user and verify_password(user.password_hash, password):
-        # Session ID is not regenerated - vulnerable to session fixation
-        session['user_id'] = user.id
-        return redirect('/dashboard')
-    return 'Login failed'
-```
-
-**Secure Implementation**:
-```python
-# SECURE: Proper authentication with session regeneration
-from flask import session
-from werkzeug.security import check_password_hash
-
-@app.route('/login', methods=['POST'])
-def login():
-    username = request.form.get('username')
-    password = request.form.get('password')
-    user = User.query.filter_by(username=username).first()
-    
-    if user and check_password_hash(user.password_hash, password):
-        # Regenerate session ID to prevent session fixation
-        session.clear()
-        session['user_id'] = user.id
-        session.permanent = True
-        app.permanent_session_lifetime = timedelta(hours=1)
-        return redirect('/dashboard')
-    
-    return 'Login failed', 401
 ```
 
 #### Credential Stuffing and Brute Force
 
-**Vulnerability**: Applications do not implement rate limiting or account lockout mechanisms.
+**Risk**: Attackers use lists of compromised credentials or attempt many password guesses to gain access.
 
-**Risk**: Attackers can attempt many password combinations or use leaked credentials from other breaches.
+**Mitigation strategies**:
+- Implement rate limiting on login endpoints (e.g., 5 failed attempts per 15 minutes)
+- Use account lockout after repeated failures (temporary, not permanent)
+- Implement CAPTCHA after failed attempts
+- Monitor for unusual login patterns
+- Require MFA to reduce impact of compromised passwords
 
-**Mitigation**:
-- Implement rate limiting on login attempts (e.g., 5 failed attempts per 15 minutes)
-- Implement account lockout after multiple failed attempts
-- Use CAPTCHA after failed attempts
-- Monitor for suspicious login patterns
-- Implement multi-factor authentication (MFA)
+#### Session Fixation
 
-### Authorization Vulnerabilities
+**Risk**: Attacker forces a user to use a known session ID, then hijacks the session after authentication.
 
-#### Broken Access Control
+**Secure approach**:
+- Generate a new session ID after successful authentication
+- Invalidate the pre-authentication session ID
+- Use secure, random session IDs (cryptographically strong)
+- Set secure flags on session cookies (HttpOnly, Secure, SameSite)
 
-**Vulnerability**: Users can access resources they should not be able to access.
+#### Insecure Token Handling
 
-**Example 1: Direct Object Reference**:
+**Risk**: Tokens stored insecurely, transmitted over unencrypted channels, or not validated properly.
+
+**Secure approach**:
+- Store tokens in secure, HttpOnly cookies or secure storage
+- Transmit tokens only over HTTPS
+- Validate token signature and expiration on every request
+- Use short expiration times for access tokens
+- Implement token refresh mechanisms
+
+### Authorization Security Risks
+
+#### Broken Object-Level Authorization (BOLA)
+
+**Risk**: User can access or modify resources belonging to other users by manipulating object identifiers.
+
+**Example failure**:
 ```python
-# VULNERABLE: No authorization check
-@app.route('/documents/<int:doc_id>')
-def view_document(doc_id):
-    document = Document.query.get(doc_id)
-    return render_template('document.html', document=document)
+# INSECURE: No authorization check
+@app.route('/api/accounts/<account_id>/balance')
+def get_balance(account_id):
+    account = Account.query.get(account_id)
+    return {'balance': account.balance}
 ```
 
-An attacker can change the `doc_id` parameter to access documents belonging to other users.
+An authenticated user can request `/api/accounts/999/balance` and retrieve another user's balance.
 
-**Secure Implementation**:
+**Secure approach**:
 ```python
-# SECURE: Authorization check
-@app.route('/documents/<int:doc_id>')
-def view_document(doc_id):
-    document = Document.query.get(doc_id)
+# SECURE: Verify user owns the account
+@app.route('/api/accounts/<account_id>/balance')
+def get_balance(account_id):
+    account = Account.query.get(account_id)
     
-    # Verify the current user owns the document
-    if document.owner_id != current_user.id:
-        abort(403)
+    # Authorization check
+    if account.user_id != current_user.id:
+        abort(403)  # Forbidden
     
-    return render_template('document.html', document=document)
+    return {'balance': account.balance}
 ```
 
-**Example 2: Privilege Escalation**:
+#### Privilege Escalation
+
+**Risk**: User gains access to higher-privilege functions or data.
+
+**Example failure**:
 ```python
-# VULNERABLE: No role check
-@app.route('/admin/users', methods=['POST'])
-def create_user():
-    username = request.form.get('username')
-    role = request.form.get('role')  # User can set their own role!
-    user = User(username=username, role=role)
-    db.session.add(user)
+# INSECURE: Role check only on frontend
+@app.route('/api/admin/users', methods=['DELETE'])
+def delete_user(user_id):
+    # No backend authorization check
+    User.query.filter_by(id=user_id).delete()
     db.session.commit()
-    return 'User created'
+    return {'status': 'deleted'}
 ```
 
-An attacker can create an admin account by setting `role=admin`.
+An attacker can call this endpoint directly, bypassing frontend role checks.
 
-**Secure Implementation**:
+**Secure approach**:
 ```python
-# SECURE: Role check and fixed role assignment
-@app.route('/admin/users', methods=['POST'])
-def create_user():
-    # Verify current user is admin
-    if current_user.role != 'admin':
-        abort(403)
-    
-    username = request.form.get('username')
-    # Role is not user-controlled; always create as 'user'
-    user = User(username=username, role='user')
-    db.session.add(user)
+# SECURE: Backend authorization check
+from functools import wraps
+
+def require_role(role):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if current_user.role != role:
+                abort(403)
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+@app.route('/api/admin/users', methods=['DELETE'])
+@require_role('admin')
+def delete_user(user_id):
+    User.query.filter_by(id=user_id).delete()
     db.session.commit()
-    return 'User created'
+    return {'status': 'deleted'}
 ```
 
 #### Insecure Direct Object References (IDOR)
 
-**Vulnerability**: Application uses user-controllable input to directly access objects without authorization checks.
+**Risk**: Application uses user-supplied input directly to access objects without proper authorization.
 
-**Example**:
+**Example failure**:
+```python
+# INSECURE: Direct use of user input
+@app.route('/documents/<doc_id>')
+def view_document(doc_id):
+    document = Document.query.get(doc_id)
+    return render_template('document.html', doc=document)
 ```
-GET /api/invoices/42
-GET /api/invoices/43
-GET /api/invoices/44
+
+**Secure approach**:
+```python
+# SECURE: Verify user has access
+@app.route('/documents/<doc_id>')
+def view_document(doc_id):
+    document = Document.query.get(doc_id)
+    
+    # Check if user has access to this document
+    if document.owner_id != current_user.id and \
+       current_user.id not in [s.user_id for s in document.shared_with]:
+        abort(403)
+    
+    return render_template('document.html', doc=document)
 ```
 
-An attacker can enumerate invoice IDs and access invoices belonging to other users.
+#### Missing Authorization Checks
 
-**Mitigation**:
-- Always verify authorization before returning objects
-- Use indirect references (UUIDs, opaque tokens) instead of sequential IDs
-- Implement comprehensive access control checks
-- Log and monitor access to sensitive resources
+**Risk**: Sensitive operations lack authorization checks entirely.
 
-#### Horizontal vs Vertical Privilege Escalation
+**Example failure**:
+```python
+# INSECURE: No authorization check
+@app.route('/api/settings/update', methods=['POST'])
+def update_settings():
+    settings = request.json
+    current_user.email = settings['email']
+    current_user.role = settings['role']  # User can set their own role!
+    db.session.commit()
+    return {'status': 'updated'}
+```
 
-**Horizontal Privilege Escalation**: A user accesses resources belonging to another user at the same privilege level.
+**Secure approach**:
+```python
+# SECURE: Separate endpoints with proper authorization
+@app.route('/api/settings/update', methods=['POST'])
+def update_settings():
+    settings = request.json
+    # Only allow user to update their own email
+    current_user.email = settings['email']
+    db.session.commit()
+    return {'status': 'updated'}
 
-**Example**: User A accesses User B's profile or documents.
-
-**Vertical Privilege Escalation**: A user gains higher privileges than they should have.
-
-**Example**: A regular user becomes an admin.
-
-Both types of privilege escalation are critical vulnerabilities.
+@app.route('/api/admin/users/<user_id>/role', methods=['POST'])
+@require_role('admin')
+def update_user_role(user_id):
+    user = User.query.get(user_id)
+    user.role = request.json['role']
+    db.session.commit()
+    return {'status': 'updated'}
+```
 
 ---
 
@@ -456,376 +398,304 @@ Both types of privilege escalation are critical vulnerabilities.
 
 ### Implementing Authentication
 
-#### Password Hashing Best Practices
+#### Password-Based Authentication
 
-Use modern password hashing algorithms designed for this purpose:
+When implementing password-based authentication, follow these principles:
 
-- **bcrypt**: Adaptive hashing algorithm with built-in salt and work factor
-- **scrypt**: Memory-hard algorithm resistant to GPU attacks
-- **Argon2**: Winner of Password Hashing Competition; memory-hard and time-hard
+1. **Hash passwords with a strong algorithm**: Use bcrypt, scrypt, or Argon2 with appropriate cost factors
+2. **Never store plaintext passwords**: Hash passwords before storing
+3. **Use unique salts**: Modern algorithms (bcrypt, Argon2) handle this automatically
+4. **Implement rate limiting**: Prevent brute force attacks
+5. **Require strong passwords**: Enforce minimum length and complexity
+6. **Implement account lockout**: Temporarily lock accounts after failed attempts
+7. **Log authentication events**: Track successful and failed login attempts
 
-**Never use**:
-- MD5, SHA-1, SHA-256 without salt (too fast, vulnerable to rainbow tables)
-- Custom hashing algorithms
-- Encryption instead of hashing (passwords should not be decryptable)
+**Implementation example** (Python with Flask and bcrypt):
 
-**Implementation Example** (Node.js):
-```javascript
-const bcrypt = require('bcrypt');
+```python
+from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
+import bcrypt
+from datetime import datetime, timedelta
 
-// Register user
-async function registerUser(username, password) {
-  const saltRounds = 12;
-  const hashedPassword = await bcrypt.hash(password, saltRounds);
-  
-  const user = {
-    username: username,
-    passwordHash: hashedPassword
-  };
-  
-  // Store user in database
-  await db.users.insert(user);
-}
+app = Flask(__name__)
+db = SQLAlchemy(app)
 
-// Verify password during login
-async function verifyPassword(username, providedPassword) {
-  const user = await db.users.findOne({ username: username });
-  
-  if (!user) {
-    return false;
-  }
-  
-  return await bcrypt.compare(providedPassword, user.passwordHash);
-}
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    failed_attempts = db.Column(db.Integer, default=0)
+    locked_until = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class AuthLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    event = db.Column(db.String(50))  # 'login_success', 'login_failure', 'account_locked'
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    ip_address = db.Column(db.String(45))
+
+def hash_password(password):
+    """Hash password using bcrypt with cost factor 12"""
+    salt = bcrypt.gensalt(rounds=12)
+    return bcrypt.hashpw(password.encode('utf-8'), salt)
+
+def verify_password(password, password_hash):
+    """Verify password against hash"""
+    return bcrypt.checkpw(password.encode('utf-8'), password_hash)
+
+@app.route('/api/auth/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    
+    # Validate input
+    if not username or not password:
+        return {'error': 'Username and password required'}, 400
+    
+    if len(password) < 12:
+        return {'error': 'Password must be at least 12 characters'}, 400
+    
+    # Check if user exists
+    if User.query.filter_by(username=username).first():
+        return {'error': 'Username already exists'}, 409
+    
+    # Create user with hashed password
+    user = User(
+        username=username,
+        password_hash=hash_password(password)
+    )
+    db.session.add(user)
+    db.session.commit()
+    
+    return {'status': 'User created successfully'}, 201
+
+@app.route('/api/auth/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    client_ip = request.remote_addr
+    
+    user = User.query.filter_by(username=username).first()
+    
+    # Check if account is locked
+    if user and user.locked_until and user.locked_until > datetime.utcnow():
+        AuthLog.create(user.id, 'login_attempt_locked', client_ip)
+        return {'error': 'Account is locked. Try again later.'}, 429
+    
+    # Verify credentials
+    if not user or not verify_password(password, user.password_hash):
+        # Log failed attempt
+        if user:
+            user.failed_attempts += 1
+            if user.failed_attempts >= 5:
+                user.locked_until = datetime.utcnow() + timedelta(minutes=15)
+                AuthLog.create(user.id, 'account_locked', client_ip)
+            else:
+                AuthLog.create(user.id, 'login_failure', client_ip)
+            db.session.commit()
+        
+        return {'error': 'Invalid credentials'}, 401
+    
+    # Reset failed attempts on successful login
+    user.failed_attempts = 0
+    user.locked_until = None
+    AuthLog.create(user.id, 'login_success', client_ip)
+    db.session.commit()
+    
+    # Generate session token (simplified; use proper JWT in production)
+    session_token = generate_secure_token()
+    
+    return {
+        'status': 'Login successful',
+        'token': session_token,
+        'user_id': user.id
+    }, 200
 ```
 
 #### Multi-Factor Authentication (MFA)
 
-Implement MFA to protect against compromised passwords:
+MFA significantly reduces the risk of account compromise. Implement MFA using:
 
-**Time-Based One-Time Password (TOTP)**:
-- User scans QR code with authenticator app (Google Authenticator, Authy, etc.)
-- App generates 6-digit code that changes every 30 seconds
-- User enters code during login
+- **Time-based One-Time Password (TOTP)**: User scans QR code with authenticator app (Google Authenticator, Authy)
+- **SMS-based OTP**: Code sent via SMS (less secure than TOTP, but better than nothing)
+- **Hardware security keys**: FIDO2/WebAuthn (most secure)
 
-**Implementation Example** (Python):
+**TOTP implementation example**:
+
 ```python
 import pyotp
 import qrcode
+from io import BytesIO
+import base64
 
-# Generate secret for user
-def setup_mfa(user_id):
+class User(db.Model):
+    # ... existing fields ...
+    mfa_secret = db.Column(db.String(32), nullable=True)
+    mfa_enabled = db.Column(db.Boolean, default=False)
+
+@app.route('/api/auth/mfa/setup', methods=['POST'])
+def setup_mfa():
+    """Generate MFA secret and QR code"""
+    user = current_user
+    
+    # Generate secret
     secret = pyotp.random_base32()
-    user = User.query.get(user_id)
+    
+    # Generate QR code
+    totp = pyotp.TOTP(secret)
+    qr = qrcode.QRCode()
+    qr.add_data(totp.provisioning_uri(name=user.username, issuer_name='MyApp'))
+    qr.make()
+    
+    img = qr.make_image()
+    buffer = BytesIO()
+    img.save(buffer, format='PNG')
+    qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
+    
+    # Store secret temporarily (not yet enabled)
     user.mfa_secret = secret
     db.session.commit()
     
-    # Generate QR code for user to scan
-    totp = pyotp.TOTP(secret)
-    qr = qrcode.QRCode()
-    qr.add_data(totp.provisioning_uri(name=user.email, issuer_name='MyApp'))
-    qr.make()
-    
-    return qr
-
-# Verify MFA code during login
-def verify_mfa(user_id, code):
-    user = User.query.get(user_id)
-    totp = pyotp.TOTP(user.mfa_secret)
-    
-    # Allow for time drift (±1 time window)
-    return totp.verify(code, valid_window=1)
-```
-
-#### Session Management
-
-**Secure Session Configuration**:
-
-```python
-# Flask example
-app.config['SESSION_COOKIE_SECURE'] = True      # HTTPS only
-app.config['SESSION_COOKIE_HTTPONLY'] = True    # No JavaScript access
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'   # CSRF protection
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)  # Timeout
-```
-
-**Session Regeneration**:
-```python
-@app.route('/login', methods=['POST'])
-def login():
-    # ... authentication logic ...
-    
-    # Regenerate session ID after successful authentication
-    session.clear()
-    session['user_id'] = user.id
-    
-    return redirect('/dashboard')
-```
-
-### Implementing Authorization
-
-#### Decorator-Based Authorization
-
-Use decorators to enforce authorization checks:
-
-```python
-from functools import wraps
-from flask import abort, session
-
-def require_role(required_role):
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            user_id = session.get('user_id')
-            if not user_id:
-                abort(401)  # Not authenticated
-            
-            user = User.query.get(user_id)
-            if user.role != required_role:
-                abort(403)  # Not authorized
-            
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator
-
-@app.route('/admin/dashboard')
-@require_role('admin')
-def admin_dashboard():
-    return render_template('admin_dashboard.html')
-```
-
-#### Resource-Level Authorization
-
-Always check authorization at the resource level:
-
-```python
-def require_resource_access(resource_type):
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(resource_id, *args, **kwargs):
-            user_id = session.get('user_id')
-            if not user_id:
-                abort(401)
-            
-            # Fetch resource
-            resource = get_resource(resource_type
+    return {
+        'qr_code': qr_code_base64,
+        'secret': secret  # For manual entry if QR fails
+    },
 
 # Pentest Lens
 
 ## Authentication Testing
 
-### Credential Validation Testing
+### Credential Validation Weaknesses
 
-**Objective**: Verify that the application properly validates credentials and rejects invalid authentication attempts.
+Penetration testers should verify that authentication mechanisms properly validate credentials and resist common attacks.
 
-**Test Cases**:
+**Test cases:**
 
-1. **Null/Empty Credentials**
-   - Submit login with empty username and password
-   - Submit login with empty username only
-   - Submit login with empty password only
-   - Expected: All attempts rejected with appropriate error messages
-
-2. **SQL Injection in Authentication**
-   - Username: `admin' --`
-   - Username: `' OR '1'='1`
-   - Username: `admin' OR 1=1 --`
-   - Expected: Injection attempts rejected; no database errors exposed
-
-3. **Authentication Bypass Attempts**
-   - Test for logic flaws: Submit valid username with any password
-   - Test for case sensitivity: `Admin` vs `admin`
-   - Test for whitespace handling: `admin ` vs `admin`
-   - Test for default credentials: `admin/admin`, `test/test`
-
-4. **Timing Attacks**
-   - Measure response time for valid vs invalid usernames
-   - Measure response time for correct vs incorrect passwords
-   - Expected: Consistent response times (no information leakage)
+- **Weak password policies**: Attempt to register accounts with passwords like "123456", "password", or single characters. Verify minimum length (12+ characters), complexity requirements, and dictionary checks.
+- **Credential stuffing**: Use lists of known compromised credentials (from public breaches) against login endpoints. Check for rate limiting, account lockout, and CAPTCHA challenges.
+- **Brute force attacks**: Attempt multiple login failures and verify that rate limiting, account lockout, or progressive delays are enforced. Test whether lockout is temporary or permanent.
+- **Default credentials**: Check for hardcoded or default credentials in documentation, configuration files, or common accounts (admin/admin, test/test).
+- **Password reset flaws**: Test password reset functionality for:
+  - Predictable reset tokens
+  - Tokens that don't expire
+  - Ability to reset other users' passwords
+  - Lack of email verification
+  - Tokens sent in URLs (logged in browser history)
 
 ### Session Management Testing
 
-**Objective**: Verify that sessions are properly created, maintained, and invalidated.
+**Test cases:**
 
-**Test Cases**:
-
-1. **Session Fixation**
-   - Obtain a session ID before authentication
-   - Authenticate with that session ID
-   - Verify that a new session ID is issued after authentication
-   - Expected: Session ID changes after login
-
-2. **Session Timeout**
-   - Authenticate and obtain a session
-   - Wait for the configured timeout period
-   - Attempt to use the expired session
-   - Expected: Expired session is rejected; user must re-authenticate
-
-3. **Session Invalidation**
-   - Authenticate and obtain a session
-   - Logout
-   - Attempt to use the invalidated session
-   - Expected: Session is rejected; user must re-authenticate
-
-4. **Session Prediction**
-   - Collect multiple session IDs
-   - Analyze for patterns or predictability
-   - Attempt to predict valid session IDs
-   - Expected: Session IDs are cryptographically random and unpredictable
-
-5. **Cookie Attributes**
-   - Inspect session cookies for security attributes
-   - Verify `Secure` flag is set (HTTPS only)
-   - Verify `HttpOnly` flag is set (no JavaScript access)
-   - Verify `SameSite` attribute is set (CSRF protection)
-   - Expected: All security attributes properly configured
+- **Session fixation**: Obtain a session ID before authentication, authenticate, and verify whether the session ID changes. If it doesn't, the application is vulnerable.
+- **Session timeout**: Verify that sessions expire after a reasonable period of inactivity. Test whether the application enforces logout on the server side.
+- **Session token predictability**: Analyze session tokens for patterns or low entropy. Use tools like Burp Suite to test randomness.
+- **Session cookie security**: Verify that session cookies have:
+  - `HttpOnly` flag (prevents JavaScript access)
+  - `Secure` flag (HTTPS only)
+  - `SameSite` attribute (prevents CSRF)
+  - Appropriate domain and path restrictions
+- **Concurrent sessions**: Test whether users can have multiple active sessions simultaneously. Verify whether logging in from a new location invalidates previous sessions.
 
 ### Multi-Factor Authentication Testing
 
-**Objective**: Verify that MFA is properly implemented and cannot be bypassed.
+**Test cases:**
 
-**Test Cases**:
+- **MFA bypass**: Attempt to access protected resources without completing MFA. Test whether the application enforces MFA before granting access.
+- **OTP reuse**: Verify that one-time passwords cannot be reused. Test whether the same OTP can be used multiple times within its validity window.
+- **OTP brute force**: Attempt to brute force OTP codes (typically 6 digits = 1 million combinations). Verify rate limiting and account lockout.
+- **MFA recovery codes**: Test whether recovery codes are:
+  - Securely generated and stored
+  - Single-use
+  - Properly validated
+  - Not transmitted insecurely
+- **MFA bypass via alternative methods**: Test whether users can bypass MFA by using alternative authentication methods (e.g., social login, passwordless authentication).
 
-1. **MFA Bypass**
-   - Authenticate with valid credentials
-   - Attempt to access protected resources without completing MFA
-   - Expected: Access denied until MFA is completed
+### Token-Based Authentication Testing
 
-2. **MFA Code Reuse**
-   - Complete MFA with a valid code
-   - Attempt to use the same code again
-   - Expected: Code is rejected on reuse
+**Test cases:**
 
-3. **MFA Code Prediction**
-   - Collect multiple MFA codes
-   - Analyze for patterns
-   - Attempt to predict valid codes
-   - Expected: Codes are unpredictable and time-bound
-
-4. **MFA Bypass via Session Manipulation**
-   - Authenticate with valid credentials
-   - Manipulate session to indicate MFA is complete without actually completing it
-   - Expected: Session manipulation is detected and rejected
-
-### Credential Stuffing and Brute Force Testing
-
-**Objective**: Verify that the application implements rate limiting and account lockout.
-
-**Test Cases**:
-
-1. **Brute Force Attack**
-   - Attempt multiple login attempts with incorrect passwords
-   - Expected: After configured threshold (e.g., 5 attempts), account is locked or rate limiting is applied
-
-2. **Rate Limiting**
-   - Attempt rapid login requests
-   - Expected: Requests are rate-limited; attacker receives 429 (Too Many Requests) response
-
-3. **Account Lockout Recovery**
-   - Trigger account lockout through failed login attempts
-   - Verify lockout duration
-   - Attempt login after lockout expires
-   - Expected: Account is unlocked after configured duration
-
-4. **Credential Stuffing with Valid Credentials**
-   - Use credentials from known breaches
-   - Expected: Rate limiting prevents rapid testing of multiple credentials
+- **JWT signature validation**: Modify JWT claims (user ID, role, expiration) and verify whether the application rejects unsigned or incorrectly signed tokens. Test with `alg: none`.
+- **Token expiration**: Verify that expired tokens are rejected. Test whether the application checks the `exp` claim.
+- **Token revocation**: Revoke a token (logout) and verify that it cannot be used for subsequent requests. Test whether the application maintains a blacklist or checks token status.
+- **Token storage**: Verify that tokens are not stored in localStorage (vulnerable to XSS). Check for secure, HttpOnly cookie storage.
+- **Token leakage**: Test whether tokens are exposed in:
+  - Browser history (avoid URL parameters)
+  - Server logs
+  - Error messages
+  - Referer headers
+- **Token refresh**: Verify that refresh tokens are:
+  - Stored securely
+  - Rotated on use
+  - Properly validated
+  - Not exposed to the frontend
 
 ## Authorization Testing
 
-### Access Control Testing
+### Access Control Verification
 
-**Objective**: Verify that users can only access resources they are authorized to access.
+**Test cases:**
 
-**Test Cases**:
+- **Broken object-level authorization (BOLA)**: Authenticate as one user and attempt to access resources belonging to other users by modifying object IDs in requests. Examples:
+  - Change `/api/users/123/profile` to `/api/users/124/profile`
+  - Modify `/documents/doc-456` to `/documents/doc-789`
+  - Test both GET (read) and POST/PUT (modify) operations
+- **Horizontal privilege escalation**: Verify that users cannot access resources of other users at the same privilege level.
+- **Vertical privilege escalation**: Attempt to access admin functions as a regular user. Test whether authorization checks are enforced on:
+  - API endpoints
+  - Business logic operations
+  - Database queries
+  - UI elements (note: UI hiding is not a security control)
 
-1. **Horizontal Privilege Escalation (IDOR)**
-   - Authenticate as User A
-   - Attempt to access resources belonging to User B by modifying resource ID
-   - Example: Change `/documents/123` to `/documents/124`
-   - Expected: Access denied; error message does not reveal resource existence
+### Role and Permission Testing
 
-2. **Vertical Privilege Escalation**
-   - Authenticate as regular user
-   - Attempt to access admin-only resources
-   - Attempt to modify user role in request parameters
-   - Expected: Access denied; role cannot be modified by user
+**Test cases:**
 
-3. **Function-Level Access Control**
-   - Authenticate as user without admin privileges
-   - Attempt to access admin functions directly via URL or API
-   - Example: `/admin/delete-user`, `/api/admin/reports`
-   - Expected: Access denied with 403 Forbidden
+- **Role-based access control (RBAC) bypass**: Test whether users can:
+  - Modify their own role in requests
+  - Access endpoints restricted to higher roles
+  - Perform actions that should require specific permissions
+- **Permission inheritance**: Verify that permissions are correctly inherited and not overly permissive. Test whether child resources inherit parent permissions correctly.
+- **Permission caching**: If permissions are cached, verify that cache invalidation works correctly. Test whether permission changes take effect immediately.
+- **Missing authorization checks**: Identify endpoints that lack authorization checks entirely. Use automated tools to compare endpoints accessible to different user roles.
 
-4. **Data-Level Access Control**
-   - Authenticate as User A
-   - Query API for data belonging to User B
-   - Example: `/api/users/B/profile`, `/api/users/B/orders`
-   - Expected: Access denied; data not returned
+### Attribute-Based Access Control (ABAC) Testing
 
-### Role-Based Access Control Testing
+**Test cases:**
 
-**Objective**: Verify that RBAC is properly enforced.
-
-**Test Cases**:
-
-1. **Role Verification**
-   - Authenticate as user with specific role
-   - Verify that only resources permitted for that role are accessible
-   - Test boundary conditions between roles
-
-2. **Role Modification**
-   - Attempt to modify user role in request parameters
-   - Attempt to modify role in JWT token (if applicable)
-   - Expected: Role modifications are rejected or ignored
-
-3. **Missing Role Checks**
-   - Identify all protected resources
-   - Verify that each resource has explicit role checks
-   - Test resources that may have been missed in implementation
-
-### Attribute-Based Access Control Testing
-
-**Objective**: Verify that ABAC policies are correctly evaluated.
-
-**Test Cases**:
-
-1. **Policy Evaluation**
-   - Identify ABAC policies
-   - Test boundary conditions of policies
-   - Example: If policy is "user can edit document if owner AND time is 9-17", test at 8:59 and 17:01
-
-2. **Attribute Manipulation**
-   - Attempt to modify user attributes in request
-   - Attempt to modify resource attributes
-   - Expected: Attribute modifications are rejected or ignored
-
-3. **Policy Bypass**
-   - Identify complex policies
-   - Test for logical flaws or unintended combinations
-   - Example: Policy with OR conditions may allow unintended access
+- **Attribute manipulation**: Attempt to modify user, resource, or environment attributes to gain unauthorized access. Examples:
+  - Modify user attributes in JWT claims
+  - Change resource ownership in requests
+  - Spoof environment attributes (IP address, time, location)
+- **Policy logic flaws**: Test edge cases in ABAC policies:
+  - Conflicting rules
+  - Overly permissive defaults
+  - Incorrect boolean logic (AND vs OR)
+  - Time-based access (test at boundary times)
 
 ### API Authorization Testing
 
-**Objective**: Verify that API endpoints properly enforce authorization.
+**Test cases:**
 
-**Test Cases**:
+- **Unauthenticated API access**: Verify that API endpoints require authentication. Test whether endpoints are accessible without tokens or credentials.
+- **Missing authorization headers**: Test whether the application properly validates authorization headers. Attempt requests with:
+  - Missing Authorization header
+  - Invalid token format
+  - Expired tokens
+  - Tokens from other users
+- **HTTP method override**: Test whether the application is vulnerable to HTTP method override attacks. Some frameworks allow overriding the HTTP method via headers like `X-HTTP-Method-Override` or `X-Method-Override`.
+- **API versioning bypass**: If the application supports multiple API versions, test whether authorization is enforced consistently across versions.
 
-1. **Missing Authorization Checks**
-   - Enumerate all API endpoints
-   - Test each endpoint without authentication
-   - Test each endpoint with insufficient privileges
-   - Expected: Endpoints return 401 or 403 as appropriate
+### Data-Level Authorization Testing
 
-2. **Token Manipulation**
-   - Modify JWT token claims (if applicable)
-   - Modify OAuth token scope
-   - Expected: Manipulated tokens are rejected
+**Test cases:**
 
-3. **API Key Testing**
-   - Attempt to use API key from one user to access another user's data
-   - Attempt to use expired API keys
-   - Expected: Invalid keys are rejected
+- **Row-level security**: Verify that database queries properly filter results based on user permissions. Test whether users can access rows they shouldn't be able to see.
+- **Column-level security**: Test whether sensitive columns are properly restricted. Verify that users cannot access sensitive fields (salary, SSN, etc.) they shouldn't see.
+- **Bulk operations**: Test authorization on bulk operations (delete multiple records, export data). Verify that the application checks permissions for each record.
 
 ---
 
@@ -833,298 +703,269 @@ def require_resource_access(resource_type):
 
 ## Authentication Findings
 
-### Finding 1: Weak Password Hashing Algorithm
+### CWE-256: Plaintext Storage of Password
 
-**Severity**: High
+**Severity**: Critical
 
-**Description**: The application stores passwords using a weak hashing algorithm (MD5, SHA-1, or SHA-256 without salt) instead of a modern password hashing algorithm.
-
-**Impact**: If the password database is compromised, attackers can quickly crack passwords using rainbow tables or GPU-accelerated attacks.
+**Description**: Passwords stored in plaintext or with weak hashing algorithms allow attackers to compromise accounts if the database is breached.
 
 **Example**:
 ```python
 # VULNERABLE
-import hashlib
-password_hash = hashlib.sha256(password.encode()).hexdigest()
+user.password = request.form['password']  # Stored as plaintext
+db.session.commit()
 ```
+
+**Impact**: Complete account compromise; attacker can log in as any user.
 
 **Remediation**:
-```python
-# SECURE
-import bcrypt
-password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12))
-```
+- Use bcrypt, scrypt, or Argon2 with appropriate cost factors
+- Never store plaintext passwords
+- Use unique salts (handled automatically by modern algorithms)
+- Implement password hashing at the application layer before storage
 
-**Verification**: Verify that passwords are hashed using bcrypt, scrypt, or Argon2 with appropriate work factors.
-
----
-
-### Finding 2: Missing Multi-Factor Authentication
+### CWE-307: Improper Restriction of Rendered UI Layers or Frames
 
 **Severity**: High
 
-**Description**: The application does not implement multi-factor authentication (MFA) for user accounts, particularly for administrative or sensitive accounts.
-
-**Impact**: Compromised passwords (through phishing, malware, or credential stuffing) allow attackers to access user accounts without additional verification.
-
-**Remediation**:
-- Implement TOTP-based MFA using authenticator apps
-- Implement SMS-based MFA as fallback
-- Enforce MFA for administrative accounts
-- Provide backup codes for account recovery
-
-**Verification**: Verify that MFA is required for login and cannot be bypassed.
-
----
-
-### Finding 3: Session Fixation Vulnerability
-
-**Severity**: High
-
-**Description**: The application does not regenerate the session ID after successful authentication.
-
-**Impact**: An attacker can trick a user into using a known session ID, then hijack the session after the user authenticates.
+**Description**: Authentication checks are only performed on the frontend, allowing attackers to bypass them by calling APIs directly.
 
 **Example**:
-```
-1. Attacker obtains session ID: ABC123
-2. Attacker tricks user into visiting: /login?sessionid=ABC123
-3. User authenticates with session ID ABC123
-4. Attacker uses session ID ABC123 to access user's account
+```javascript
+// VULNERABLE: Only frontend check
+if (user.role === 'admin') {
+    showAdminPanel();
+}
 ```
 
+An attacker can call the admin API directly without the frontend check.
+
+**Impact**: Unauthorized access to protected functionality.
+
 **Remediation**:
+- Enforce authentication and authorization on the backend for all API endpoints
+- Never rely on frontend checks for security
+- Implement server-side session validation
+- Use middleware to enforce authentication before reaching route handlers
+
+### CWE-384: Session Fixation
+
+**Severity**: High
+
+**Description**: Application reuses session IDs after authentication, allowing attackers to hijack sessions.
+
+**Example**:
 ```python
+# VULNERABLE: Session ID not regenerated after login
 @app.route('/login', methods=['POST'])
 def login():
-    # ... authentication logic ...
-    session.clear()  # Clear old session
-    session['user_id'] = user.id  # Create new session
+    user = authenticate(request.form['username'], request.form['password'])
+    session['user_id'] = user.id
+    # Session ID remains the same!
     return redirect('/dashboard')
 ```
 
-**Verification**: Verify that session ID changes after authentication.
-
----
-
-### Finding 4: Insufficient Rate Limiting on Login
-
-**Severity**: High
-
-**Description**: The application does not implement rate limiting on login attempts, allowing brute force and credential stuffing attacks.
-
-**Impact**: Attackers can attempt many password combinations or test leaked credentials without restriction.
+**Impact**: Session hijacking; attacker can impersonate authenticated users.
 
 **Remediation**:
-- Implement rate limiting: 5 failed attempts per 15 minutes per IP
-- Implement account lockout: Lock account after 5 failed attempts for 30 minutes
-- Implement CAPTCHA after failed attempts
-- Monitor for suspicious login patterns
+- Generate a new session ID after successful authentication
+- Invalidate the pre-authentication session
+- Use secure, cryptographically random session IDs
+- Set secure cookie flags (HttpOnly, Secure, SameSite)
 
-**Verification**: Attempt multiple failed login attempts and verify that rate limiting is applied.
+### CWE-521: Weak Password Requirements
 
----
+**Severity**: Medium
 
-### Finding 5: Credentials Exposed in Logs or Error Messages
-
-**Severity**: High
-
-**Description**: Passwords or other sensitive credentials are logged or displayed in error messages.
-
-**Impact**: Credentials may be exposed in log files, error pages, or debugging output.
+**Description**: Application allows weak passwords that are easily guessed or cracked.
 
 **Example**:
 ```python
-# VULNERABLE
-try:
-    authenticate(username, password)
-except Exception as e:
-    logger.error(f"Authentication failed for {username} with password {password}: {e}")
+# VULNERABLE: No password strength requirements
+if len(password) >= 1:  # Any length is acceptable
+    create_user(username, password)
 ```
+
+**Impact**: Accounts compromised through password guessing or dictionary attacks.
 
 **Remediation**:
+- Enforce minimum password length (12+ characters)
+- Require character diversity (uppercase, lowercase, numbers, symbols)
+- Check against common password lists and user information
+- Implement rate limiting on login attempts
+- Require MFA for high-value accounts
+
+### CWE-613: Insufficient Session Expiration
+
+**Severity**: Medium
+
+**Description**: Sessions remain valid for too long or don't expire at all, increasing the window for session hijacking.
+
+**Example**:
 ```python
-# SECURE
-try:
-    authenticate(username, password)
-except Exception as e:
-    logger.error(f"Authentication failed for {username}")
-    # Never log passwords or sensitive data
+# VULNERABLE: Session expires after 1 year
+SESSION_LIFETIME = 365 * 24 * 60 * 60  # 1 year
 ```
 
-**Verification**: Review logs and error messages to ensure credentials are not exposed.
+**Impact**: Extended window for session hijacking and unauthorized access.
 
----
+**Remediation**:
+- Set appropriate session timeout based on risk level (15-30 minutes for sensitive applications)
+- Implement idle timeout (logout after inactivity)
+- Implement absolute timeout (logout after maximum session duration)
+- Provide logout functionality
+- Invalidate sessions on the server side
+
+### CWE-640: Weak Password Recovery Mechanism for Forgotten Password
+
+**Severity**: High
+
+**Description**: Password reset mechanism is vulnerable to attacks (predictable tokens, no email verification, tokens don't expire).
+
+**Example**:
+```python
+# VULNERABLE: Predictable reset token
+import time
+reset_token = str(int(time.time()))  # Predictable!
+```
+
+**Impact**: Attackers can reset other users' passwords and take over accounts.
+
+**Remediation**:
+- Generate cryptographically random reset tokens
+- Set short expiration times (15-30 minutes)
+- Require email verification before allowing password reset
+- Send reset links via email, not in responses
+- Invalidate tokens after use
+- Log password reset events
 
 ## Authorization Findings
 
-### Finding 6: Insecure Direct Object Reference (IDOR)
+### CWE-639: Authorization Bypass Through User-Controlled Key
 
-**Severity**: High
+**Severity**: Critical
 
-**Description**: The application uses user-controllable input to directly access objects without authorization checks.
-
-**Impact**: Users can access resources belonging to other users by modifying object IDs.
+**Description**: Application uses user-supplied input (user ID, account ID) directly to access resources without verifying ownership.
 
 **Example**:
 ```python
-# VULNERABLE
-@app.route('/documents/<int:doc_id>')
-def view_document(doc_id):
-    document = Document.query.get(doc_id)
-    return render_template('document.html', document=document)
+# VULNERABLE: No authorization check
+@app.route('/api/accounts/<account_id>/balance')
+def get_balance(account_id):
+    account = Account.query.get(account_id)
+    return {'balance': account.balance}
 ```
 
-An attacker can access any document by changing the `doc_id` parameter.
+User can request `/api/accounts/999/balance` and retrieve any account's balance.
+
+**Impact**: Unauthorized access to sensitive data; users can view/modify other users' resources.
 
 **Remediation**:
-```python
-# SECURE
-@app.route('/documents/<int:doc_id>')
-def view_document(doc_id):
-    document = Document.query.get(doc_id)
-    if document.owner_id != current_user.id:
-        abort(403)
-    return render_template('document.html', document=document)
-```
+- Verify that the authenticated user owns or has access to the requested resource
+- Use indirect references (UUIDs, opaque identifiers) instead of sequential IDs
+- Implement consistent authorization checks on all endpoints
+- Use middleware or decorators to enforce authorization
 
-**Verification**: Enumerate object IDs and verify that access is denied for objects not owned by the current user.
-
----
-
-### Finding 7: Missing Authorization Checks on API Endpoints
+### CWE-276: Incorrect Default Permissions
 
 **Severity**: High
 
-**Description**: API endpoints do not verify that the authenticated user is authorized to perform the requested action.
-
-**Impact**: Authenticated users can perform actions they should not be able to perform.
+**Description**: Resources are created with overly permissive default permissions, allowing unauthorized access.
 
 **Example**:
 ```python
-# VULNERABLE
-@app.route('/api/users/<int:user_id>/delete', methods=['POST'])
+# VULNERABLE: New documents are world-readable by default
+document = Document(title=title, content=content, is_public=True)
+db.session.add(document)
+db.session.commit()
+```
+
+**Impact**: Sensitive data exposed to unauthorized users.
+
+**Remediation**:
+- Default to restrictive permissions (private, owner-only access)
+- Require explicit permission grants
+- Implement principle of least privilege
+- Regularly audit permissions for overly permissive settings
+
+### CWE-269: Improper Access Control (Generic)
+
+**Severity**: High
+
+**Description**: Application lacks proper authorization checks for sensitive operations.
+
+**Example**:
+```python
+# VULNERABLE: No authorization check on admin operation
+@app.route('/api/admin/users/<user_id>/delete', methods=['POST'])
 def delete_user(user_id):
-    user = User.query.get(user_id)
-    db.session.delete(user)
+    User.query.filter_by(id=user_id).delete()
     db.session.commit()
-    return 'User deleted'
+    return {'status': 'deleted'}
 ```
 
 Any authenticated user can delete any other user.
 
+**Impact**: Unauthorized modification or deletion of data; privilege escalation.
+
 **Remediation**:
-```python
-# SECURE
-@app.route('/api/users/<int:user_id>/delete', methods=['POST'])
-def delete_user(user_id):
-    if current_user.role != 'admin':
-        abort(403)
-    user = User.query.get(user_id)
-    db.session.delete(user)
-    db.session.commit()
-    return 'User deleted'
-```
+- Implement authorization checks for all sensitive operations
+- Verify user role/permissions before allowing actions
+- Use role-based or attribute-based access control
+- Implement consistent authorization patterns across the application
+- Log authorization failures for monitoring
 
-**Verification**: Test each API endpoint with different user roles and verify authorization is enforced.
-
----
-
-### Finding 8: Privilege Escalation via Parameter Manipulation
+### CWE-434: Unrestricted Upload of File with Dangerous Type
 
 **Severity**: High
 
-**Description**: Users can escalate their privileges by modifying request parameters.
-
-**Impact**: Regular users can become administrators or gain other elevated privileges.
+**Description**: Application allows users to upload files without proper authorization or validation, potentially leading to code execution.
 
 **Example**:
 ```python
-# VULNERABLE
-@app.route('/profile/update', methods=['POST'])
-def update_profile():
-    user = User.query.get(current_user.id)
-    user.role = request.form.get('role')  # User can set their own role!
+# VULNERABLE: No file type validation or authorization check
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    file = request.files['file']
+    file.save(f'/uploads/{file.filename}')
+    return {'status': 'uploaded'}
+```
+
+**Impact**: Arbitrary file upload; potential code execution; malware distribution.
+
+**Remediation**:
+- Validate file types (whitelist allowed extensions)
+- Check MIME types (verify actual file type, not just extension)
+- Store uploads outside web root
+- Implement authorization checks (verify user can upload)
+- Scan uploads for malware
+- Rename files to prevent path traversal
+
+### CWE-862: Missing Authorization
+
+**Severity**: Critical
+
+**Description**: Application performs sensitive operations without checking whether the user has permission.
+
+**Example**:
+```python
+# VULNERABLE: No authorization check
+@app.route('/api/settings/update', methods=['POST'])
+def update_settings():
+    settings = request.json
+    current_user.role = settings['role']  # User can set their own role!
     db.session.commit()
-    return 'Profile updated'
+    return {'status': 'updated'}
 ```
 
-An attacker can change their role to 'admin' by submitting `role=admin` in the request.
+**Impact**: Privilege escalation; unauthorized data modification.
 
 **Remediation**:
-```python
-# SECURE
-@app.route('/profile/update', methods=['POST'])
-def update_profile():
-    user = User.query.get(current_user.id)
-    # Role is not user-controllable; only allow specific fields
-    user.email = request.form.get('email')
-    user.phone = request.form.get('phone')
-    # Role is never modified by user
-    db.session.commit()
-    return 'Profile updated'
-```
-
-**Verification**: Attempt to modify sensitive parameters (role, permissions, etc.) and verify they cannot be changed by users.
-
----
-
-### Finding 9: Horizontal Privilege Escalation
-
-**Severity**: High
-
-**Description**: Users can access resources belonging to other users at the same privilege level.
-
-**Impact**: Users can view, modify, or delete data belonging to other users.
-
-**Example**:
-```
-User A accesses: /api/profile/user/123
-User A modifies URL to: /api/profile/user/124
-User A can now view User B's profile
-```
-
-**Remediation**:
-- Always verify that the current user owns or has explicit permission to access the resource
-- Use indirect references (UUIDs, opaque tokens) instead of sequential IDs
-- Implement comprehensive access control checks at the resource level
-
-**Verification**: Attempt to access resources belonging to other users and verify access is denied.
-
----
-
-### Finding 10: Broken Function-Level Access Control
-
-**Severity**: High
-
-**Description**: Administrative functions are accessible to non-administrative users.
-
-**Impact**: Regular users can perform administrative actions.
-
-**Example**:
-```
-Regular user accesses: /admin/users
-Regular user accesses: /admin/settings
-Regular user accesses: /admin/reports
-```
-
-**Remediation**:
-```python
-def require_admin(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if current_user.role != 'admin':
-            abort(403)
-        return f(*args, **kwargs)
-    return decorated_function
-
-@app.route('/admin/users')
-@require_admin
-def admin_users():
-    return render_template('admin_users.html')
-```
-
-**Verification**: Enumerate all endpoints and verify that administrative endpoints require administrative privileges.
+- Implement authorization checks for all sensitive operations
+- Separate endpoints for different privilege levels
+- Use role-based or attribute-based access control
+- Implement consistent authorization patterns
+- Test authorization on all endpoints
 
 ---
 
@@ -1132,119 +973,143 @@ def admin_users():
 
 ## Authentication Design Principles
 
-### 1. Use Strong, Modern Password Hashing
+### 1. Defense in Depth for Authentication
 
-**Principle**: Passwords must be hashed using algorithms specifically designed for password storage, not general-purpose cryptographic hash functions.
+Implement multiple layers of authentication controls to reduce the impact of any single failure.
 
-**Implementation Guidance**:
+**Design approach**:
+- **Layer 1 - Credential strength**: Enforce strong password policies; support passphrases
+- **Layer 2 - Credential protection**: Hash passwords with strong algorithms; protect against credential stuffing
+- **Layer 3 - Multi-factor authentication**: Require MFA for sensitive accounts or operations
+- **Layer 4 - Session security**: Implement secure session management with proper timeout and invalidation
+- **Layer 5 - Monitoring**: Log authentication events and alert on suspicious patterns
 
-- **Choose a modern algorithm**: Use bcrypt, scrypt, or Argon2. Do not use MD5, SHA-1, or SHA-256.
-- **Use appropriate work factors**: Configure the algorithm to be computationally expensive (e.g., bcrypt with 12+ rounds).
-- **Use unique salts**: Each password should have a unique salt (modern algorithms handle this automatically).
-- **Never decrypt passwords**: Passwords should be hashed, not encrypted. Comparison is done by hashing the provided password and comparing hashes.
-
-**Example Architecture**:
+**Example architecture**:
 ```
-User Registration:
-1. User provides password
-2. Application generates salt
-3. Application hashes password with salt using bcrypt
-4. Application stores hash in database
-5. Application discards plaintext password
-
-User Login:
-1. User provides password
-2. Application retrieves stored hash from database
-3. Application hashes provided password with stored salt
-4. Application compares hashes
-5. If hashes match, user is authenticated
-```
-
----
-
-### 2. Implement Multi-Factor Authentication
-
-**Principle**: Require at least two factors of authentication for sensitive accounts and operations.
-
-**Implementation Guidance**:
-
-- **Primary factor**: Username and password (something you know)
-- **Secondary factor**: TOTP (something you have) or biometric (something you are)
-- **Backup codes**: Provide backup codes for account recovery if MFA device is lost
-- **Enforcement**: Require MFA for administrative accounts; make optional for regular users
-
-**Recommended MFA Methods** (in order of preference):
-1. TOTP (Time-Based One-Time Password) using authenticator apps
-2. Hardware security keys (FIDO2/WebAuthn)
-3. SMS-based OTP (less secure but better than nothing)
-4. Email-based OTP
-
-**Example Architecture**:
-```
-MFA Setup:
-1. User enables MFA in account settings
-2. Application generates secret key
-3. Application displays QR code
-4. User scans QR code with authenticator app
-5. User confirms setup by entering code from app
-6. Application stores secret key (encrypted)
-
-MFA Login:
-1. User enters username and password
-2. Application verifies credentials
-3. Application prompts for MFA code
-4. User enters code from authenticator app
-5. Application verifies code using stored secret
-6. If code is valid, user is authenticated
+User Input
+    ↓
+[Password Strength Check]
+    ↓
+[Rate Limiting & Account Lockout]
+    ↓
+[Credential Verification]
+    ↓
+[MFA Challenge]
+    ↓
+[Session Creation]
+    ↓
+[Continuous Monitoring]
 ```
 
----
+### 2. Secure Password Handling
 
-### 3. Implement Secure Session Management
+**Principles**:
+- Never store plaintext passwords
+- Use strong hashing algorithms with appropriate cost factors
+- Implement rate limiting to prevent brute force attacks
+- Enforce strong password policies
+- Support password managers
 
-**Principle**: Sessions must be created, maintained, and invalidated securely.
+**Implementation checklist**:
+- [ ] Use bcrypt (cost factor 12+), scrypt, or Argon2
+- [ ] Generate unique salts (handled by modern algorithms)
+- [ ] Implement account lockout after 5 failed attempts (15-30 minute lockout)
+- [ ] Require minimum 12-character passwords
+- [ ] Check against common password lists
+- [ ] Implement password reset with secure tokens
+- [ ] Log authentication events
+- [ ] Monitor for credential stuffing attacks
 
-**Implementation Guidance**:
+### 3. Multi-Factor Authentication Strategy
 
-- **Session ID generation**: Use cryptographically secure random number generator
-- **Session ID length**: At least 128 bits of entropy
-- **Session storage**: Store sessions server-side (in-memory, database, or cache)
-- **Session timeout**: Implement absolute timeout (e.g., 1 hour) and idle timeout (e.g., 15 minutes)
-- **Session regeneration**: Regenerate session ID after authentication to prevent session fixation
-- **Session invalidation**: Invalidate session on logout and when user role changes
-- **Cookie attributes**: Set Secure, HttpOnly, and SameSite attributes
+**MFA implementation hierarchy** (from most to least secure):
+1. **Hardware security keys (FIDO2/WebAuthn)**: Most secure; resistant to phishing
+2. **Time-based one-time passwords (TOTP)**: Secure; requires authenticator app
+3. **SMS-based OTP**: Less secure; vulnerable to SIM swapping
+4. **Email-based OTP**: Convenient; vulnerable to email compromise
 
-**Example Architecture**:
-```
-Session Creation:
-1. User authenticates
-2. Application generates cryptographically random session ID
-3. Application creates session object with user ID and timestamp
-4. Application stores session in session store
-5. Application sends session ID to client in secure cookie
+**Design guidance**:
+- Make MFA mandatory for privileged accounts (admins, service accounts)
+- Make MFA optional but encouraged for regular users
+- Provide recovery codes for account recovery
+- Implement MFA for sensitive operations (password change, permission changes)
+- Test MFA bypass vectors (alternative authentication methods, recovery codes)
 
-Session Validation:
-1. Client sends session ID in cookie
-2. Application looks up session in session store
-3. Application verifies session has not expired
-4. Application verifies user ID in session
-5. If valid, request is processed; otherwise, user is redirected to login
+### 4. Session Management Design
 
-Session Invalidation:
-1. User logs out
-2. Application deletes session from session store
-3. Application clears session cookie on client
-```
+**Secure session design**:
+- Generate cryptographically random session IDs (minimum 128 bits of entropy)
+- Regenerate session ID after authentication
+- Implement idle timeout (15-30 minutes for sensitive applications)
+- Implement absolute timeout (maximum session duration)
+- Invalidate sessions on logout
+- Store sessions securely (server-side, not in cookies)
+- Use secure cookie flags (HttpOnly, Secure, SameSite)
 
----
+**Session storage options**:
+- **Server-side sessions**: More secure; requires session storage (Redis, database)
+- **Stateless tokens (JWT)**: Scalable; requires careful token validation and revocation
 
-### 4. Implement Rate Limiting and Account Lockout
+### 5. Token-Based Authentication Design
 
-**Principle**: Prevent brute force and credential stuffing attacks by limiting login attempts.
+If using tokens (JWT, OAuth), follow these principles:
 
-**Implementation Guidance**:
+**Token design**:
+- Use short expiration times for access tokens (15-60 minutes)
+- Implement refresh tokens with longer expiration (days/weeks)
+- Rotate refresh tokens on use
+- Sign tokens with strong algorithms (RS256, not HS256 for multi-service architectures)
+- Include minimal claims (user ID, roles, expiration)
+- Never include sensitive data in tokens
 
-- **Rate limiting**: Limit login attempts per IP address
+**Token validation**:
+- Validate signature on every request
+- Check expiration time
+- Verify token hasn't been revoked
+- Validate token format and claims
+- Implement token blacklist for revocation
+
+**Token storage**:
+- Store in secure, HttpOnly cookies (not localStorage)
+- Transmit only over HTTPS
+- Avoid including tokens in URLs
+- Implement CSRF protection for token-based authentication
+
+## Authorization Design Principles
+
+### 1. Principle of Least Privilege
+
+Users should have the minimum permissions necessary to perform their job.
+
+**Design approach**:
+- Default to deny (deny all access unless explicitly granted)
+- Grant permissions explicitly and specifically
+- Regularly audit and remove unnecessary permissions
+- Implement role-based access control (RBAC) for simplicity
+- Implement attribute-based access control (ABAC) for complex scenarios
+
+**Example**:
+```python
+# SECURE: Explicit permission grants
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80))
+    role = db.Column(db.String(20))  # 'viewer', 'editor', 'admin'
+
+class Document(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    shared_with = db.relationship('User', secondary='document_shares')
+
+def can_view_document(user, document):
+    """Check if user can view document"""
+    return (user.id == document.owner_id or 
+            user in document.shared_with or
+            user.role == 'admin')
+
+def can_edit_document(user, document):
+    """Check if user can edit document"""
+    return (user
 
 ## Interview Questions
 
@@ -1268,353 +1133,302 @@ Session Invalidation:
 
 ## Revision Additions
 
-# Additive Revisions for Chapter 01: Authentication vs Authorization
+# Additive Revisions and Corrections for Chapter 1
 
-## Technical Accuracy Corrections
+## Correction: Complete MFA Implementation Example
 
-### Correction 1: TOTP Time Window Clarification
+**Location**: Developer Lens → Implementing Authentication → Multi-Factor Authentication (MFA)
 
-**Location**: Developer Lens > Multi-Factor Authentication (MFA) section, Python code example
-
-**Add after the code block**:
-
-```markdown
-**Time Window Explanation**: The `valid_window=1` parameter allows the TOTP verification to accept codes from the previous, current, and next 30-second time window. This accounts for clock skew between the client device and server (typically ±30 seconds). A window of 0 would only accept the current time window; a window of 1 accepts ±1 window (±30 seconds total).
-
-**Security Consideration**: Do not increase the time window beyond 1, as this weakens the security of TOTP by allowing a wider window for code reuse or prediction attacks.
-```
-
----
-
-### Correction 2: Session Timeout Configuration - Idle vs Absolute
-
-**Location**: Developer Lens > Session Management section
-
-**Replace the existing session configuration example with**:
+**Add after the TOTP setup code block:**
 
 ```python
-# Flask example - Secure Session Configuration
-app.config['SESSION_COOKIE_SECURE'] = True      # HTTPS only
-app.config['SESSION_COOKIE_HTTPONLY'] = True    # No JavaScript access
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'   # CSRF protection
-
-# Absolute timeout: Session expires after this duration regardless of activity
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)
-
-# Idle timeout: Session expires after this period of inactivity
-# Note: Requires custom middleware to track last activity timestamp
-IDLE_TIMEOUT = timedelta(minutes=15)
-
-@app.before_request
-def check_session_timeout():
-    session.permanent = True
-    app.permanent_session_lifetime = timedelta(hours=1)
+@app.route('/api/auth/mfa/verify', methods=['POST'])
+def verify_mfa():
+    """Verify TOTP code and enable MFA"""
+    user = current_user
+    code = request.json.get('code')
     
-    # Check idle timeout
-    last_activity = session.get('last_activity')
-    if last_activity:
-        if datetime.utcnow() - last_activity > IDLE_TIMEOUT:
-            session.clear()
-            abort(401)
+    if not user.mfa_secret:
+        return {'error': 'MFA setup not initiated'}, 400
     
-    # Update last activity timestamp
-    session['last_activity'] = datetime.utcnow()
-```
-
-**Add explanatory note**:
-
-```markdown
-**Absolute vs Idle Timeout**:
-- **Absolute Timeout**: Session expires after a fixed duration (e.g., 1 hour) from creation, regardless of user activity. Protects against long-lived session hijacking.
-- **Idle Timeout**: Session expires after a period of inactivity (e.g., 15 minutes). Protects against unattended sessions. Requires tracking last activity timestamp.
-
-Both timeouts should be implemented for defense in depth. Absolute timeout should be longer than idle timeout.
-```
-
----
-
-### Correction 3: Add Argon2 to Password Hashing Best Practices
-
-**Location**: Developer Lens > Implementing Authentication > Password Hashing Best Practices section
-
-**Add after the bcrypt implementation example**:
-
-```markdown
-**Argon2 Implementation** (Python):
-
-Argon2 is the winner of the Password Hashing Competition and is recommended for new applications. It is memory-hard and resistant to GPU and ASIC attacks.
-
-```python
-from argon2 import PasswordHasher
-from argon2.exceptions import VerifyMismatchError
-
-# Initialize password hasher
-ph = PasswordHasher()
-
-# Register user
-def register_user(username, password):
-    hashed_password = ph.hash(password)
-    user = {
-        'username': username,
-        'password_hash': hashed_password
-    }
-    # Store user in database
-    db.users.insert(user)
-
-# Verify password during login
-def verify_password(username, provided_password):
-    user = db.users.find_one({'username': username})
+    totp = pyotp.TOTP(user.mfa_secret)
     
-    if not user:
-        return False
+    # Verify code (allow 30-second window for clock skew)
+    if not totp.verify(code, valid_window=1):
+        return {'error': 'Invalid code'}, 401
     
-    try:
-        ph.verify(user['password_hash'], provided_password)
-        return True
-    except VerifyMismatchError:
-        return False
-```
-
-**Argon2 Configuration**:
-- `time_cost`: Number of iterations (default: 2, recommended: 2-3)
-- `memory_cost`: Memory usage in KiB (default: 65536, recommended: 65536-262144)
-- `parallelism`: Number of parallel threads (default: 4, recommended: 4-8)
-
-Higher values increase security but also increase computation time. Balance security with acceptable login latency.
-```
-
----
-
-### Correction 4: JWT Token Validation Guidance
-
-**Location**: Architecture Perspective > Session and Token Management section
-
-**Add new subsection after token-based authentication explanation**:
-
-```markdown
-#### JWT Token Validation
-
-When using JWT tokens, the server must validate both the signature and claims:
-
-**Signature Verification**:
-```python
-import jwt
-from datetime import datetime
-
-SECRET_KEY = 'your-secret-key'  # Should be stored securely
-
-def verify_jwt_token(token):
-    try:
-        # Verify signature and decode token
-        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-        return payload
-    except jwt.InvalidSignatureError:
-        # Token signature is invalid
-        return None
-    except jwt.DecodeError:
-        # Token is malformed
-        return None
-
-def validate_token_claims(payload):
-    # Check expiration claim
-    if 'exp' in payload:
-        if datetime.utcnow().timestamp() > payload['exp']:
-            return False  # Token has expired
+    # Enable MFA
+    user.mfa_enabled = True
+    db.session.commit()
     
-    # Check issued-at claim
-    if 'iat' in payload:
-        if datetime.utcnow().timestamp() < payload['iat']:
-            return False  # Token not yet valid
+    # Generate recovery codes
+    recovery_codes = [secrets.token_hex(4) for _ in range(10)]
+    for code in recovery_codes:
+        RecoveryCode(user_id=user.id, code=code)
+    db.session.commit()
     
-    # Check other required claims
-    if 'user_id' not in payload:
-        return False
+    return {
+        'status': 'MFA enabled successfully',
+        'recovery_codes': recovery_codes  # Display once; user must save
+    }, 200
+
+@app.route('/api/auth/login/mfa', methods=['POST'])
+def login_with_mfa():
+    """Verify MFA code during login"""
+    session_id = request.json.get('session_id')  # Temporary session from initial login
+    code = request.json.get('code')
     
-    return True
-
-@app.route('/api/protected')
-def protected_resource():
-    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    # Retrieve temporary session (should expire in 5 minutes)
+    temp_session = TemporarySession.query.get(session_id)
+    if not temp_session or temp_session.expired:
+        return {'error': 'Session expired. Please log in again.'}, 401
     
-    payload = verify_jwt_token(token)
-    if not payload or not validate_token_claims(payload):
-        abort(401)
+    user = User.query.get(temp_session.user_id)
+    totp = pyotp.TOTP(user.mfa_secret)
     
-    user_id = payload['user_id']
-    # Process request with authenticated user
-    return {'data': 'sensitive'}
-```
-
-**Critical JWT Validation Points**:
-- Always verify the signature using the correct algorithm and secret key
-- Always check the `exp` (expiration) claim
-- Always check the `iat` (issued-at) claim to prevent tokens issued in the future
-- Never trust the token payload without signature verification
-- Do not use `jwt.decode()` with `verify=False` in production
-- Use strong, randomly generated secret keys (at least 256 bits for HS256)
-```
-
----
-
-## Missing Content Additions
-
-### Addition 1: OAuth 2.0 and OpenID Connect
-
-**Location**: Architecture Perspective > Authentication Architecture Patterns section
-
-**Add new subsection after Federated Authentication**:
-
-```markdown
-#### OAuth 2.0 and OpenID Connect
-
-**OAuth 2.0** is an authorization framework that allows users to grant applications access to their resources without sharing passwords. **OpenID Connect (OIDC)** extends OAuth 2.0 to provide authentication (identity verification) in addition to authorization.
-
-**OAuth 2.0 Authorization Code Flow** (most common for web applications):
-
-```
-1. User clicks "Sign in with Google"
-2. Application redirects to Google's authorization endpoint
-3. User authenticates with Google and grants permission
-4. Google redirects back to application with authorization code
-5. Application exchanges code for access token (server-to-server)
-6. Application uses access token to fetch user information
-7. Application creates session for user
-```
-
-**OpenID Connect Flow** (adds authentication layer):
-
-OpenID Connect adds an ID token (JWT) that contains user identity information:
-
-```python
-# After exchanging authorization code for tokens
-id_token = response['id_token']  # JWT containing user info
-access_token = response['access_token']  # For accessing user resources
-
-# Verify ID token signature
-payload = jwt.decode(id_token, GOOGLE_PUBLIC_KEY, algorithms=['RS256'])
-
-# Extract user information
-user_id = payload['sub']  # Subject (unique user identifier)
-email = payload['email']
-email_verified = payload['email_verified']
-name = payload['name']
-
-# Create application session
-session['user_id'] = user_id
-session['email'] = email
-```
-
-**PKCE (Proof Key for Code Exchange)** for Mobile and SPA Applications:
-
-PKCE adds an additional security layer for applications that cannot securely store a client secret (mobile apps, single-page applications):
-
-```python
-import secrets
-import hashlib
-import base64
-
-# Step 1: Generate code verifier and challenge
-code_verifier = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode('utf-8').rstrip('=')
-code_challenge = base64.urlsafe_b64encode(
-    hashlib.sha256(code_verifier.encode()).digest()
-).decode('utf-8').rstrip('=')
-
-# Step 2: Redirect to authorization endpoint with code_challenge
-authorization_url = f"{OAUTH_PROVIDER}/authorize?client_id={CLIENT_ID}&code_challenge={code_challenge}&code_challenge_method=S256"
-
-# Step 3: Exchange authorization code for token, including code_verifier
-token_response = requests.post(
-    f"{OAUTH_PROVIDER}/token",
-    data={
-        'grant_type': 'authorization_code',
-        'code': authorization_code,
-        'client_id': CLIENT_ID,
-        'code_verifier': code_verifier  # Proves we initiated the request
-    }
-)
-```
-
-**Advantages of OAuth 2.0 / OIDC**:
-- Users do not share passwords with applications
-- Applications do not store passwords
-- Users can revoke access without changing passwords
-- Leverages security investments of large identity providers
-- Enables single sign-on across multiple applications
-
-**Disadvantages**:
-- Dependency on external provider availability
-- Privacy concerns about sharing user data
-- More complex implementation than basic authentication
-- Potential for misconfiguration (e.g., not validating ID token signature)
-```
-
----
-
-### Addition 2: Secure Password Reset and Recovery
-
-**Location**: AppSec Lens section
-
-**Add new subsection after Authorization Vulnerabilities**:
-
-```markdown
-#### Insecure Password Reset
-
-**Vulnerability**: Password reset mechanisms that do not properly validate reset tokens or allow unauthorized password changes.
-
-**Common Flaws**:
-
-1. **Predictable Reset Tokens**
-```python
-# VULNERABLE: Predictable token based on user ID
-def generate_reset_token(user_id):
-    return str(user_id) + str(int(time.time()))
-
-# VULNERABLE: Token not time-limited
-def generate_reset_token(user_id):
-    return hashlib.md5(user_email.encode()).hexdigest()
-```
-
-2. **No Token Expiration**
-```python
-# VULNERABLE: Token never expires
-reset_token = secrets.token_urlsafe(32)
-db.store_reset_token(user_id, reset_token)  # No expiration time stored
-```
-
-3. **Token Reuse**
-```python
-# VULNERABLE: Token can be used multiple times
-@app.route('/reset-password/<token>', methods=['POST'])
-def reset_password(token):
-    user = db.find_user_by_reset_token(token)
-    if user:
-        user.password = hash_password(request.form.get('new_password'))
+    # Check TOTP code
+    if not totp.verify(code, valid_window=1):
+        # Check recovery codes as fallback
+        recovery = RecoveryCode.query.filter_by(user_id=user.id, code=code, used=False).first()
+        if not recovery:
+            return {'error': 'Invalid code'}, 401
+        recovery.used = True
         db.session.commit()
-        # Token is never invalidated; can be reused
-```
-
-4. **Account Enumeration via Reset**
-```python
-# VULNERABLE: Different responses reveal whether email exists
-@app.route('/forgot-password', methods=['POST'])
-def forgot_password():
-    email = request.form.get('email')
-    user = User.query.filter_by(email=email).first()
     
-    if user:
-        send_reset_email(user)
-        return 'Reset email sent'  # Reveals email exists
-    else:
-        return 'Email not found'  # Reveals email does not exist
+    # Create permanent session
+    session_token = generate_secure_token()
+    temp_session.delete()
+    db.session.commit()
+    
+    return {
+        'status': 'Login successful',
+        'token': session_token,
+        'user_id': user.id
+    }, 200
 ```
 
-**Secure Password Reset Implementation**:
+**Add model definitions:**
+
+```python
+class RecoveryCode(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    code = db.Column(db.String(8), nullable=False)
+    used = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class TemporarySession(db.Model):
+    id = db.Column(db.String(32), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    @property
+    def expired(self):
+        return datetime.utcnow() - self.created_at > timedelta(minutes=5)
+```
+
+---
+
+## Correction: Add Missing Helper Methods
+
+**Location**: Developer Lens → Implementing Authentication → Password-Based Authentication
+
+**Add before the `@app.route('/api/auth/register')` decorator:**
 
 ```python
 import secrets
-from datetime import datetime, timedelta
 
-# Generate secure reset token
-def generate_reset_token(user_id):
-    token = secrets.token_urlsafe(32)
-    expiration = datetime.utc
+def generate_secure_token(length=32):
+    """Generate cryptographically secure random token"""
+    return secrets.token_urlsafe(length)
+```
+
+**Add to AuthLog model:**
+
+```python
+class AuthLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    event = db.Column(db.String(50))  # 'login_success', 'login_failure', 'account_locked'
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    ip_address = db.Column(db.String(45))
+    
+    @staticmethod
+    def create(user_id, event, ip_address):
+        """Helper method to create auth log entries"""
+        log = AuthLog(user_id=user_id, event=event, ip_address=ip_address)
+        db.session.add(log)
+        db.session.commit()
+```
+
+---
+
+## Enhancement: JWT Signature Validation Vulnerability Explanation
+
+**Location**: Pentest Lens → Token-Based Authentication Testing
+
+**Replace the existing "JWT signature validation" test case with:**
+
+```
+- **JWT signature validation**: Modify JWT claims (user ID, role, expiration) and verify whether the application rejects unsigned or incorrectly signed tokens. Specifically test:
+  - **Algorithm confusion**: Attempt to change the algorithm from RS256 (asymmetric) to HS256 (symmetric) or `alg: none`. The `alg: none` vulnerability allows attackers to create unsigned tokens that some JWT libraries incorrectly accept as valid. Always validate that the algorithm matches your expected signing method and never accept `alg: none`.
+  - **Signature tampering**: Modify claims and recalculate the signature using a guessed or publicly known key. Verify the application rejects the modified token.
+  - **Key confusion**: If the application supports multiple keys, attempt to use a public key (from JWKS endpoint) as the signing key.
+```
+
+---
+
+## Enhancement: Token Storage and CSRF Protection Guidance
+
+**Location**: Developer Lens → Implementing Authentication → Secure approach (after token validation section)
+
+**Add new subsection:**
+
+### Token Storage and CSRF Protection
+
+When storing tokens in cookies, additional CSRF protection is required because cookies are automatically sent with requests.
+
+**Secure cookie-based token storage approach:**
+
+```python
+# Set token in HttpOnly cookie with CSRF protection
+response = make_response({'status': 'Login successful'})
+response.set_cookie(
+    'access_token',
+    value=session_token,
+    httponly=True,           # Prevent JavaScript access (XSS protection)
+    secure=True,             # HTTPS only
+    samesite='Strict',       # Prevent CSRF (strictest option)
+    max_age=3600,            # 1 hour expiration
+    domain='.example.com',   # Restrict to domain
+    path='/'
+)
+return response, 200
+```
+
+**CSRF protection options:**
+
+1. **SameSite=Strict** (recommended): Cookies sent only in same-site requests. Prevents CSRF but may break legitimate cross-site navigation.
+2. **SameSite=Lax** (balanced): Cookies sent in top-level navigation (links, form GET) but not in subresource requests. Prevents most CSRF attacks while maintaining usability.
+3. **Double-submit cookie pattern**: Include CSRF token in response body; client includes it in custom header (e.g., `X-CSRF-Token`). Browsers don't auto-send custom headers in cross-site requests.
+
+**Example with double-submit pattern:**
+
+```python
+@app.route('/api/auth/login', methods=['POST'])
+def login():
+    # ... authentication logic ...
+    
+    session_token = generate_secure_token()
+    csrf_token = generate_secure_token()
+    
+    response = make_response({
+        'status': 'Login successful',
+        'csrf_token': csrf_token  # Client must include in X-CSRF-Token header
+    })
+    response.set_cookie(
+        'access_token',
+        value=session_token,
+        httponly=True,
+        secure=True,
+        samesite='Lax',
+        max_age=3600
+    )
+    return response, 200
+
+# Middleware to validate CSRF token
+@app.before_request
+def validate_csrf():
+    if request.method in ['POST', 'PUT', 'DELETE', 'PATCH']:
+        token_from_header = request.headers.get('X-CSRF-Token')
+        token_from_cookie = request.cookies.get('csrf_token')
+        
+        if not token_from_header or token_from_header != token_from_cookie:
+            abort(403)  # CSRF token mismatch
+```
+
+**Alternative: Store tokens in localStorage with manual header inclusion**
+
+If storing tokens in localStorage (less secure against XSS but avoids CSRF):
+
+```javascript
+// After login, store token in localStorage
+localStorage.setItem('access_token', response.access_token);
+
+// Include token in all API requests via custom header
+fetch('/api/protected', {
+    headers: {
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+    }
+});
+```
+
+**Trade-offs:**
+- **HttpOnly cookies + SameSite**: Protected against XSS (can't be stolen by JavaScript), protected against CSRF (SameSite prevents cross-site sending). Requires CSRF token for state-changing operations if using SameSite=Lax.
+- **localStorage + custom header**: Vulnerable to XSS (JavaScript can steal token), protected against CSRF (custom headers not sent cross-site). Requires XSS protection (CSP, input validation).
+
+**Recommendation**: Use HttpOnly cookies with SameSite=Strict for maximum security. If cross-site navigation is required, use SameSite=Lax with double-submit CSRF tokens.
+
+---
+
+## Enhancement: Stateless vs. Stateful Session Design Guidance
+
+**Location**: Secure Design Guidance → Authentication Design Principles
+
+**Add new subsection after "Session Management Design":**
+
+### 6. Stateless vs. Stateful Session Architecture
+
+Applications must choose between stateless (token-based) and stateful (server-side session) architectures. Each has distinct security and operational implications.
+
+**Stateful Sessions (Server-Side Storage)**
+
+Sessions stored in server-side storage (Redis, database, in-memory cache).
+
+**Advantages:**
+- Immediate session revocation (logout invalidates session immediately)
+- Easy to update session data (permissions, attributes) without client interaction
+- Simpler token validation (just lookup in storage)
+- Better for detecting concurrent sessions or suspicious activity
+- Easier to implement session timeout and idle detection
+
+**Disadvantages:**
+- Requires shared session storage across multiple servers (Redis, database)
+- Session storage becomes a critical dependency and potential bottleneck
+- Horizontal scaling requires session replication or sticky sessions
+- Higher latency (storage lookup on every request)
+
+**Security considerations:**
+- Session IDs must be cryptographically random (minimum 128 bits entropy)
+- Session storage must be protected (encrypted, access-controlled)
+- Session timeout must be enforced server-side
+- Logout must delete session from storage immediately
+
+**Implementation example:**
+
+```python
+import redis
+
+session_store = redis.Redis(host='localhost', port=6379, db=0)
+
+@app.route('/api/auth/login', methods=['POST'])
+def login():
+    user = authenticate(username, password)
+    session_id = generate_secure_token()
+    
+    # Store session server-side with expiration
+    session_data = {
+        'user_id': user.id,
+        'username': user.username,
+        'role': user.role,
+        'login_time': datetime.utcnow().isoformat()
+    }
+    session_store.setex(
+        f'session:{session_id}',
+        3600,  # 1 hour expiration
+        json.dumps(session_data)
+    )
+    
+    response = make_response({'status': 'Login successful'})
+    response.set_cookie('session_id', session_id, httponly=True, secure=True)
+    return response
