@@ -16,8 +16,8 @@ Create one focused sketchnote-style diagram for this handbook section.
 - Source stage: final
 
 ## Concepts To Visualize
-- Implement rate limiting on login endpoints (e.g., 5 failed attempts pe
-- Use account lockout after repeated failures (temporary, not permanent)
+- Implement rate limiting on login endpoints e.g., 5 failed attempts per
+- Use account lockout after repeated failures temporary, not permanent
 - Implement CAPTCHA after failed attempts
 - Monitor for unusual login patterns
 - Require MFA to reduce impact of compromised passwords

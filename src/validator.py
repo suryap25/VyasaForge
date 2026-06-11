@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from src.handbook import resolve_chapter
+from src.publish_gate import validate_publish_quality
 
 MIN_WORD_COUNT = 1500
 STAGE_FIELDS = {"drafts": "draft_path", "reviewed": "reviewed_path", "final": "final_path"}
@@ -32,6 +33,7 @@ class ValidationResult:
     word_count: int
     missing_sections: list[str]
     errors: list[str]
+    structural_errors: list[str] | None = None
 
 
 def count_words(text: str) -> int:
@@ -68,6 +70,7 @@ def validate_chapter(chapter: int, stage: str = "drafts") -> ValidationResult:
             word_count=0,
             missing_sections=[],
             errors=[f"Missing {stage} chapter file: {chapter_path}"],
+            structural_errors=[],
         )
 
     chapter_text = chapter_path.read_text(encoding="utf-8")
@@ -79,9 +82,16 @@ def validate_chapter(chapter: int, stage: str = "drafts") -> ValidationResult:
     for section in missing_sections:
         errors.append(f"Missing required section: {section}")
 
+    structural_result = validate_publish_quality(
+        chapter_text,
+        allow_sketchnote_placeholder=True,
+    )
+    errors.extend(structural_result.errors)
+
     return ValidationResult(
         passed=not errors,
         word_count=word_count,
         missing_sections=missing_sections,
         errors=errors,
+        structural_errors=structural_result.errors,
     )

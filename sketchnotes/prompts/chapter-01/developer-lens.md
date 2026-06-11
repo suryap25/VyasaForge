@@ -16,9 +16,9 @@ Create one focused sketchnote-style diagram for this handbook section.
 - Source stage: final
 
 ## Concepts To Visualize
-- **Time-based One-Time Password (TOTP)**: User scans QR code with authe
-- **SMS-based OTP**: Code sent via SMS (less secure than TOTP, but bette
-- **Hardware security keys**: FIDO2/WebAuthn (most secure)
+- Time-based One-Time Password TOTP : User scans QR code with authentica
+- SMS-based OTP : Code sent via SMS less secure than TOTP, but better th
+- Hardware security keys : FIDO2/WebAuthn most secure
 - implementation
 - verification
 - core idea

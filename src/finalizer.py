@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from src.handbook import resolve_chapter
+from src.publish_gate import validate_publish_quality
 
 SOURCE_FIELDS = {"drafts": "draft_path", "reviewed": "reviewed_path"}
 
@@ -37,6 +38,11 @@ def finalize_chapter(chapter: int, source: str = "reviewed") -> Path:
 
     source_content = source_path.read_text(encoding="utf-8")
 
+    final_content = metadata_header(chapter, source) + source_content
+    gate_result = validate_publish_quality(final_content, allow_sketchnote_placeholder=True)
+    if not gate_result.passed:
+        raise RuntimeError("Publish gate failed for final chapter: " + "; ".join(gate_result.errors))
+
     final_path.parent.mkdir(parents=True, exist_ok=True)
-    final_path.write_text(metadata_header(chapter, source) + source_content, encoding="utf-8")
+    final_path.write_text(final_content, encoding="utf-8")
     return final_path

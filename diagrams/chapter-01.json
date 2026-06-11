@@ -1,0 +1,95 @@
+{
+  "chapter": 1,
+  "chapter_id": "chapter_01",
+  "diagrams": [
+    {
+      "caption": "Sketchnote summary for Authentication vs Authorization.",
+      "chapter": 1,
+      "diagram_id": "chapter-01-summary",
+      "image_path": "sketchnotes\\images\\chapter-01.svg",
+      "image_type": "svg",
+      "prompt_path": "sketchnotes\\prompts\\chapter-01-prompt.md",
+      "section": "Sketchnote Placeholder",
+      "status": "generated",
+      "title": "Chapter 01 Summary Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 01: Learning Objectives.",
+      "chapter": 1,
+      "diagram_id": "chapter-01-learning-objectives",
+      "image_path": "sketchnotes\\images\\chapter-01\\learning-objectives.svg",
+      "image_type": "svg",
+      "prompt_path": "sketchnotes\\prompts\\chapter-01\\learning-objectives.md",
+      "section": "Learning Objectives",
+      "status": "generated",
+      "title": "Learning Objectives Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 01: Conceptual Foundation.",
+      "chapter": 1,
+      "diagram_id": "chapter-01-conceptual-foundation",
+      "image_path": "sketchnotes\\images\\chapter-01\\conceptual-foundation.svg",
+      "image_type": "svg",
+      "prompt_path": "sketchnotes\\prompts\\chapter-01\\conceptual-foundation.md",
+      "section": "Conceptual Foundation",
+      "status": "generated",
+      "title": "Conceptual Foundation Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 01: Architecture Perspective.",
+      "chapter": 1,
+      "diagram_id": "chapter-01-architecture-perspective",
+      "image_path": "sketchnotes\\images\\chapter-01\\architecture-perspective.svg",
+      "image_type": "svg",
+      "prompt_path": "sketchnotes\\prompts\\chapter-01\\architecture-perspective.md",
+      "section": "Architecture Perspective",
+      "status": "generated",
+      "title": "Architecture Perspective Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 01: AppSec Lens.",
+      "chapter": 1,
+      "diagram_id": "chapter-01-appsec-lens",
+      "image_path": "sketchnotes\\images\\chapter-01\\appsec-lens.svg",
+      "image_type": "svg",
+      "prompt_path": "sketchnotes\\prompts\\chapter-01\\appsec-lens.md",
+      "section": "AppSec Lens",
+      "status": "generated",
+      "title": "AppSec Lens Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 01: Developer Lens.",
+      "chapter": 1,
+      "diagram_id": "chapter-01-developer-lens",
+      "image_path": "sketchnotes\\images\\chapter-01\\developer-lens.svg",
+      "image_type": "svg",
+      "prompt_path": "sketchnotes\\prompts\\chapter-01\\developer-lens.md",
+      "section": "Developer Lens",
+      "status": "generated",
+      "title": "Developer Lens Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 01: Interview Questions.",
+      "chapter": 1,
+      "diagram_id": "chapter-01-interview-questions",
+      "image_path": "sketchnotes\\images\\chapter-01\\interview-questions.svg",
+      "image_type": "svg",
+      "prompt_path": "sketchnotes\\prompts\\chapter-01\\interview-questions.md",
+      "section": "Interview Questions",
+      "status": "generated",
+      "title": "Interview Questions Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 01: Key Takeaways.",
+      "chapter": 1,
+      "diagram_id": "chapter-01-key-takeaways",
+      "image_path": "sketchnotes\\images\\chapter-01\\key-takeaways.svg",
+      "image_type": "svg",
+      "prompt_path": "sketchnotes\\prompts\\chapter-01\\key-takeaways.md",
+      "section": "Key Takeaways",
+      "status": "generated",
+      "title": "Key Takeaways Sketchnote"
+    }
+  ],
+  "title": "Authentication vs Authorization"
+}

@@ -288,6 +288,47 @@ The normal chapter pipeline now runs sketchnote prompt generation and local SVG 
 python -m src.cli run-chapter --chapter 1
 ```
 
+## M21-M25: Publish Reliability
+
+Run the publish-quality gate against a chapter stage:
+
+```powershell
+python -m src.cli publish-gate --chapter 1 --stage final
+```
+
+The gate rejects structural and publishing problems such as:
+
+```text
+Revision Additions
+Correction / Enhancement process markers
+unbalanced code fences
+duplicate required sections
+unresolved sketchnote placeholders at compile time
+```
+
+Structured review findings are written beside the human review:
+
+```text
+reviews/chapter-01-review.md
+reviews/chapter-01-review.json
+```
+
+The reviser now expects section-patch JSON and replaces target sections in place. It no longer appends a `Revision Additions` section.
+
+Sketchnote and diagram artifacts are tracked in:
+
+```text
+diagrams/chapter-01.json
+```
+
+Inspect diagram status:
+
+```powershell
+python -m src.cli diagram-status --chapter 1
+```
+
+Compile now runs a publish gate before Pandoc. If Pandoc cannot convert a generated SVG image, compilation fails with a clear message instead of silently producing an incomplete DOCX. On Windows, full SVG conversion may require `rsvg-convert` on `PATH`.
+
 ## Notes
 
 - `run-chapter` creates the chapter brief automatically before writing.

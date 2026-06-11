@@ -13,22 +13,22 @@
 <text x="185" y="323" text-anchor="middle" font-size="22" font-family="Comic Sans MS, Segoe Print, Arial"><tspan x="185" dy="0">context</tspan></text>
   <line x1="290" y1="340" x2="380" y2="340" stroke="#111111" stroke-width="4" marker-end="url(#arrow)"/>
   <rect x="390" y="255" width="225" height="170" rx="18" fill="#fff4df" stroke="#df7c18" stroke-width="4"/>
-<text x="502" y="313" text-anchor="middle" font-size="22" font-family="Comic Sans MS, Segoe Print, Arial"><tspan x="502" dy="0">**Password-based</tspan><tspan x="502" dy="26">authentication**</tspan><tspan x="502" dy="26">: User...</tspan></text>
+<text x="502" y="313" text-anchor="middle" font-size="22" font-family="Comic Sans MS, Segoe Print, Arial"><tspan x="502" dy="0">Password-based</tspan><tspan x="502" dy="26">authentication :</tspan><tspan x="502" dy="26">User provides...</tspan></text>
   <line x1="615" y1="340" x2="700" y2="340" stroke="#111111" stroke-width="4" marker-end="url(#arrow)"/>
   <rect x="710" y="255" width="225" height="170" rx="18" fill="#fff4df" stroke="#df7c18" stroke-width="4"/>
-<text x="822" y="313" text-anchor="middle" font-size="22" font-family="Comic Sans MS, Segoe Print, Arial"><tspan x="822" dy="0">**Multi-factor</tspan><tspan x="822" dy="26">authentication</tspan><tspan x="822" dy="26">(MFA)**: User...</tspan></text>
+<text x="822" y="313" text-anchor="middle" font-size="22" font-family="Comic Sans MS, Segoe Print, Arial"><tspan x="822" dy="0">Multi-factor</tspan><tspan x="822" dy="26">authentication</tspan><tspan x="822" dy="26">MFA : User...</tspan></text>
   <line x1="935" y1="340" x2="1020" y2="340" stroke="#111111" stroke-width="4" marker-end="url(#arrow)"/>
   <rect x="1030" y="255" width="225" height="170" rx="18" fill="#fff4df" stroke="#df7c18" stroke-width="4"/>
-<text x="1142" y="313" text-anchor="middle" font-size="22" font-family="Comic Sans MS, Segoe Print, Arial"><tspan x="1142" dy="0">**Certificate-</tspan><tspan x="1142" dy="26">based authentica</tspan><tspan x="1142" dy="26">tion**: User...</tspan></text>
+<text x="1142" y="313" text-anchor="middle" font-size="22" font-family="Comic Sans MS, Segoe Print, Arial"><tspan x="1142" dy="0">Certificate-</tspan><tspan x="1142" dy="26">based...</tspan></text>
   <line x1="1255" y1="340" x2="1340" y2="340" stroke="#111111" stroke-width="4" marker-end="url(#arrow)"/>
   <rect x="1350" y="265" width="190" height="150" rx="18" fill="#eef9ea" stroke="#2e7d32" stroke-width="4"/>
 <text x="1445" y="323" text-anchor="middle" font-size="22" font-family="Comic Sans MS, Segoe Print, Arial"><tspan x="1445" dy="0">outcome</tspan></text>
 
   <rect x="390" y="545" width="225" height="135" rx="18" fill="#eef9ea" stroke="#2e7d32" stroke-width="4"/>
-<text x="502" y="603" text-anchor="middle" font-size="22" font-family="Comic Sans MS, Segoe Print, Arial"><tspan x="502" dy="0">**Token-based au</tspan><tspan x="502" dy="26">thentication**:</tspan><tspan x="502" dy="26">User...</tspan></text>
+<text x="502" y="603" text-anchor="middle" font-size="22" font-family="Comic Sans MS, Segoe Print, Arial"><tspan x="502" dy="0">Token-based</tspan><tspan x="502" dy="26">authentication :</tspan><tspan x="502" dy="26">User...</tspan></text>
   <line x1="502" y1="545" x2="502" y2="425" stroke="#111111" stroke-width="4" marker-end="url(#arrow)"/>
   <rect x="985" y="545" width="225" height="135" rx="18" fill="#fef8df" stroke="#d9a300" stroke-width="4"/>
-<text x="1097" y="603" text-anchor="middle" font-size="22" font-family="Comic Sans MS, Segoe Print, Arial"><tspan x="1097" dy="0">**Biometric auth</tspan><tspan x="1097" dy="26">entication**:</tspan><tspan x="1097" dy="26">User provides...</tspan></text>
+<text x="1097" y="603" text-anchor="middle" font-size="22" font-family="Comic Sans MS, Segoe Print, Arial"><tspan x="1097" dy="0">Biometric</tspan><tspan x="1097" dy="26">authentication :</tspan><tspan x="1097" dy="26">User provides...</tspan></text>
   <line x1="1097" y1="545" x2="1097" y2="425" stroke="#111111" stroke-width="4" marker-end="url(#arrow)"/>
 
   <path d="M185 610 C250 560, 310 480, 390 408" fill="none" stroke="#d71920" stroke-width="4" stroke-dasharray="12 10" marker-end="url(#arrow)"/>

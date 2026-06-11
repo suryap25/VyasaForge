@@ -16,12 +16,12 @@ Create one focused sketchnote-style diagram for this handbook section.
 - Source stage: final
 
 ## Concepts To Visualize
-- **Password-based authentication**: User provides a secret (password) t
-- **Multi-factor authentication (MFA)**: User provides multiple independ
-- **Certificate-based authentication**: User proves possession of a priv
-- **Token-based authentication**: User exchanges credentials for a token
-- **Biometric authentication**: User provides a biological characteristi
-- **Social authentication**: User authenticates through a trusted third 
+- Password-based authentication : User provides a secret password that o
+- Multi-factor authentication MFA : User provides multiple independent f
+- Certificate-based authentication : User proves possession of a private
+- Token-based authentication : User exchanges credentials for a token JW
+- Biometric authentication : User provides a biological characteristic f
+- Social authentication : User authenticates through a trusted third par
 
 ## Output Requirement
 - Produce one landscape diagram suitable for insertion immediately after this section heading.

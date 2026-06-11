@@ -8,6 +8,7 @@ from pathlib import Path
 
 from src.handbook import load_handbook_registry
 from src.handbook import resolve_chapter
+from src.publish_gate import validate_publish_quality
 from src.sketchnotes import image_path_for, section_image_path_for, section_sketchnote_sections
 
 OUTPUT_PATH = Path("output/AppSec_Authentication_Authorization_Handbook_Phase1.docx")
@@ -143,7 +144,11 @@ def compile_handbook(chapters: list[int], output_format: str = "docx") -> Path:
     output_path = output_path_for(output_format)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     combined_path = output_path.parent / "pandoc-input.md"
-    combined_path.write_text(combined_markdown(chapters, chapter_paths), encoding="utf-8")
+    combined_content = combined_markdown(chapters, chapter_paths)
+    gate_result = validate_publish_quality(combined_content, allow_sketchnote_placeholder=False)
+    if not gate_result.passed:
+        raise RuntimeError("Compile-time publish gate failed: " + "; ".join(gate_result.errors))
+    combined_path.write_text(combined_content, encoding="utf-8")
 
     try:
         command = [
@@ -162,8 +167,14 @@ def compile_handbook(chapters: list[int], output_format: str = "docx") -> Path:
             str(output_path),
         ]
         completed = subprocess.run(command, capture_output=True, text=True, check=False)
+        stderr = completed.stderr.strip()
+        if "Could not convert image" in stderr:
+            raise RuntimeError(
+                "Pandoc could not convert one or more sketchnote images. "
+                "Install rsvg-convert or generate DOCX-compatible raster images. "
+                f"Pandoc output: {stderr}"
+            )
         if completed.returncode != 0:
-            stderr = completed.stderr.strip()
             raise RuntimeError(f"Pandoc {output_format.upper()} compilation failed: {stderr or 'no error output'}")
     finally:
         combined_path.unlink(missing_ok=True)

@@ -7,6 +7,7 @@ import re
 import textwrap
 from pathlib import Path
 
+from src.diagrams import DiagramArtifact, write_diagram_registry
 from src.handbook import resolve_chapter
 from src.validator import REQUIRED_SECTIONS
 
@@ -406,9 +407,38 @@ def generate_all_sketchnote_prompts(chapter: int, stage: str = "final") -> list[
 
 def generate_all_sketchnote_images(chapter: int, stage: str = "final") -> list[Path]:
     """Generate chapter summary and section sketchnote SVGs."""
+    metadata = resolve_chapter(chapter)
     paths = [generate_sketchnote_image(chapter, stage=stage)]
+    artifacts = [
+        DiagramArtifact(
+            diagram_id=f"chapter-{chapter:02d}-summary",
+            chapter=chapter,
+            section="Sketchnote Placeholder",
+            title=f"Chapter {chapter:02d} Summary Sketchnote",
+            prompt_path=str(prompt_path_for(chapter)),
+            image_path=str(image_path_for(chapter)),
+            image_type="svg",
+            caption=f"Sketchnote summary for {metadata.title}.",
+            status="generated" if image_path_for(chapter).exists() else "missing",
+        )
+    ]
     markdown = _chapter_text(chapter, stage)
     for section in SECTION_SKETCHNOTE_SECTIONS:
         if _section_text(markdown, section):
-            paths.append(generate_section_sketchnote_image(chapter, section, stage=stage))
+            image_path = generate_section_sketchnote_image(chapter, section, stage=stage)
+            paths.append(image_path)
+            artifacts.append(
+                DiagramArtifact(
+                    diagram_id=f"chapter-{chapter:02d}-{slugify(section)}",
+                    chapter=chapter,
+                    section=section,
+                    title=f"{section} Sketchnote",
+                    prompt_path=str(section_prompt_path_for(chapter, section)),
+                    image_path=str(section_image_path_for(chapter, section)),
+                    image_type="svg",
+                    caption=f"Sketchnote for Chapter {chapter:02d}: {section}.",
+                    status="generated" if image_path.exists() else "missing",
+                )
+            )
+    write_diagram_registry(chapter, artifacts)
     return paths

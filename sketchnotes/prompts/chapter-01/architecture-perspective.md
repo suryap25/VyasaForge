@@ -19,7 +19,7 @@ Create one focused sketchnote-style diagram for this handbook section.
 - Single implementation reduces bugs and inconsistencies
 - Easier to update authentication mechanisms globally
 - Centralized audit logging of authentication events
-- Supports single sign-on (SSO) across multiple applications
+- Supports single sign-on SSO across multiple applications
 - The auth service becomes a critical dependency
 - Network latency for every authentication check
 

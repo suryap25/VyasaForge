@@ -16,12 +16,12 @@ Create one focused sketchnote-style diagram for this handbook section.
 - Source stage: final
 
 ## Concepts To Visualize
-- **Distinguish** between authentication and authorization and explain w
-- **Design** authentication mechanisms that verify user identity with ap
-- **Implement** authorization controls that enforce access policies cons
-- **Identify** common authentication and authorization failures in code 
-- **Evaluate** authentication and authorization architectures for securi
-- **Apply** secure design patterns for both authentication and authoriza
+- Distinguish between authentication and authorization and explain why b
+- Design authentication mechanisms that verify user identity with approp
+- Implement authorization controls that enforce access policies consiste
+- Identify common authentication and authorization failures in code revi
+- Evaluate authentication and authorization architectures for security g
+- Apply secure design patterns for both authentication and authorization
 
 ## Output Requirement
 - Produce one landscape diagram suitable for insertion immediately after this section heading.

@@ -259,6 +259,38 @@ def _qa_handbook(chapters: str, stage: str = "final") -> None:
         raise SystemExit(1)
 
 
+def _publish_gate(chapter: int, stage: str = "final") -> None:
+    from src.publish_gate import validate_publish_file
+    from src.validator import resolve_chapter_stage_path
+
+    chapter_path = resolve_chapter_stage_path(chapter, stage=stage)
+    result = validate_publish_file(chapter_path, allow_sketchnote_placeholder=True)
+    print(f"{'PASS' if result.passed else 'FAIL'}: publish gate")
+    print(f"Path: {chapter_path}")
+    print(f"Word count: {result.word_count}")
+    for error in result.errors:
+        print(f"- {error}")
+    if not result.passed:
+        raise SystemExit(1)
+
+
+def _diagram_status(chapter: int) -> None:
+    from src.diagrams import load_diagram_registry
+
+    registry = load_diagram_registry(chapter)
+    diagrams = registry.get("diagrams", [])
+    print(f"Chapter: {registry.get('chapter_id')} - {registry.get('title')}")
+    print(f"Diagrams: {len(diagrams) if isinstance(diagrams, list) else 0}")
+    if isinstance(diagrams, list):
+        for diagram in diagrams:
+            if isinstance(diagram, dict):
+                print(
+                    f"- {diagram.get('diagram_id')}: "
+                    f"{diagram.get('section')} -> {diagram.get('status')} "
+                    f"({diagram.get('image_path')})"
+                )
+
+
 def _generate_sketchnote_prompts(chapters: str, stage: str = "final") -> None:
     from src.sketchnotes import generate_all_sketchnote_prompts
 
@@ -538,6 +570,13 @@ def _run_argparse() -> None:
     qa_parser.add_argument("--chapters", required=True)
     qa_parser.add_argument("--stage", default="final")
 
+    publish_gate_parser = subparsers.add_parser("publish-gate")
+    publish_gate_parser.add_argument("--chapter", type=int, required=True)
+    publish_gate_parser.add_argument("--stage", default="final")
+
+    diagram_status_parser = subparsers.add_parser("diagram-status")
+    diagram_status_parser.add_argument("--chapter", type=int, required=True)
+
     sketchnote_prompt_parser = subparsers.add_parser("generate-sketchnote-prompts")
     sketchnote_prompt_parser.add_argument("--chapters", required=True)
     sketchnote_prompt_parser.add_argument("--stage", default="final")
@@ -589,6 +628,8 @@ def _run_argparse() -> None:
         "llm-usage": lambda: _llm_usage(args.chapter),
         "agent-status": _agent_status,
         "qa-handbook": lambda: _qa_handbook(args.chapters, args.stage),
+        "publish-gate": lambda: _publish_gate(args.chapter, args.stage),
+        "diagram-status": lambda: _diagram_status(args.chapter),
         "generate-sketchnote-prompts": lambda: _generate_sketchnote_prompts(args.chapters, args.stage),
         "generate-sketchnotes": lambda: _generate_sketchnotes(args.chapters, args.stage),
         "plan-handbook": lambda: _plan_handbook(args.topic, args.chapters, args.audience, args.depth, args.pages),
@@ -746,6 +787,25 @@ if typer is not None:
         """Run deterministic handbook QA checks."""
         try:
             _qa_handbook(chapters, stage)
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    @app.command()
+    def publish_gate(
+        chapter: int = typer.Option(..., "--chapter", help="Chapter number to check."),
+        stage: str = typer.Option("final", "--stage", help="Chapter stage to check."),
+    ) -> None:
+        """Run publish-quality checks for one chapter stage."""
+        try:
+            _publish_gate(chapter, stage)
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    @app.command()
+    def diagram_status(chapter: int = typer.Option(..., "--chapter", help="Chapter number to inspect.")) -> None:
+        """Print generated diagram artifact registry status."""
+        try:
+            _diagram_status(chapter)
         except (FileNotFoundError, RuntimeError, ValueError) as exc:
             raise typer.BadParameter(str(exc)) from exc
 

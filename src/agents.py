@@ -57,8 +57,15 @@ AGENT_CONTRACTS = [
         name="Editor Agent",
         role="editor",
         input_contract="Original draft plus review comments.",
-        output_contract="Reviewed Markdown chapter that preserves original content.",
-        validation_gate="Revision must preserve required sections and at least 80% of draft word count.",
+        output_contract="Section patch JSON applied in place to produce reviewed Markdown.",
+        validation_gate="Revision must preserve required sections, avoid editorial markers, and keep at least 80% of draft word count.",
+    ),
+    AgentContract(
+        name="Publish Gate Agent",
+        role=None,
+        input_contract="Draft, reviewed, or final chapter Markdown.",
+        output_contract="Deterministic pass/fail publish-quality result.",
+        validation_gate="No LLM calls; final artifacts with revision notes, broken fences, or unresolved placeholders fail.",
     ),
     AgentContract(
         name="QA Agent",

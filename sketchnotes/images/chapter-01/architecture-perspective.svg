@@ -25,7 +25,7 @@
 <text x="1445" y="323" text-anchor="middle" font-size="22" font-family="Comic Sans MS, Segoe Print, Arial"><tspan x="1445" dy="0">outcome</tspan></text>
 
   <rect x="390" y="545" width="225" height="135" rx="18" fill="#eef9ea" stroke="#2e7d32" stroke-width="4"/>
-<text x="502" y="603" text-anchor="middle" font-size="22" font-family="Comic Sans MS, Segoe Print, Arial"><tspan x="502" dy="0">Supports single</tspan><tspan x="502" dy="26">sign-on (SSO)</tspan><tspan x="502" dy="26">across...</tspan></text>
+<text x="502" y="603" text-anchor="middle" font-size="22" font-family="Comic Sans MS, Segoe Print, Arial"><tspan x="502" dy="0">Supports single</tspan><tspan x="502" dy="26">sign-on SSO</tspan><tspan x="502" dy="26">across...</tspan></text>
   <line x1="502" y1="545" x2="502" y2="425" stroke="#111111" stroke-width="4" marker-end="url(#arrow)"/>
   <rect x="985" y="545" width="225" height="135" rx="18" fill="#fef8df" stroke="#d9a300" stroke-width="4"/>
 <text x="1097" y="603" text-anchor="middle" font-size="22" font-family="Comic Sans MS, Segoe Print, Arial"><tspan x="1097" dy="0">The auth service</tspan><tspan x="1097" dy="26">becomes a</tspan><tspan x="1097" dy="26">critical...</tspan></text>
