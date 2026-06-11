@@ -56,12 +56,45 @@ def _issue_type(message: str) -> str:
     return "section_improvement"
 
 
+def _is_actionable_issue(message: str) -> bool:
+    """Return true when a review sentence describes a likely issue, not praise."""
+    lower = message.lower()
+    positive_markers = [
+        "excellent",
+        "well-chosen",
+        "well organized",
+        "well-organized",
+        "valuable",
+        "clearly",
+        "strong",
+    ]
+    issue_markers = [
+        "missing",
+        "unclear",
+        "weak",
+        "lacks",
+        "gap",
+        "risk",
+        "hallucination",
+        "vendor",
+        "minor issue",
+        "should",
+        "needs",
+    ]
+    return any(marker in lower for marker in issue_markers) and not (
+        any(marker in lower for marker in positive_markers)
+        and not any(marker in lower for marker in ["missing", "weak", "lacks", "gap", "issue"])
+    )
+
+
 def extract_structured_findings(review: str) -> list[ReviewFinding]:
     """Extract conservative structured findings from a Markdown review."""
     findings: list[ReviewFinding] = []
     for section in REQUIRED_SECTIONS:
         sentence = _sentence_for_section(review, section)
         if sentence is None:
+            continue
+        if not _is_actionable_issue(sentence):
             continue
         findings.append(
             ReviewFinding(

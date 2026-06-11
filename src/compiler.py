@@ -9,7 +9,7 @@ from pathlib import Path
 from src.handbook import load_handbook_registry
 from src.handbook import resolve_chapter
 from src.publish_gate import validate_publish_quality
-from src.sketchnotes import image_path_for, section_image_path_for, section_sketchnote_sections
+from src.sketchnotes import preferred_image_path_for, preferred_section_image_path_for, section_sketchnote_sections
 
 OUTPUT_PATH = Path("output/AppSec_Authentication_Authorization_Handbook_Phase1.docx")
 TITLE = "AppSec Authentication & Authorization Handbook v2.0"
@@ -43,7 +43,7 @@ def pandoc_path() -> str:
 
 def sketchnote_markdown(chapter: int) -> str | None:
     """Return Markdown image syntax for a generated sketchnote if it exists."""
-    image_path = image_path_for(chapter)
+    image_path = preferred_image_path_for(chapter)
     if not image_path.exists():
         return None
     return f"![Sketchnote for Chapter {chapter:02d}]({image_path.as_posix()}){{ width=6.5in }}"
@@ -51,7 +51,7 @@ def sketchnote_markdown(chapter: int) -> str | None:
 
 def section_sketchnote_markdown(chapter: int, section: str) -> str | None:
     """Return Markdown image syntax for a section sketchnote if it exists."""
-    image_path = section_image_path_for(chapter, section)
+    image_path = preferred_section_image_path_for(chapter, section)
     if not image_path.exists():
         return None
     return f"![Sketchnote for Chapter {chapter:02d} - {section}]({image_path.as_posix()}){{ width=6.5in }}"

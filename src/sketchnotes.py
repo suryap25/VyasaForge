@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import html
+import json
 import re
+import shutil
+import subprocess
 import textwrap
 from pathlib import Path
 
@@ -38,6 +41,11 @@ def image_path_for(chapter: int) -> Path:
     return IMAGE_DIR / f"chapter-{chapter:02d}.svg"
 
 
+def png_path_for(chapter: int) -> Path:
+    """Return the DOCX-compatible PNG path for a chapter sketchnote."""
+    return IMAGE_DIR / f"chapter-{chapter:02d}.png"
+
+
 def slugify(value: str) -> str:
     """Return a filesystem-safe slug."""
     slug = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
@@ -52,6 +60,23 @@ def section_prompt_path_for(chapter: int, section: str) -> Path:
 def section_image_path_for(chapter: int, section: str) -> Path:
     """Return the sketchnote SVG path for one chapter section."""
     return IMAGE_DIR / f"chapter-{chapter:02d}" / f"{slugify(section)}.svg"
+
+
+def section_png_path_for(chapter: int, section: str) -> Path:
+    """Return the DOCX-compatible PNG path for one chapter section."""
+    return IMAGE_DIR / f"chapter-{chapter:02d}" / f"{slugify(section)}.png"
+
+
+def preferred_image_path_for(chapter: int) -> Path:
+    """Return the preferred image path for DOCX compilation."""
+    png_path = png_path_for(chapter)
+    return png_path if png_path.exists() else image_path_for(chapter)
+
+
+def preferred_section_image_path_for(chapter: int, section: str) -> Path:
+    """Return the preferred section image path for DOCX compilation."""
+    png_path = section_png_path_for(chapter, section)
+    return png_path if png_path.exists() else section_image_path_for(chapter, section)
 
 
 def section_sketchnote_sections() -> list[str]:
@@ -330,6 +355,122 @@ def sketchnote_svg(chapter: int, stage: str = "final") -> str:
 '''
 
 
+def _summary_labels(chapter: int, stage: str) -> tuple[str, list[str]]:
+    metadata = resolve_chapter(chapter)
+    markdown = _chapter_text(chapter, stage)
+    headings = [heading for heading in _headings(markdown) if heading in REQUIRED_SECTIONS]
+    if len(headings) < 6:
+        headings = REQUIRED_SECTIONS[:8]
+    return metadata.title, ["Reader Context", *headings[:7]]
+
+
+def _section_labels(chapter: int, section: str, stage: str) -> tuple[str, list[str]]:
+    metadata = resolve_chapter(chapter)
+    markdown = _chapter_text(chapter, stage)
+    section_body = _section_text(markdown, section)
+    if not section_body:
+        raise ValueError(f"Section '{section}' was not found in chapter {chapter}.")
+    labels = _concept_labels(
+        section_body,
+        fallback=[section, "risk", "control", "developer action", "security review"],
+        limit=5,
+    )
+    return f"{metadata.title}: {section}", ["Context", *labels, "Outcome"]
+
+
+def _render_png(output_path: Path, title: str, labels: list[str]) -> None:
+    """Render a simple sketchnote-style PNG using Windows System.Drawing."""
+    powershell = shutil.which("powershell")
+    if powershell is None:
+        raise RuntimeError("PowerShell is required to render PNG sketchnotes on this platform.")
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_dir = IMAGE_DIR / ".tmp"
+    tmp_dir.mkdir(parents=True, exist_ok=True)
+    spec_path = tmp_dir / f"{output_path.stem}.json"
+    script_path = tmp_dir / f"{output_path.stem}.ps1"
+    spec_path.write_text(
+        json.dumps({"title": title, "labels": labels, "output": str(output_path.resolve())}),
+        encoding="utf-8",
+    )
+    script_path.write_text(
+        r'''
+param([string]$SpecPath)
+Add-Type -AssemblyName System.Drawing
+Add-Type -AssemblyName System.Windows.Forms
+$spec = Get-Content -Raw -Path $SpecPath | ConvertFrom-Json
+$bmp = New-Object System.Drawing.Bitmap 1600,900
+$g = [System.Drawing.Graphics]::FromImage($bmp)
+$g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
+$g.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAliasGridFit
+$g.Clear([System.Drawing.Color]::FromArgb(255,253,247))
+$fontTitle = New-Object System.Drawing.Font 'Arial',26,[System.Drawing.FontStyle]::Bold
+$font = New-Object System.Drawing.Font 'Arial',18,[System.Drawing.FontStyle]::Regular
+$penBlack = New-Object System.Drawing.Pen ([System.Drawing.Color]::FromArgb(30,30,30)),4
+$penBlue = New-Object System.Drawing.Pen ([System.Drawing.Color]::FromArgb(30,102,177)),4
+$penOrange = New-Object System.Drawing.Pen ([System.Drawing.Color]::FromArgb(223,124,24)),4
+$penGreen = New-Object System.Drawing.Pen ([System.Drawing.Color]::FromArgb(46,125,50)),4
+$penRed = New-Object System.Drawing.Pen ([System.Drawing.Color]::FromArgb(215,25,32)),4
+$penRed.DashStyle = [System.Drawing.Drawing2D.DashStyle]::Dash
+$brushText = [System.Drawing.Brushes]::Black
+$brushBlue = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(238,246,255))
+$brushOrange = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(255,244,223))
+$brushGreen = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(238,249,234))
+$format = New-Object System.Drawing.StringFormat
+$format.Alignment = [System.Drawing.StringAlignment]::Center
+$format.LineAlignment = [System.Drawing.StringAlignment]::Center
+$textFlags = [System.Windows.Forms.TextFormatFlags]::HorizontalCenter -bor [System.Windows.Forms.TextFormatFlags]::VerticalCenter -bor [System.Windows.Forms.TextFormatFlags]::WordBreak
+function Box($x,$y,$w,$h,$fill,$pen,$text) {
+  $rect = New-Object System.Drawing.Rectangle $x,$y,$w,$h
+  $g.FillRectangle($fill,$rect)
+  $g.DrawRectangle($pen,$rect)
+  [System.Windows.Forms.TextRenderer]::DrawText($g,[string]$text,$font,$rect,[System.Drawing.Color]::Black,$textFlags)
+}
+function Arrow($x1,$y1,$x2,$y2,$pen) {
+  $g.DrawLine($pen,$x1,$y1,$x2,$y2)
+  $g.DrawLine($pen,$x2,$y2,$x2-16,$y2-8)
+  $g.DrawLine($pen,$x2,$y2,$x2-16,$y2+8)
+}
+$titleRect = New-Object System.Drawing.Rectangle 90,25,1420,80
+[System.Windows.Forms.TextRenderer]::DrawText($g,[string]$spec.title,$fontTitle,$titleRect,[System.Drawing.Color]::Black,$textFlags)
+$labels = @($spec.labels)
+while ($labels.Count -lt 8) { $labels += 'concept' }
+Box 70 350 190 140 $brushBlue $penBlue $labels[0]
+Arrow 260 420 360 420 $penBlack
+Box 370 310 210 155 $brushOrange $penOrange $labels[1]
+Arrow 580 388 660 388 $penBlack
+Box 670 310 210 155 $brushOrange $penOrange $labels[2]
+Arrow 880 388 960 388 $penBlack
+Box 970 310 210 155 $brushOrange $penOrange $labels[3]
+Arrow 1180 388 1260 388 $penBlack
+Box 1270 350 220 140 $brushGreen $penGreen $labels[4]
+Box 390 635 240 130 $brushGreen $penGreen $labels[5]
+Arrow 510 635 510 465 $penBlack
+Box 760 635 240 130 $brushGreen $penGreen $labels[6]
+Arrow 880 635 880 465 $penBlack
+Box 1130 635 240 130 $brushGreen $penGreen $labels[7]
+Arrow 1250 635 1080 465 $penBlack
+$g.DrawLine($penRed,160,700,375,465)
+$riskRect = New-Object System.Drawing.Rectangle 65,725,220,60
+[System.Windows.Forms.TextRenderer]::DrawText($g,'risk path',$font,$riskRect,[System.Drawing.Color]::Black,$textFlags)
+$bmp.Save($spec.output,[System.Drawing.Imaging.ImageFormat]::Png)
+$g.Dispose()
+$bmp.Dispose()
+''',
+        encoding="utf-8",
+    )
+    completed = subprocess.run(
+        [powershell, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script_path), str(spec_path)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    spec_path.unlink(missing_ok=True)
+    script_path.unlink(missing_ok=True)
+    if completed.returncode != 0 or not output_path.exists():
+        raise RuntimeError(f"PNG sketchnote rendering failed: {completed.stderr.strip() or completed.stdout.strip()}")
+
+
 def section_sketchnote_svg(chapter: int, section: str, stage: str = "final") -> str:
     """Create a deterministic sketchnote-style SVG for one section."""
     metadata = resolve_chapter(chapter)
@@ -383,7 +524,9 @@ def generate_sketchnote_image(chapter: int, stage: str = "final") -> Path:
     path = image_path_for(chapter)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(sketchnote_svg(chapter, stage=stage), encoding="utf-8")
-    return path
+    title, labels = _summary_labels(chapter, stage)
+    _render_png(png_path_for(chapter), title, labels)
+    return png_path_for(chapter)
 
 
 def generate_section_sketchnote_image(chapter: int, section: str, stage: str = "final") -> Path:
@@ -392,7 +535,9 @@ def generate_section_sketchnote_image(chapter: int, section: str, stage: str = "
     path = section_image_path_for(chapter, section)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(section_sketchnote_svg(chapter, section, stage=stage), encoding="utf-8")
-    return path
+    title, labels = _section_labels(chapter, section, stage)
+    _render_png(section_png_path_for(chapter, section), title, labels)
+    return section_png_path_for(chapter, section)
 
 
 def generate_all_sketchnote_prompts(chapter: int, stage: str = "final") -> list[Path]:
@@ -416,10 +561,10 @@ def generate_all_sketchnote_images(chapter: int, stage: str = "final") -> list[P
             section="Sketchnote Placeholder",
             title=f"Chapter {chapter:02d} Summary Sketchnote",
             prompt_path=str(prompt_path_for(chapter)),
-            image_path=str(image_path_for(chapter)),
-            image_type="svg",
+            image_path=str(png_path_for(chapter)),
+            image_type="png",
             caption=f"Sketchnote summary for {metadata.title}.",
-            status="generated" if image_path_for(chapter).exists() else "missing",
+            status="generated" if png_path_for(chapter).exists() else "missing",
         )
     ]
     markdown = _chapter_text(chapter, stage)
@@ -434,8 +579,8 @@ def generate_all_sketchnote_images(chapter: int, stage: str = "final") -> list[P
                     section=section,
                     title=f"{section} Sketchnote",
                     prompt_path=str(section_prompt_path_for(chapter, section)),
-                    image_path=str(section_image_path_for(chapter, section)),
-                    image_type="svg",
+                    image_path=str(section_png_path_for(chapter, section)),
+                    image_type="png",
                     caption=f"Sketchnote for Chapter {chapter:02d}: {section}.",
                     status="generated" if image_path.exists() else "missing",
                 )

@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from src.handbook import resolve_chapter
+from src.publish_gate import code_fence_count
 from src.validator import has_section, resolve_chapter_stage_path, validate_chapter
 
 SKETCHNOTE_SECTION = "Sketchnote Placeholder"
@@ -46,13 +47,24 @@ def append_section(path: Path, section_markdown: str) -> None:
     path.write_text(existing.rstrip() + "\n\n" + section_markdown.strip() + "\n", encoding="utf-8")
 
 
+def repair_code_fence(path: Path) -> bool:
+    """Close a dangling fenced code block if the file has an odd fence count."""
+    existing = path.read_text(encoding="utf-8")
+    if code_fence_count(existing) % 2 == 0:
+        return False
+    path.write_text(existing.rstrip() + "\n```\n", encoding="utf-8")
+    return True
+
+
 def repair_chapter(chapter: int, stage: str = "drafts") -> Path:
     """Append missing required sections to an existing chapter file."""
     metadata = resolve_chapter(chapter)
     chapter_path = resolve_chapter_stage_path(chapter, stage=stage)
-    result = validate_chapter(chapter, stage=stage)
     if not chapter_path.exists():
         raise FileNotFoundError(f"Missing {stage} chapter file: {chapter_path}")
+
+    repair_code_fence(chapter_path)
+    result = validate_chapter(chapter, stage=stage)
 
     if not result.missing_sections:
         return chapter_path
@@ -85,13 +97,18 @@ def repair_chapter(chapter: int, stage: str = "drafts") -> Path:
 
     from src import llm_gateway
 
-    repair = llm_gateway.call_llm(role="writer", messages=messages, chapter=metadata.number)
+    try:
+        repair = llm_gateway.call_llm(role="writer", messages=messages, chapter=metadata.number)
+    except RuntimeError:
+        repair = "\n\n".join(deterministic_section_markdown(section) for section in llm_sections)
     chapter_path.write_text(existing.rstrip() + "\n\n" + repair.strip() + "\n", encoding="utf-8")
+    repair_code_fence(chapter_path)
 
     repaired = chapter_path.read_text(encoding="utf-8")
     for section in result.missing_sections:
         if not has_section(repaired, section):
             append_section(chapter_path, deterministic_section_markdown(section))
+            repair_code_fence(chapter_path)
             repaired = chapter_path.read_text(encoding="utf-8")
 
     return chapter_path

@@ -121,11 +121,13 @@ def _print_validation_result(result: object, chapter_path: Path, stage: str) -> 
 
 
 def _is_repairable_validation_failure(result: object, chapter_path: Path) -> bool:
-    """Return true when validation failed only for section or word count issues."""
+    """Return true when validation failed only for auto-repairable issues."""
     if result.passed or not chapter_path.exists():
         return False
     return all(
-        error.startswith("Missing required section:") or error.startswith("Word count is ")
+        error.startswith("Missing required section:")
+        or error.startswith("Word count is ")
+        or error == "Unbalanced fenced code block markers."
         for error in result.errors
     )
 

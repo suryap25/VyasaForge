@@ -87,6 +87,8 @@ handbook-status
 
 If revision fails the safety gate, the pipeline falls back to finalizing the validated draft so MVP1 can still complete.
 
+Draft repair handles missing required sections and can deterministically close an unbalanced fenced code block. If the LLM repair call is unavailable, the repairer falls back to local section scaffolds so the pipeline can continue with clear placeholders for later enrichment.
+
 ## Verify Outputs
 
 Validate each stage:
@@ -262,7 +264,7 @@ Expected output:
 sketchnotes/prompts/chapter-01-prompt.md
 ```
 
-Generate deterministic local sketchnote SVGs:
+Generate deterministic local sketchnotes:
 
 ```powershell
 python -m src.cli generate-sketchnotes --chapters 1 --stage final
@@ -272,6 +274,9 @@ Expected output:
 
 ```text
 sketchnotes/images/chapter-01.svg
+sketchnotes/images/chapter-01.png
+sketchnotes/images/chapter-01/<section>.svg
+sketchnotes/images/chapter-01/<section>.png
 ```
 
 Compile the handbook after sketchnotes exist:
@@ -280,9 +285,9 @@ Compile the handbook after sketchnotes exist:
 python -m src.cli compile-handbook --chapters 1 --format docx
 ```
 
-The compiler replaces `[SKETCHNOTE DIAGRAM PLACEHOLDER]` with the generated chapter SVG when the image exists. If the image does not exist, the placeholder remains visible.
+The generator keeps SVG source files and also creates DOCX-compatible PNG files. The compiler prefers PNG images and replaces `[SKETCHNOTE DIAGRAM PLACEHOLDER]` with the generated chapter image when it exists. If the image does not exist, the placeholder remains visible.
 
-The normal chapter pipeline now runs sketchnote prompt generation and local SVG generation before DOCX compilation:
+The normal chapter pipeline now runs sketchnote prompt generation and local image generation before DOCX compilation:
 
 ```powershell
 python -m src.cli run-chapter --chapter 1
@@ -327,7 +332,7 @@ Inspect diagram status:
 python -m src.cli diagram-status --chapter 1
 ```
 
-Compile now runs a publish gate before Pandoc. If Pandoc cannot convert a generated SVG image, compilation fails with a clear message instead of silently producing an incomplete DOCX. On Windows, full SVG conversion may require `rsvg-convert` on `PATH`.
+Compile now runs a publish gate before Pandoc. Sketchnotes are compiled from PNG files by default so Pandoc does not require `rsvg-convert` for the normal DOCX path.
 
 ## Notes
 

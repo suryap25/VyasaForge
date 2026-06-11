@@ -89,6 +89,7 @@ def has_heading_hierarchy_jump(markdown: str) -> bool:
 
 def editorial_marker_errors(markdown: str) -> list[str]:
     """Return editorial artifact errors."""
+    markdown = strip_fenced_code(markdown)
     errors = []
     for pattern in EDITORIAL_MARKER_PATTERNS:
         match = re.search(pattern, markdown)
