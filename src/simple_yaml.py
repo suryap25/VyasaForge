@@ -71,6 +71,8 @@ def _format_scalar(value: Any) -> str:
     if isinstance(value, int):
         return str(value)
     text = str(value)
+    if text == "":
+        return "''"
     if text.replace(".", "", 1).isdigit():
         return f'"{text}"'
     return text

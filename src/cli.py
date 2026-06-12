@@ -40,6 +40,35 @@ def _parse_chapter_numbers(chapters: str) -> list[int]:
     return chapter_numbers
 
 
+def _with_provider(profile: str | None, action: Callable[[], None]) -> None:
+    """Run an action with a temporary LLM_PROFILE override."""
+    if not profile:
+        action()
+        return
+
+    previous = os.environ.get("LLM_PROFILE")
+    os.environ["LLM_PROFILE"] = profile
+    try:
+        action()
+    finally:
+        if previous is None:
+            os.environ.pop("LLM_PROFILE", None)
+        else:
+            os.environ["LLM_PROFILE"] = previous
+
+
+def _print_table(headers: list[str], rows: list[list[object]]) -> None:
+    """Print a compact text table."""
+    widths = [
+        max(len(str(row[index])) for row in rows + [headers])
+        for index in range(len(headers))
+    ]
+    print(" | ".join(header.ljust(widths[index]) for index, header in enumerate(headers)))
+    print("-+-".join("-" * width for width in widths))
+    for row in rows:
+        print(" | ".join(str(value).ljust(widths[index]) for index, value in enumerate(row)))
+
+
 def _write_chapter(chapter: int) -> None:
     from src.writer import write_chapter
     from src.state_manager import update_draft
@@ -547,10 +576,24 @@ def _doctor() -> None:
     """Print provider and configuration diagnostics without calling the LLM."""
     phase1_config = Path("configs/phase1.example.json")
     handbook_config = Path("configs/handbook.yaml")
+    provider_config = Path("configs/providers.yaml")
 
     print("Config files:")
     print(f"- {phase1_config}: {'FOUND' if phase1_config.exists() else 'MISSING'}")
     print(f"- {handbook_config}: {'FOUND' if handbook_config.exists() else 'MISSING'}")
+    print(f"- {provider_config}: {'FOUND' if provider_config.exists() else 'MISSING'}")
+
+    try:
+        from src.provider_profiles import active_provider_profile, selected_profile_name
+
+        profile = active_provider_profile()
+        if profile is not None:
+            print(f"Active provider profile: {selected_profile_name()}")
+            print(f"Provider: {profile.provider}")
+            print(f"Expected env var: {profile.env_var or 'none'}")
+            print(f"Env var present: {'yes' if not profile.env_var or os.environ.get(profile.env_var) else 'no'}")
+    except FileNotFoundError:
+        pass
 
     from src.llm_gateway import load_config
 
@@ -570,12 +613,56 @@ def _doctor() -> None:
         print(f"  env_var_present: {env_present}")
 
 
+def _list_providers() -> None:
+    from src.provider_profiles import load_provider_config, provider_env_present
+
+    config = load_provider_config()
+    rows = []
+    for profile_name, profile in config.profiles.items():
+        rows.append(
+            [
+                "*" if profile_name == config.active_profile else "",
+                profile_name,
+                profile.provider,
+                profile.env_var or "none",
+                "yes" if provider_env_present(profile) else "no",
+                ", ".join(sorted(profile.roles)),
+            ]
+        )
+    _print_table(["Active", "Profile", "Provider", "Env Var", "Present", "Roles"], rows)
+
+
+def _provider_status() -> None:
+    from src.provider_profiles import active_provider_profile, selected_profile_name
+
+    profile = active_provider_profile()
+    if profile is None:
+        print("Provider profiles are not configured.")
+        return
+    print(f"Active profile: {selected_profile_name()}")
+    print(f"Provider: {profile.provider}")
+    print(f"Expected env var: {profile.env_var or 'none'}")
+    print(f"Env var present: {'yes' if not profile.env_var or os.environ.get(profile.env_var) else 'no'}")
+    print("Roles:")
+    for role, settings in sorted(profile.roles.items()):
+        print(f"- {role}: {settings.model}")
+
+
+def _use_provider(profile: str) -> None:
+    from src.provider_profiles import set_active_profile
+
+    path = set_active_profile(profile)
+    print(f"Active provider profile set to: {profile}")
+    print(f"Updated: {Path(path)}")
+
+
 def _run_argparse() -> None:
     parser = argparse.ArgumentParser(description="AppSec handbook agent utilities.")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     test_model_parser = subparsers.add_parser("test-model")
     test_model_parser.add_argument("--role", default="writer")
+    test_model_parser.add_argument("--provider")
 
     create_parser = subparsers.add_parser("create-chapter")
     create_parser.add_argument("--chapter", type=int, required=True)
@@ -590,6 +677,7 @@ def _run_argparse() -> None:
 
     write_parser = subparsers.add_parser("write-chapter")
     write_parser.add_argument("--chapter", type=int, required=True)
+    write_parser.add_argument("--provider")
 
     validate_parser = subparsers.add_parser("validate-chapter")
     validate_parser.add_argument("--chapter", type=int, required=True)
@@ -601,9 +689,11 @@ def _run_argparse() -> None:
 
     review_parser = subparsers.add_parser("review-chapter")
     review_parser.add_argument("--chapter", type=int, required=True)
+    review_parser.add_argument("--provider")
 
     revise_parser = subparsers.add_parser("revise-chapter")
     revise_parser.add_argument("--chapter", type=int, required=True)
+    revise_parser.add_argument("--provider")
 
     finalize_parser = subparsers.add_parser("finalize-chapter")
     finalize_parser.add_argument("--chapter", type=int, required=True)
@@ -649,9 +739,11 @@ def _run_argparse() -> None:
     plan_parser.add_argument("--audience")
     plan_parser.add_argument("--depth")
     plan_parser.add_argument("--pages", type=int)
+    plan_parser.add_argument("--provider")
 
     update_toc_parser = subparsers.add_parser("update-toc")
     update_toc_parser.add_argument("--input", required=True)
+    update_toc_parser.add_argument("--provider")
 
     subparsers.add_parser("handbook-status")
 
@@ -662,23 +754,29 @@ def _run_argparse() -> None:
 
     run_parser = subparsers.add_parser("run-chapter")
     run_parser.add_argument("--chapter", type=int, required=True)
+    run_parser.add_argument("--provider")
 
     run_chapters_parser = subparsers.add_parser("run-chapters")
     run_chapters_parser.add_argument("--chapters", required=True)
+    run_chapters_parser.add_argument("--provider")
 
     subparsers.add_parser("doctor")
+    subparsers.add_parser("list-providers")
+    subparsers.add_parser("provider-status")
+    use_provider_parser = subparsers.add_parser("use-provider")
+    use_provider_parser.add_argument("--profile", required=True)
 
     args = parser.parse_args()
     commands: dict[str, Callable[[], None]] = {
-        "test-model": lambda: _test_model(args.role),
+        "test-model": lambda: _with_provider(args.provider, lambda: _test_model(args.role)),
         "create-chapter": lambda: _create_chapter(args.chapter, args.overwrite),
         "generate-briefs": lambda: _generate_briefs(args.chapters, args.overwrite),
         "validate-brief": lambda: _validate_brief(args.chapter),
-        "write-chapter": lambda: _write_chapter(args.chapter),
+        "write-chapter": lambda: _with_provider(args.provider, lambda: _write_chapter(args.chapter)),
         "validate-chapter": lambda: _validate_chapter(args.chapter, args.stage),
         "repair-chapter": lambda: _repair_chapter(args.chapter, args.stage),
-        "review-chapter": lambda: _review_chapter(args.chapter),
-        "revise-chapter": lambda: _revise_chapter(args.chapter),
+        "review-chapter": lambda: _with_provider(args.provider, lambda: _review_chapter(args.chapter)),
+        "revise-chapter": lambda: _with_provider(args.provider, lambda: _revise_chapter(args.chapter)),
         "finalize-chapter": lambda: _finalize_chapter(args.chapter, args.source),
         "compile-docx": lambda: _compile_docx(args.chapters),
         "compile-handbook": lambda: _compile_handbook(args.chapters, args.format),
@@ -690,13 +788,16 @@ def _run_argparse() -> None:
         "diagram-status": lambda: _diagram_status(args.chapter),
         "generate-sketchnote-prompts": lambda: _generate_sketchnote_prompts(args.chapters, args.stage),
         "generate-sketchnotes": lambda: _generate_sketchnotes(args.chapters, args.stage),
-        "plan-handbook": lambda: _plan_handbook(args.topic, args.chapters, args.audience, args.depth, args.pages),
-        "update-toc": lambda: _update_toc(args.input),
+        "plan-handbook": lambda: _with_provider(args.provider, lambda: _plan_handbook(args.topic, args.chapters, args.audience, args.depth, args.pages)),
+        "update-toc": lambda: _with_provider(args.provider, lambda: _update_toc(args.input)),
         "handbook-status": _handbook_status,
         "diff-chapter": lambda: _diff_chapter(args.chapter, args.from_stage, args.to_stage),
-        "run-chapter": lambda: _run_chapter(args.chapter),
-        "run-chapters": lambda: _run_chapters(args.chapters),
+        "run-chapter": lambda: _with_provider(args.provider, lambda: _run_chapter(args.chapter)),
+        "run-chapters": lambda: _with_provider(args.provider, lambda: _run_chapters(args.chapters)),
         "doctor": _doctor,
+        "list-providers": _list_providers,
+        "provider-status": _provider_status,
+        "use-provider": lambda: _use_provider(args.profile),
     }
 
     try:
@@ -709,10 +810,13 @@ if typer is not None:
     app = typer.Typer(help="AppSec handbook agent utilities.")
 
     @app.command()
-    def test_model(role: str = typer.Option("writer", "--role", help="Configured LLM role.")) -> None:
+    def test_model(
+        role: str = typer.Option("writer", "--role", help="Configured LLM role."),
+        provider: str | None = typer.Option(None, "--provider", help="Temporary provider profile."),
+    ) -> None:
         """Send a tiny prompt through the configured model."""
         try:
-            _test_model(role)
+            _with_provider(provider, lambda: _test_model(role))
         except (RuntimeError, ValueError) as exc:
             raise typer.BadParameter(str(exc)) from exc
 
@@ -747,10 +851,13 @@ if typer is not None:
             raise typer.BadParameter(str(exc)) from exc
 
     @app.command()
-    def write_chapter(chapter: int = typer.Option(..., "--chapter", help="Chapter number to write.")) -> None:
+    def write_chapter(
+        chapter: int = typer.Option(..., "--chapter", help="Chapter number to write."),
+        provider: str | None = typer.Option(None, "--provider", help="Temporary provider profile."),
+    ) -> None:
         """Write a Markdown chapter draft."""
         try:
-            _write_chapter(chapter)
+            _with_provider(provider, lambda: _write_chapter(chapter))
         except (FileNotFoundError, RuntimeError, ValueError) as exc:
             raise typer.BadParameter(str(exc)) from exc
 
@@ -777,18 +884,24 @@ if typer is not None:
             raise typer.BadParameter(str(exc)) from exc
 
     @app.command()
-    def review_chapter(chapter: int = typer.Option(..., "--chapter", help="Chapter number to review.")) -> None:
+    def review_chapter(
+        chapter: int = typer.Option(..., "--chapter", help="Chapter number to review."),
+        provider: str | None = typer.Option(None, "--provider", help="Temporary provider profile."),
+    ) -> None:
         """Review a Markdown chapter draft."""
         try:
-            _review_chapter(chapter)
+            _with_provider(provider, lambda: _review_chapter(chapter))
         except (FileNotFoundError, RuntimeError, ValueError) as exc:
             raise typer.BadParameter(str(exc)) from exc
 
     @app.command()
-    def revise_chapter(chapter: int = typer.Option(..., "--chapter", help="Chapter number to revise.")) -> None:
+    def revise_chapter(
+        chapter: int = typer.Option(..., "--chapter", help="Chapter number to revise."),
+        provider: str | None = typer.Option(None, "--provider", help="Temporary provider profile."),
+    ) -> None:
         """Revise a Markdown chapter draft using review comments."""
         try:
-            _revise_chapter(chapter)
+            _with_provider(provider, lambda: _revise_chapter(chapter))
         except (FileNotFoundError, RuntimeError, ValueError) as exc:
             raise typer.BadParameter(str(exc)) from exc
 
@@ -796,10 +909,11 @@ if typer is not None:
     def enhance_chapter(
         chapter: int = typer.Option(..., "--chapter", help="Chapter number to enhance."),
         source: str = typer.Option("reviewed", "--source", help="Source: drafts, reviewed, enhanced, or referenced."),
+        provider: str | None = typer.Option(None, "--provider", help="Temporary provider profile."),
     ) -> None:
         """Add principal-level AppSec depth to a chapter."""
         try:
-            _enhance_chapter(chapter, source)
+            _with_provider(provider, lambda: _enhance_chapter(chapter, source))
         except (FileNotFoundError, RuntimeError, ValueError, KeyError) as exc:
             raise typer.BadParameter(str(exc)) from exc
 
@@ -807,10 +921,11 @@ if typer is not None:
     def add_references(
         chapter: int = typer.Option(..., "--chapter", help="Chapter number to enrich."),
         source: str = typer.Option("enhanced", "--source", help="Source: drafts, reviewed, enhanced, or referenced."),
+        provider: str | None = typer.Option(None, "--provider", help="Temporary provider profile."),
     ) -> None:
         """Add a gated References section to a chapter."""
         try:
-            _add_references(chapter, source)
+            _with_provider(provider, lambda: _add_references(chapter, source))
         except (FileNotFoundError, RuntimeError, ValueError, KeyError) as exc:
             raise typer.BadParameter(str(exc)) from exc
 
@@ -929,18 +1044,22 @@ if typer is not None:
         audience: str | None = typer.Option(None, "--audience", help="Optional target audience."),
         depth: str | None = typer.Option(None, "--depth", help="Optional depth, such as beginner or advanced."),
         pages: int | None = typer.Option(None, "--pages", help="Optional target page count."),
+        provider: str | None = typer.Option(None, "--provider", help="Temporary provider profile."),
     ) -> None:
         """Generate handbook registry YAML from a topic."""
         try:
-            _plan_handbook(topic, chapters, audience, depth, pages)
+            _with_provider(provider, lambda: _plan_handbook(topic, chapters, audience, depth, pages))
         except (FileNotFoundError, RuntimeError, ValueError) as exc:
             raise typer.BadParameter(str(exc)) from exc
 
     @app.command()
-    def update_toc(input: str = typer.Option(..., "--input", help="User requirements Markdown file.")) -> None:
+    def update_toc(
+        input: str = typer.Option(..., "--input", help="User requirements Markdown file."),
+        provider: str | None = typer.Option(None, "--provider", help="Temporary provider profile."),
+    ) -> None:
         """Update handbook registry YAML from user requirements."""
         try:
-            _update_toc(input)
+            _with_provider(provider, lambda: _update_toc(input))
         except (FileNotFoundError, RuntimeError, ValueError) as exc:
             raise typer.BadParameter(str(exc)) from exc
 
@@ -962,18 +1081,48 @@ if typer is not None:
             raise typer.BadParameter(str(exc)) from exc
 
     @app.command()
-    def run_chapter(chapter: int = typer.Option(..., "--chapter", help="Chapter number to run.")) -> None:
+    def run_chapter(
+        chapter: int = typer.Option(..., "--chapter", help="Chapter number to run."),
+        provider: str | None = typer.Option(None, "--provider", help="Temporary provider profile."),
+    ) -> None:
         """Run the single-chapter pipeline."""
         try:
-            _run_chapter(chapter)
+            _with_provider(provider, lambda: _run_chapter(chapter))
         except (FileNotFoundError, RuntimeError, ValueError) as exc:
             raise typer.BadParameter(str(exc)) from exc
 
     @app.command()
-    def run_chapters(chapters: str = typer.Option(..., "--chapters", help="Comma-separated chapter numbers.")) -> None:
+    def run_chapters(
+        chapters: str = typer.Option(..., "--chapters", help="Comma-separated chapter numbers."),
+        provider: str | None = typer.Option(None, "--provider", help="Temporary provider profile."),
+    ) -> None:
         """Run the chapter pipeline for multiple chapters."""
         try:
-            _run_chapters(chapters)
+            _with_provider(provider, lambda: _run_chapters(chapters))
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    @app.command()
+    def list_providers() -> None:
+        """List configured provider profiles."""
+        try:
+            _list_providers()
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    @app.command()
+    def provider_status() -> None:
+        """Print active provider profile details."""
+        try:
+            _provider_status()
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    @app.command()
+    def use_provider(profile: str = typer.Option(..., "--profile", help="Provider profile name.")) -> None:
+        """Persist the active provider profile."""
+        try:
+            _use_provider(profile)
         except (FileNotFoundError, RuntimeError, ValueError) as exc:
             raise typer.BadParameter(str(exc)) from exc
 

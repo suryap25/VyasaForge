@@ -42,7 +42,30 @@ class Phase1Config:
 
 
 def load_config(config_path: Path = DEFAULT_CONFIG_PATH) -> Phase1Config:
-    """Load LLM configuration from the Phase 1 config file."""
+    """Load effective LLM configuration.
+
+    Provider profiles in configs/providers.yaml take precedence. The older
+    phase1.example.json file remains as a fallback for backward compatibility.
+    """
+    try:
+        from src.provider_profiles import active_provider_profile
+
+        profile = active_provider_profile()
+    except FileNotFoundError:
+        profile = None
+
+    if profile is not None:
+        roles = {
+            role: LLMRoleConfig(
+                model=settings.model,
+                temperature=settings.temperature,
+                max_tokens=settings.max_tokens,
+                max_output_tokens=settings.max_output_tokens,
+            )
+            for role, settings in profile.roles.items()
+        }
+        return Phase1Config(llm=LLMConfig(roles=roles))
+
     with config_path.open("r", encoding="utf-8") as config_file:
         raw_config = json.load(config_file)
 

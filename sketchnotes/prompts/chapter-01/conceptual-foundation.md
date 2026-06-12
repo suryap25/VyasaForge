@@ -1,6 +1,6 @@
 # Sketchnote Prompt: Chapter 01 - Conceptual Foundation
 
-Create one focused sketchnote-style diagram for this handbook section.
+Create one focused sketchnote-style teaching diagram for this handbook section.
 
 ## Visual Style
 - White background
@@ -26,5 +26,7 @@ Create one focused sketchnote-style diagram for this handbook section.
 ## Output Requirement
 - Produce one landscape diagram suitable for insertion immediately after this section heading.
 - Keep labels short enough to read in a DOCX page.
-- Use diagram type: concept_map.
+- Use diagram type: concept_diagram.
+- Avoid chapter section names as diagram nodes.
+- Use icons, grouping, whitespace, and color-coded arrows.
 - Show relationships between concepts, risks, and controls.

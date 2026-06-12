@@ -1,0 +1,130 @@
+active_profile: anthropic_haiku
+profiles:
+  anthropic_haiku:
+    provider: anthropic
+    env_var: ANTHROPIC_API_KEY
+    roles:
+      writer:
+        model: claude-haiku-4-5-20251001
+        temperature: 0.2
+        max_tokens: 5000
+      reviewer:
+        model: claude-haiku-4-5-20251001
+        temperature: 0.1
+        max_tokens: 1000
+      editor:
+        model: claude-haiku-4-5-20251001
+        temperature: 0.2
+        max_tokens: 3000
+      planner:
+        model: claude-haiku-4-5-20251001
+        temperature: 0.2
+        max_tokens: 5000
+      toc_editor:
+        model: claude-haiku-4-5-20251001
+        temperature: 0.1
+        max_tokens: 5000
+      expert:
+        model: claude-haiku-4-5-20251001
+        temperature: 0.2
+        max_tokens: 5000
+      fact_checker:
+        model: claude-haiku-4-5-20251001
+        temperature: 0.1
+        max_tokens: 3000
+  openai_gpt:
+    provider: openai
+    env_var: OPENAI_API_KEY
+    roles:
+      writer:
+        model: openai/gpt-4.1-mini
+        temperature: 0.2
+        max_tokens: 5000
+      reviewer:
+        model: openai/gpt-4.1-mini
+        temperature: 0.1
+        max_tokens: 1000
+      editor:
+        model: openai/gpt-4.1-mini
+        temperature: 0.2
+        max_tokens: 3000
+      planner:
+        model: openai/gpt-4.1-mini
+        temperature: 0.2
+        max_tokens: 5000
+      toc_editor:
+        model: openai/gpt-4.1-mini
+        temperature: 0.1
+        max_tokens: 5000
+      expert:
+        model: openai/gpt-4.1-mini
+        temperature: 0.2
+        max_tokens: 5000
+      fact_checker:
+        model: openai/gpt-4.1-mini
+        temperature: 0.1
+        max_tokens: 3000
+  gemini_flash:
+    provider: gemini
+    env_var: GEMINI_API_KEY
+    roles:
+      writer:
+        model: gemini/gemini-2.5-flash
+        temperature: 0.2
+        max_tokens: 5000
+      reviewer:
+        model: gemini/gemini-2.5-flash
+        temperature: 0.1
+        max_tokens: 1000
+      editor:
+        model: gemini/gemini-2.5-flash
+        temperature: 0.2
+        max_tokens: 3000
+      planner:
+        model: gemini/gemini-2.5-flash
+        temperature: 0.2
+        max_tokens: 5000
+      toc_editor:
+        model: gemini/gemini-2.5-flash
+        temperature: 0.1
+        max_tokens: 5000
+      expert:
+        model: gemini/gemini-2.5-flash
+        temperature: 0.2
+        max_tokens: 5000
+      fact_checker:
+        model: gemini/gemini-2.5-flash
+        temperature: 0.1
+        max_tokens: 3000
+  ollama_local:
+    provider: ollama
+    env_var: ''
+    roles:
+      writer:
+        model: ollama/llama3.1
+        temperature: 0.2
+        max_tokens: 5000
+      reviewer:
+        model: ollama/llama3.1
+        temperature: 0.1
+        max_tokens: 1000
+      editor:
+        model: ollama/llama3.1
+        temperature: 0.2
+        max_tokens: 3000
+      planner:
+        model: ollama/llama3.1
+        temperature: 0.2
+        max_tokens: 5000
+      toc_editor:
+        model: ollama/llama3.1
+        temperature: 0.1
+        max_tokens: 5000
+      expert:
+        model: ollama/llama3.1
+        temperature: 0.2
+        max_tokens: 5000
+      fact_checker:
+        model: ollama/llama3.1
+        temperature: 0.1
+        max_tokens: 3000

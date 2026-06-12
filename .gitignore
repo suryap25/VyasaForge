@@ -1,11 +1,53 @@
+# Ignore everything by default.
+*
+
+# Keep repository control files.
+!.gitignore
+!README.md
+!ROADMAP.md
+!pyproject.toml
+
+# Keep source, configuration, and prompts.
+!src/
+!src/**
+!configs/
+!configs/**
+!prompts/
+!prompts/**
+
+# Ignore generated handbook artifacts.
+chapters/
+reviews/
+reports/
+diagrams/
+sketchnotes/
+output/
+logs/
+
+# Ignore local notes and secrets.
+developers_notes.txt
+.env
+.env.*
+!.env.example
+
+# Ignore Python caches, virtual environments, and build outputs.
 __pycache__/
 *.py[cod]
+*$py.class
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+.coverage
+htmlcov/
 .venv/
 venv/
+env/
 dist/
 build/
 *.egg-info/
-.env
+
+# Ignore editor and OS noise.
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
