@@ -1,0 +1,139 @@
+{
+  "chapter": 4,
+  "chapter_id": "chapter_04",
+  "diagrams": [
+    {
+      "caption": "Sketchnote summary for OpenID Connect and User Information.",
+      "chapter": 4,
+      "diagram_id": "chapter-04-summary",
+      "diagram_type": "chapter_summary",
+      "image_path": "sketchnotes\\images\\chapter-04.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-04-prompt.md",
+      "section": "Sketchnote Placeholder",
+      "status": "generated",
+      "title": "Chapter 04 Summary Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 04: Learning Objectives.",
+      "chapter": 4,
+      "diagram_id": "chapter-04-learning-objectives",
+      "diagram_type": "roadmap",
+      "image_path": "sketchnotes\\images\\chapter-04\\learning-objectives.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-04\\learning-objectives.md",
+      "section": "Learning Objectives",
+      "status": "generated",
+      "title": "Learning Objectives Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 04: Conceptual Foundation.",
+      "chapter": 4,
+      "diagram_id": "chapter-04-conceptual-foundation",
+      "diagram_type": "concept_map",
+      "image_path": "sketchnotes\\images\\chapter-04\\conceptual-foundation.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-04\\conceptual-foundation.md",
+      "section": "Conceptual Foundation",
+      "status": "generated",
+      "title": "Conceptual Foundation Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 04: Architecture Perspective.",
+      "chapter": 4,
+      "diagram_id": "chapter-04-architecture-perspective",
+      "diagram_type": "trust_boundary",
+      "image_path": "sketchnotes\\images\\chapter-04\\architecture-perspective.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-04\\architecture-perspective.md",
+      "section": "Architecture Perspective",
+      "status": "generated",
+      "title": "Architecture Perspective Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 04: AppSec Lens.",
+      "chapter": 4,
+      "diagram_id": "chapter-04-appsec-lens",
+      "diagram_type": "attack_path",
+      "image_path": "sketchnotes\\images\\chapter-04\\appsec-lens.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-04\\appsec-lens.md",
+      "section": "AppSec Lens",
+      "status": "generated",
+      "title": "AppSec Lens Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 04: Developer Lens.",
+      "chapter": 4,
+      "diagram_id": "chapter-04-developer-lens",
+      "diagram_type": "implementation_flow",
+      "image_path": "sketchnotes\\images\\chapter-04\\developer-lens.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-04\\developer-lens.md",
+      "section": "Developer Lens",
+      "status": "generated",
+      "title": "Developer Lens Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 04: Pentest Lens.",
+      "chapter": 4,
+      "diagram_id": "chapter-04-pentest-lens",
+      "diagram_type": "test_checklist",
+      "image_path": "sketchnotes\\images\\chapter-04\\pentest-lens.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-04\\pentest-lens.md",
+      "section": "Pentest Lens",
+      "status": "generated",
+      "title": "Pentest Lens Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 04: Common Findings.",
+      "chapter": 4,
+      "diagram_id": "chapter-04-common-findings",
+      "diagram_type": "risk_matrix",
+      "image_path": "sketchnotes\\images\\chapter-04\\common-findings.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-04\\common-findings.md",
+      "section": "Common Findings",
+      "status": "generated",
+      "title": "Common Findings Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 04: Secure Design Guidance.",
+      "chapter": 4,
+      "diagram_id": "chapter-04-secure-design-guidance",
+      "diagram_type": "control_map",
+      "image_path": "sketchnotes\\images\\chapter-04\\secure-design-guidance.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-04\\secure-design-guidance.md",
+      "section": "Secure Design Guidance",
+      "status": "generated",
+      "title": "Secure Design Guidance Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 04: Interview Questions.",
+      "chapter": 4,
+      "diagram_id": "chapter-04-interview-questions",
+      "diagram_type": "interview_cards",
+      "image_path": "sketchnotes\\images\\chapter-04\\interview-questions.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-04\\interview-questions.md",
+      "section": "Interview Questions",
+      "status": "generated",
+      "title": "Interview Questions Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 04: Key Takeaways.",
+      "chapter": 4,
+      "diagram_id": "chapter-04-key-takeaways",
+      "diagram_type": "takeaway_map",
+      "image_path": "sketchnotes\\images\\chapter-04\\key-takeaways.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-04\\key-takeaways.md",
+      "section": "Key Takeaways",
+      "status": "generated",
+      "title": "Key Takeaways Sketchnote"
+    }
+  ],
+  "title": "OpenID Connect and User Information"
+}

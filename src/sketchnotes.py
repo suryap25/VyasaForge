@@ -29,6 +29,19 @@ SECTION_SKETCHNOTE_SECTIONS = [
     "Interview Questions",
     "Key Takeaways",
 ]
+SECTION_DIAGRAM_TYPES = {
+    "Learning Objectives": "roadmap",
+    "Conceptual Foundation": "concept_map",
+    "Architecture Perspective": "trust_boundary",
+    "AppSec Lens": "attack_path",
+    "Developer Lens": "implementation_flow",
+    "Pentest Lens": "test_checklist",
+    "Common Findings": "risk_matrix",
+    "Secure Design Guidance": "control_map",
+    "Interview Questions": "interview_cards",
+    "Key Takeaways": "takeaway_map",
+    "Sketchnote Placeholder": "chapter_summary",
+}
 
 
 def prompt_path_for(chapter: int) -> Path:
@@ -82,6 +95,11 @@ def preferred_section_image_path_for(chapter: int, section: str) -> Path:
 def section_sketchnote_sections() -> list[str]:
     """Return the chapter sections that get dedicated sketchnotes."""
     return list(SECTION_SKETCHNOTE_SECTIONS)
+
+
+def diagram_type_for_section(section: str) -> str:
+    """Return the preferred visual diagram type for a chapter section."""
+    return SECTION_DIAGRAM_TYPES.get(section, "concept_map")
 
 
 def chapter_path_for(chapter: int, stage: str) -> Path:
@@ -249,6 +267,7 @@ def section_sketchnote_prompt(chapter: int, section: str, stage: str = "final") 
         "## Output Requirement",
         "- Produce one landscape diagram suitable for insertion immediately after this section heading.",
         "- Keep labels short enough to read in a DOCX page.",
+        f"- Use diagram type: {diagram_type_for_section(section)}.",
         "- Show relationships between concepts, risks, and controls.",
         "",
     ]
@@ -378,7 +397,7 @@ def _section_labels(chapter: int, section: str, stage: str) -> tuple[str, list[s
     return f"{metadata.title}: {section}", ["Context", *labels, "Outcome"]
 
 
-def _render_png(output_path: Path, title: str, labels: list[str]) -> None:
+def _render_png(output_path: Path, title: str, labels: list[str], diagram_type: str = "concept_map") -> None:
     """Render a simple sketchnote-style PNG using Windows System.Drawing."""
     powershell = shutil.which("powershell")
     if powershell is None:
@@ -390,7 +409,14 @@ def _render_png(output_path: Path, title: str, labels: list[str]) -> None:
     spec_path = tmp_dir / f"{output_path.stem}.json"
     script_path = tmp_dir / f"{output_path.stem}.ps1"
     spec_path.write_text(
-        json.dumps({"title": title, "labels": labels, "output": str(output_path.resolve())}),
+        json.dumps(
+            {
+                "title": title,
+                "labels": labels,
+                "diagram_type": diagram_type,
+                "output": str(output_path.resolve()),
+            }
+        ),
         encoding="utf-8",
     )
     script_path.write_text(
@@ -435,24 +461,81 @@ $titleRect = New-Object System.Drawing.Rectangle 90,25,1420,80
 [System.Windows.Forms.TextRenderer]::DrawText($g,[string]$spec.title,$fontTitle,$titleRect,[System.Drawing.Color]::Black,$textFlags)
 $labels = @($spec.labels)
 while ($labels.Count -lt 8) { $labels += 'concept' }
-Box 70 350 190 140 $brushBlue $penBlue $labels[0]
-Arrow 260 420 360 420 $penBlack
-Box 370 310 210 155 $brushOrange $penOrange $labels[1]
-Arrow 580 388 660 388 $penBlack
-Box 670 310 210 155 $brushOrange $penOrange $labels[2]
-Arrow 880 388 960 388 $penBlack
-Box 970 310 210 155 $brushOrange $penOrange $labels[3]
-Arrow 1180 388 1260 388 $penBlack
-Box 1270 350 220 140 $brushGreen $penGreen $labels[4]
-Box 390 635 240 130 $brushGreen $penGreen $labels[5]
-Arrow 510 635 510 465 $penBlack
-Box 760 635 240 130 $brushGreen $penGreen $labels[6]
-Arrow 880 635 880 465 $penBlack
-Box 1130 635 240 130 $brushGreen $penGreen $labels[7]
-Arrow 1250 635 1080 465 $penBlack
-$g.DrawLine($penRed,160,700,375,465)
-$riskRect = New-Object System.Drawing.Rectangle 65,725,220,60
-[System.Windows.Forms.TextRenderer]::DrawText($g,'risk path',$font,$riskRect,[System.Drawing.Color]::Black,$textFlags)
+$diagramType = [string]$spec.diagram_type
+if ($diagramType -eq 'attack_path') {
+  Box 70 355 180 130 $brushBlue $penBlue 'attacker / entry'
+  Box 375 230 220 135 $brushOrange $penOrange $labels[1]
+  Box 690 230 220 135 $brushOrange $penOrange $labels[2]
+  Box 1005 230 220 135 $brushOrange $penOrange $labels[3]
+  Box 1320 355 210 130 $brushGreen $penGreen 'business impact'
+  Arrow 250 420 375 300 $penRed
+  Arrow 595 300 690 300 $penRed
+  Arrow 910 300 1005 300 $penRed
+  Arrow 1225 300 1320 420 $penRed
+  Box 420 635 240 120 $brushGreen $penGreen $labels[4]
+  Box 760 635 240 120 $brushGreen $penGreen $labels[5]
+  Box 1100 635 240 120 $brushGreen $penGreen $labels[6]
+  Arrow 540 635 480 365 $penBlack
+  Arrow 880 635 800 365 $penBlack
+  Arrow 1220 635 1115 365 $penBlack
+} elseif ($diagramType -eq 'test_checklist' -or $diagramType -eq 'interview_cards') {
+  for ($i = 0; $i -lt 6; $i++) {
+    $x = 160 + (($i % 3) * 430)
+    $y = 225 + ([math]::Floor($i / 3) * 255)
+    Box $x $y 320 150 $brushOrange $penOrange $labels[$i]
+    $checkRect = New-Object System.Drawing.Rectangle ($x+18),($y+18),45,45
+    [System.Windows.Forms.TextRenderer]::DrawText($g,'✓',$fontTitle,$checkRect,[System.Drawing.Color]::FromArgb(46,125,50),$textFlags)
+  }
+} elseif ($diagramType -eq 'risk_matrix') {
+  Box 145 200 280 130 $brushBlue $penBlue 'finding'
+  Box 560 200 280 130 $brushOrange $penOrange 'risk'
+  Box 975 200 280 130 $brushGreen $penGreen 'control'
+  Arrow 425 265 560 265 $penBlack
+  Arrow 840 265 975 265 $penBlack
+  for ($i = 0; $i -lt 4; $i++) {
+    $y = 430 + ($i * 95)
+    Box 120 $y 320 70 $brushOrange $penOrange $labels[$i]
+    Box 520 $y 320 70 $brushBlue $penBlue $labels[$i+1]
+    Box 920 $y 320 70 $brushGreen $penGreen $labels[$i+2]
+  }
+} elseif ($diagramType -eq 'trust_boundary' -or $diagramType -eq 'control_map') {
+  $boundaryPen = New-Object System.Drawing.Pen ([System.Drawing.Color]::FromArgb(120,120,120)),4
+  $boundaryPen.DashStyle = [System.Drawing.Drawing2D.DashStyle]::Dash
+  $boundaryRect = New-Object System.Drawing.Rectangle 320,185,930,420
+  $g.DrawRectangle($boundaryPen,$boundaryRect)
+  Box 65 350 190 130 $brushBlue $penBlue 'user / client'
+  Box 410 300 210 135 $brushOrange $penOrange $labels[1]
+  Box 700 300 210 135 $brushOrange $penOrange $labels[2]
+  Box 990 300 210 135 $brushOrange $penOrange $labels[3]
+  Box 1330 350 205 130 $brushGreen $penGreen 'protected asset'
+  Arrow 255 415 410 365 $penBlack
+  Arrow 620 365 700 365 $penBlack
+  Arrow 910 365 990 365 $penBlack
+  Arrow 1200 365 1330 415 $penBlack
+  Box 500 650 230 110 $brushGreen $penGreen $labels[4]
+  Box 880 650 230 110 $brushGreen $penGreen $labels[5]
+  Arrow 615 650 535 435 $penBlack
+  Arrow 995 650 1095 435 $penBlack
+} else {
+  Box 70 350 190 140 $brushBlue $penBlue $labels[0]
+  Arrow 260 420 360 420 $penBlack
+  Box 370 310 210 155 $brushOrange $penOrange $labels[1]
+  Arrow 580 388 660 388 $penBlack
+  Box 670 310 210 155 $brushOrange $penOrange $labels[2]
+  Arrow 880 388 960 388 $penBlack
+  Box 970 310 210 155 $brushOrange $penOrange $labels[3]
+  Arrow 1180 388 1260 388 $penBlack
+  Box 1270 350 220 140 $brushGreen $penGreen $labels[4]
+  Box 390 635 240 130 $brushGreen $penGreen $labels[5]
+  Arrow 510 635 510 465 $penBlack
+  Box 760 635 240 130 $brushGreen $penGreen $labels[6]
+  Arrow 880 635 880 465 $penBlack
+  Box 1130 635 240 130 $brushGreen $penGreen $labels[7]
+  Arrow 1250 635 1080 465 $penBlack
+  $g.DrawLine($penRed,160,700,375,465)
+  $riskRect = New-Object System.Drawing.Rectangle 65,725,220,60
+  [System.Windows.Forms.TextRenderer]::DrawText($g,'risk path',$font,$riskRect,[System.Drawing.Color]::Black,$textFlags)
+}
 $bmp.Save($spec.output,[System.Drawing.Imaging.ImageFormat]::Png)
 $g.Dispose()
 $bmp.Dispose()
@@ -525,7 +608,7 @@ def generate_sketchnote_image(chapter: int, stage: str = "final") -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(sketchnote_svg(chapter, stage=stage), encoding="utf-8")
     title, labels = _summary_labels(chapter, stage)
-    _render_png(png_path_for(chapter), title, labels)
+    _render_png(png_path_for(chapter), title, labels, diagram_type_for_section("Sketchnote Placeholder"))
     return png_path_for(chapter)
 
 
@@ -536,7 +619,7 @@ def generate_section_sketchnote_image(chapter: int, section: str, stage: str = "
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(section_sketchnote_svg(chapter, section, stage=stage), encoding="utf-8")
     title, labels = _section_labels(chapter, section, stage)
-    _render_png(section_png_path_for(chapter, section), title, labels)
+    _render_png(section_png_path_for(chapter, section), title, labels, diagram_type_for_section(section))
     return section_png_path_for(chapter, section)
 
 
@@ -563,6 +646,7 @@ def generate_all_sketchnote_images(chapter: int, stage: str = "final") -> list[P
             prompt_path=str(prompt_path_for(chapter)),
             image_path=str(png_path_for(chapter)),
             image_type="png",
+            diagram_type=diagram_type_for_section("Sketchnote Placeholder"),
             caption=f"Sketchnote summary for {metadata.title}.",
             status="generated" if png_path_for(chapter).exists() else "missing",
         )
@@ -581,6 +665,7 @@ def generate_all_sketchnote_images(chapter: int, stage: str = "final") -> list[P
                     prompt_path=str(section_prompt_path_for(chapter, section)),
                     image_path=str(section_png_path_for(chapter, section)),
                     image_type="png",
+                    diagram_type=diagram_type_for_section(section),
                     caption=f"Sketchnote for Chapter {chapter:02d}: {section}.",
                     status="generated" if image_path.exists() else "missing",
                 )

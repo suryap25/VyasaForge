@@ -6,8 +6,13 @@ from pathlib import Path
 
 from src.handbook import resolve_chapter
 from src.publish_gate import validate_publish_quality
+from src.structure_repair import normalize_required_sections
 
 SOURCE_FIELDS = {"drafts": "draft_path", "reviewed": "reviewed_path"}
+SOURCE_PATHS = {
+    "enhanced": Path("chapters/enhanced/chapter-{chapter:02d}.md"),
+    "referenced": Path("chapters/referenced/chapter-{chapter:02d}.md"),
+}
 
 
 def metadata_header(chapter: int, source: str) -> str:
@@ -26,11 +31,12 @@ def finalize_chapter(chapter: int, source: str = "reviewed") -> Path:
     """Copy a selected chapter source into the final stage with metadata."""
     metadata = resolve_chapter(chapter)
     source_field = SOURCE_FIELDS.get(source)
-    if source_field is None:
-        available_sources = ", ".join(sorted(SOURCE_FIELDS))
+    source_template = SOURCE_PATHS.get(source)
+    if source_field is None and source_template is None:
+        available_sources = ", ".join(sorted([*SOURCE_FIELDS, *SOURCE_PATHS]))
         raise ValueError(f"Unknown finalizer source '{source}'. Available sources: {available_sources}")
 
-    source_path = getattr(metadata, source_field)
+    source_path = getattr(metadata, source_field) if source_field else Path(str(source_template).format(chapter=chapter))
     final_path = metadata.final_path
 
     if not source_path.exists():
@@ -38,7 +44,7 @@ def finalize_chapter(chapter: int, source: str = "reviewed") -> Path:
 
     source_content = source_path.read_text(encoding="utf-8")
 
-    final_content = metadata_header(chapter, source) + source_content
+    final_content = normalize_required_sections(metadata_header(chapter, source) + source_content)
     gate_result = validate_publish_quality(final_content, allow_sketchnote_placeholder=True)
     if not gate_result.passed:
         raise RuntimeError("Publish gate failed for final chapter: " + "; ".join(gate_result.errors))

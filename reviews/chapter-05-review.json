@@ -1,0 +1,12 @@
+{
+  "chapter": 5,
+  "findings": [
+    {
+      "issue_type": "section_improvement",
+      "message": "**Sketchnote Placeholder**\nThe chapter ends with `[SKETCHNOTE DIAGRAM PLACEHOLDER]` but provides no guidance on what should be illustrated.",
+      "recommended_action": "Patch the Sketchnote Placeholder section in place without adding editorial notes.",
+      "section": "Sketchnote Placeholder",
+      "severity": "medium"
+    }
+  ]
+}

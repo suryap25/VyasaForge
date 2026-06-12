@@ -1,0 +1,139 @@
+{
+  "chapter": 5,
+  "chapter_id": "chapter_05",
+  "diagrams": [
+    {
+      "caption": "Sketchnote summary for JSON Web Tokens and Token Management.",
+      "chapter": 5,
+      "diagram_id": "chapter-05-summary",
+      "diagram_type": "chapter_summary",
+      "image_path": "sketchnotes\\images\\chapter-05.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-05-prompt.md",
+      "section": "Sketchnote Placeholder",
+      "status": "generated",
+      "title": "Chapter 05 Summary Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 05: Learning Objectives.",
+      "chapter": 5,
+      "diagram_id": "chapter-05-learning-objectives",
+      "diagram_type": "roadmap",
+      "image_path": "sketchnotes\\images\\chapter-05\\learning-objectives.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-05\\learning-objectives.md",
+      "section": "Learning Objectives",
+      "status": "generated",
+      "title": "Learning Objectives Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 05: Conceptual Foundation.",
+      "chapter": 5,
+      "diagram_id": "chapter-05-conceptual-foundation",
+      "diagram_type": "concept_map",
+      "image_path": "sketchnotes\\images\\chapter-05\\conceptual-foundation.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-05\\conceptual-foundation.md",
+      "section": "Conceptual Foundation",
+      "status": "generated",
+      "title": "Conceptual Foundation Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 05: Architecture Perspective.",
+      "chapter": 5,
+      "diagram_id": "chapter-05-architecture-perspective",
+      "diagram_type": "trust_boundary",
+      "image_path": "sketchnotes\\images\\chapter-05\\architecture-perspective.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-05\\architecture-perspective.md",
+      "section": "Architecture Perspective",
+      "status": "generated",
+      "title": "Architecture Perspective Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 05: AppSec Lens.",
+      "chapter": 5,
+      "diagram_id": "chapter-05-appsec-lens",
+      "diagram_type": "attack_path",
+      "image_path": "sketchnotes\\images\\chapter-05\\appsec-lens.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-05\\appsec-lens.md",
+      "section": "AppSec Lens",
+      "status": "generated",
+      "title": "AppSec Lens Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 05: Developer Lens.",
+      "chapter": 5,
+      "diagram_id": "chapter-05-developer-lens",
+      "diagram_type": "implementation_flow",
+      "image_path": "sketchnotes\\images\\chapter-05\\developer-lens.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-05\\developer-lens.md",
+      "section": "Developer Lens",
+      "status": "generated",
+      "title": "Developer Lens Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 05: Pentest Lens.",
+      "chapter": 5,
+      "diagram_id": "chapter-05-pentest-lens",
+      "diagram_type": "test_checklist",
+      "image_path": "sketchnotes\\images\\chapter-05\\pentest-lens.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-05\\pentest-lens.md",
+      "section": "Pentest Lens",
+      "status": "generated",
+      "title": "Pentest Lens Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 05: Common Findings.",
+      "chapter": 5,
+      "diagram_id": "chapter-05-common-findings",
+      "diagram_type": "risk_matrix",
+      "image_path": "sketchnotes\\images\\chapter-05\\common-findings.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-05\\common-findings.md",
+      "section": "Common Findings",
+      "status": "generated",
+      "title": "Common Findings Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 05: Secure Design Guidance.",
+      "chapter": 5,
+      "diagram_id": "chapter-05-secure-design-guidance",
+      "diagram_type": "control_map",
+      "image_path": "sketchnotes\\images\\chapter-05\\secure-design-guidance.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-05\\secure-design-guidance.md",
+      "section": "Secure Design Guidance",
+      "status": "generated",
+      "title": "Secure Design Guidance Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 05: Interview Questions.",
+      "chapter": 5,
+      "diagram_id": "chapter-05-interview-questions",
+      "diagram_type": "interview_cards",
+      "image_path": "sketchnotes\\images\\chapter-05\\interview-questions.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-05\\interview-questions.md",
+      "section": "Interview Questions",
+      "status": "generated",
+      "title": "Interview Questions Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 05: Key Takeaways.",
+      "chapter": 5,
+      "diagram_id": "chapter-05-key-takeaways",
+      "diagram_type": "takeaway_map",
+      "image_path": "sketchnotes\\images\\chapter-05\\key-takeaways.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-05\\key-takeaways.md",
+      "section": "Key Takeaways",
+      "status": "generated",
+      "title": "Key Takeaways Sketchnote"
+    }
+  ],
+  "title": "JSON Web Tokens and Token Management"
+}

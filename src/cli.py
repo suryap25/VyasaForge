@@ -160,6 +160,30 @@ def _revise_chapter(chapter: int) -> None:
     print(f"Wrote revised chapter: {Path(revised_path)}")
 
 
+def _enhance_chapter(chapter: int, source: str = "reviewed") -> Path:
+    from src.expert_enhancer import enhance_chapter
+    from src.finalizer import SOURCE_FIELDS, SOURCE_PATHS
+    from src.handbook import resolve_chapter
+
+    metadata = resolve_chapter(chapter)
+    source_path = getattr(metadata, SOURCE_FIELDS[source]) if source in SOURCE_FIELDS else Path(str(SOURCE_PATHS[source]).format(chapter=chapter))
+    enhanced_path = enhance_chapter(chapter, source_path)
+    print(f"Wrote expert-enhanced chapter: {Path(enhanced_path)}")
+    return Path(enhanced_path)
+
+
+def _add_references(chapter: int, source: str = "enhanced") -> Path:
+    from src.finalizer import SOURCE_FIELDS, SOURCE_PATHS
+    from src.handbook import resolve_chapter
+    from src.reference_agent import add_references
+
+    metadata = resolve_chapter(chapter)
+    source_path = getattr(metadata, SOURCE_FIELDS[source]) if source in SOURCE_FIELDS else Path(str(SOURCE_PATHS[source]).format(chapter=chapter))
+    referenced_path = add_references(chapter, source_path)
+    print(f"Wrote reference-enriched chapter: {Path(referenced_path)}")
+    return Path(referenced_path)
+
+
 def _finalize_chapter(chapter: int, source: str = "reviewed") -> None:
     from src.finalizer import finalize_chapter
     from src.state_manager import update_final
@@ -276,6 +300,21 @@ def _publish_gate(chapter: int, stage: str = "final") -> None:
         raise SystemExit(1)
 
 
+def _structural_qa(chapter: int, path: Path | None = None, stage: str = "final") -> None:
+    from src.structural_qa import structural_qa_file
+    from src.validator import resolve_chapter_stage_path
+
+    chapter_path = path if path is not None else resolve_chapter_stage_path(chapter, stage=stage)
+    result = structural_qa_file(chapter_path)
+    print(f"{'PASS' if result.passed else 'FAIL'}: structural QA")
+    print(f"Path: {chapter_path}")
+    print(f"Word count: {result.word_count}")
+    for error in result.errors:
+        print(f"- {error}")
+    if not result.passed:
+        raise SystemExit(1)
+
+
 def _diagram_status(chapter: int) -> None:
     from src.diagrams import load_diagram_registry
 
@@ -288,7 +327,7 @@ def _diagram_status(chapter: int) -> None:
             if isinstance(diagram, dict):
                 print(
                     f"- {diagram.get('diagram_id')}: "
-                    f"{diagram.get('section')} -> {diagram.get('status')} "
+                    f"{diagram.get('section')} [{diagram.get('diagram_type', 'unknown')}] -> {diagram.get('status')} "
                     f"({diagram.get('image_path')})"
                 )
 
@@ -423,7 +462,7 @@ def _run_step(name: str, action: Callable[[], None]) -> None:
     print(f"DONE: {name}")
 
 
-def _run_chapter(chapter: int) -> None:
+def _run_chapter(chapter: int, compile_at_end: bool = True) -> None:
     """Run the single-chapter pipeline."""
     from src.handbook import resolve_chapter
     from src.validator import resolve_chapter_stage_path, validate_chapter
@@ -456,11 +495,25 @@ def _run_chapter(chapter: int) -> None:
         final_source = "drafts"
         print(f"Revision unavailable or rejected; falling back to validated draft. Reason: {exc}")
 
+    try:
+        _run_step("expert-enhance-chapter", lambda: _enhance_chapter(chapter, final_source))
+        final_source = "enhanced"
+    except (RuntimeError, SystemExit) as exc:
+        print(f"Expert enhancement unavailable or rejected; continuing with {final_source}. Reason: {exc}")
+
+    try:
+        _run_step("add-references", lambda: _add_references(chapter, final_source))
+        final_source = "referenced"
+    except (RuntimeError, SystemExit) as exc:
+        print(f"Reference enrichment unavailable or rejected; continuing with {final_source}. Reason: {exc}")
+
     _run_step("finalize-chapter", lambda: _finalize_chapter(chapter, final_source))
     _run_step("validate-chapter --stage final", lambda: _validate_chapter(chapter, "final"))
     _run_step("generate-sketchnote-prompts", lambda: _generate_sketchnote_prompts(str(chapter), "final"))
     _run_step("generate-sketchnotes", lambda: _generate_sketchnotes(str(chapter), "final"))
-    _run_step("compile-docx", lambda: _compile_docx(str(chapter)))
+    _run_step("qa-handbook --stage final", lambda: _qa_handbook(str(chapter), "final"))
+    if compile_at_end:
+        _run_step("compile-docx", lambda: _compile_docx(str(chapter)))
     _handbook_status()
     _llm_usage(chapter)
     print(f"Chapter pipeline complete for chapter {chapter}")
@@ -470,7 +523,10 @@ def _run_chapters(chapters: str) -> None:
     """Run the chapter pipeline for multiple chapters in order."""
     chapter_numbers = _parse_chapter_numbers(chapters)
     for chapter in chapter_numbers:
-        _run_chapter(chapter)
+        _run_chapter(chapter, compile_at_end=False)
+    _run_step("qa-handbook --stage final", lambda: _qa_handbook(chapters, "final"))
+    _run_step("compile-docx", lambda: _compile_docx(chapters))
+    _handbook_status()
 
 
 def _provider_env_var(model: str) -> tuple[str, str | None]:
@@ -737,9 +793,31 @@ if typer is not None:
             raise typer.BadParameter(str(exc)) from exc
 
     @app.command()
+    def enhance_chapter(
+        chapter: int = typer.Option(..., "--chapter", help="Chapter number to enhance."),
+        source: str = typer.Option("reviewed", "--source", help="Source: drafts, reviewed, enhanced, or referenced."),
+    ) -> None:
+        """Add principal-level AppSec depth to a chapter."""
+        try:
+            _enhance_chapter(chapter, source)
+        except (FileNotFoundError, RuntimeError, ValueError, KeyError) as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    @app.command()
+    def add_references(
+        chapter: int = typer.Option(..., "--chapter", help="Chapter number to enrich."),
+        source: str = typer.Option("enhanced", "--source", help="Source: drafts, reviewed, enhanced, or referenced."),
+    ) -> None:
+        """Add a gated References section to a chapter."""
+        try:
+            _add_references(chapter, source)
+        except (FileNotFoundError, RuntimeError, ValueError, KeyError) as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    @app.command()
     def finalize_chapter(
         chapter: int = typer.Option(..., "--chapter", help="Chapter number to finalize."),
-        source: str = typer.Option("reviewed", "--source", help="Source stage: drafts or reviewed."),
+        source: str = typer.Option("reviewed", "--source", help="Source stage: drafts, reviewed, enhanced, or referenced."),
     ) -> None:
         """Copy a selected chapter source into the final stage."""
         try:
@@ -800,6 +878,17 @@ if typer is not None:
         """Run publish-quality checks for one chapter stage."""
         try:
             _publish_gate(chapter, stage)
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    @app.command()
+    def structural_qa(
+        chapter: int = typer.Option(..., "--chapter", help="Chapter number to check."),
+        stage: str = typer.Option("final", "--stage", help="Chapter stage to check."),
+    ) -> None:
+        """Run deterministic structural QA for one chapter stage."""
+        try:
+            _structural_qa(chapter, stage=stage)
         except (FileNotFoundError, RuntimeError, ValueError) as exc:
             raise typer.BadParameter(str(exc)) from exc
 

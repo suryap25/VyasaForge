@@ -1,0 +1,28 @@
+{
+  "chapter_id": "chapter_12",
+  "docx": {
+    "status": "passed",
+    "updated_at": "2026-06-11T16:27:05.044562+00:00"
+  },
+  "draft": {
+    "status": "passed",
+    "updated_at": "2026-06-11T16:15:29.865198+00:00",
+    "word_count": 2839
+  },
+  "final": {
+    "source": "reviewed",
+    "status": "passed",
+    "updated_at": "2026-06-11T16:18:10.123462+00:00",
+    "word_count": 6965
+  },
+  "review": {
+    "status": "passed",
+    "updated_at": "2026-06-11T16:16:26.689561+00:00"
+  },
+  "revision": {
+    "reason": null,
+    "status": "passed",
+    "updated_at": "2026-06-11T16:16:52.010593+00:00"
+  },
+  "title": "Compliance, Auditing, and Operational Considerations"
+}

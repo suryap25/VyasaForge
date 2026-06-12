@@ -1,0 +1,139 @@
+{
+  "chapter": 7,
+  "chapter_id": "chapter_07",
+  "diagrams": [
+    {
+      "caption": "Sketchnote summary for Web Application Authentication Implementation.",
+      "chapter": 7,
+      "diagram_id": "chapter-07-summary",
+      "diagram_type": "chapter_summary",
+      "image_path": "sketchnotes\\images\\chapter-07.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-07-prompt.md",
+      "section": "Sketchnote Placeholder",
+      "status": "generated",
+      "title": "Chapter 07 Summary Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 07: Learning Objectives.",
+      "chapter": 7,
+      "diagram_id": "chapter-07-learning-objectives",
+      "diagram_type": "roadmap",
+      "image_path": "sketchnotes\\images\\chapter-07\\learning-objectives.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-07\\learning-objectives.md",
+      "section": "Learning Objectives",
+      "status": "generated",
+      "title": "Learning Objectives Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 07: Conceptual Foundation.",
+      "chapter": 7,
+      "diagram_id": "chapter-07-conceptual-foundation",
+      "diagram_type": "concept_map",
+      "image_path": "sketchnotes\\images\\chapter-07\\conceptual-foundation.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-07\\conceptual-foundation.md",
+      "section": "Conceptual Foundation",
+      "status": "generated",
+      "title": "Conceptual Foundation Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 07: Architecture Perspective.",
+      "chapter": 7,
+      "diagram_id": "chapter-07-architecture-perspective",
+      "diagram_type": "trust_boundary",
+      "image_path": "sketchnotes\\images\\chapter-07\\architecture-perspective.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-07\\architecture-perspective.md",
+      "section": "Architecture Perspective",
+      "status": "generated",
+      "title": "Architecture Perspective Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 07: AppSec Lens.",
+      "chapter": 7,
+      "diagram_id": "chapter-07-appsec-lens",
+      "diagram_type": "attack_path",
+      "image_path": "sketchnotes\\images\\chapter-07\\appsec-lens.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-07\\appsec-lens.md",
+      "section": "AppSec Lens",
+      "status": "generated",
+      "title": "AppSec Lens Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 07: Developer Lens.",
+      "chapter": 7,
+      "diagram_id": "chapter-07-developer-lens",
+      "diagram_type": "implementation_flow",
+      "image_path": "sketchnotes\\images\\chapter-07\\developer-lens.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-07\\developer-lens.md",
+      "section": "Developer Lens",
+      "status": "generated",
+      "title": "Developer Lens Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 07: Pentest Lens.",
+      "chapter": 7,
+      "diagram_id": "chapter-07-pentest-lens",
+      "diagram_type": "test_checklist",
+      "image_path": "sketchnotes\\images\\chapter-07\\pentest-lens.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-07\\pentest-lens.md",
+      "section": "Pentest Lens",
+      "status": "generated",
+      "title": "Pentest Lens Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 07: Common Findings.",
+      "chapter": 7,
+      "diagram_id": "chapter-07-common-findings",
+      "diagram_type": "risk_matrix",
+      "image_path": "sketchnotes\\images\\chapter-07\\common-findings.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-07\\common-findings.md",
+      "section": "Common Findings",
+      "status": "generated",
+      "title": "Common Findings Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 07: Secure Design Guidance.",
+      "chapter": 7,
+      "diagram_id": "chapter-07-secure-design-guidance",
+      "diagram_type": "control_map",
+      "image_path": "sketchnotes\\images\\chapter-07\\secure-design-guidance.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-07\\secure-design-guidance.md",
+      "section": "Secure Design Guidance",
+      "status": "generated",
+      "title": "Secure Design Guidance Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 07: Interview Questions.",
+      "chapter": 7,
+      "diagram_id": "chapter-07-interview-questions",
+      "diagram_type": "interview_cards",
+      "image_path": "sketchnotes\\images\\chapter-07\\interview-questions.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-07\\interview-questions.md",
+      "section": "Interview Questions",
+      "status": "generated",
+      "title": "Interview Questions Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 07: Key Takeaways.",
+      "chapter": 7,
+      "diagram_id": "chapter-07-key-takeaways",
+      "diagram_type": "takeaway_map",
+      "image_path": "sketchnotes\\images\\chapter-07\\key-takeaways.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-07\\key-takeaways.md",
+      "section": "Key Takeaways",
+      "status": "generated",
+      "title": "Key Takeaways Sketchnote"
+    }
+  ],
+  "title": "Web Application Authentication Implementation"
+}

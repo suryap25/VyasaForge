@@ -22,6 +22,7 @@ class DiagramArtifact:
     prompt_path: str
     image_path: str
     image_type: str
+    diagram_type: str
     caption: str
     status: str
 

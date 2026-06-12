@@ -9,6 +9,7 @@ from pathlib import Path
 from src.handbook import load_handbook_registry
 from src.handbook import resolve_chapter
 from src.publish_gate import validate_publish_quality
+from src.qa import qa_handbook, write_qa_report
 from src.sketchnotes import preferred_image_path_for, preferred_section_image_path_for, section_sketchnote_sections
 
 OUTPUT_PATH = Path("output/AppSec_Authentication_Authorization_Handbook_Phase1.docx")
@@ -140,12 +141,30 @@ def compile_handbook(chapters: list[int], output_format: str = "docx") -> Path:
         if not chapter_path.exists():
             raise FileNotFoundError(f"Missing final chapter: {chapter_path}")
 
+    qa_result = qa_handbook(chapters, stage="final")
+    write_qa_report(qa_result)
+    if not qa_result.passed:
+        raise RuntimeError("Publish QA failed. See reports/handbook-qa.md for details.")
+
+    for chapter, chapter_path in zip(chapters, chapter_paths):
+        chapter_content = chapter_markdown_for_compile(chapter, chapter_path)
+        gate_result = validate_publish_quality(chapter_content, allow_sketchnote_placeholder=False)
+        if not gate_result.passed:
+            raise RuntimeError(
+                f"Compile-time publish gate failed for chapter {chapter}: "
+                + "; ".join(gate_result.errors)
+            )
+
     pandoc = pandoc_path()
     output_path = output_path_for(output_format)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     combined_path = output_path.parent / "pandoc-input.md"
     combined_content = combined_markdown(chapters, chapter_paths)
-    gate_result = validate_publish_quality(combined_content, allow_sketchnote_placeholder=False)
+    gate_result = validate_publish_quality(
+        combined_content,
+        allow_sketchnote_placeholder=False,
+        check_required_section_duplicates=False,
+    )
     if not gate_result.passed:
         raise RuntimeError("Compile-time publish gate failed: " + "; ".join(gate_result.errors))
     combined_path.write_text(combined_content, encoding="utf-8")

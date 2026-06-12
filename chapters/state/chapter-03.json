@@ -1,0 +1,28 @@
+{
+  "chapter_id": "chapter_03",
+  "docx": {
+    "status": "passed",
+    "updated_at": "2026-06-11T16:27:04.890153+00:00"
+  },
+  "draft": {
+    "status": "passed",
+    "updated_at": "2026-06-11T15:42:55.151669+00:00",
+    "word_count": 2779
+  },
+  "final": {
+    "source": "drafts",
+    "status": "passed",
+    "updated_at": "2026-06-11T15:45:33.687465+00:00",
+    "word_count": 5315
+  },
+  "review": {
+    "status": "passed",
+    "updated_at": "2026-06-11T15:43:45.619669+00:00"
+  },
+  "revision": {
+    "reason": "Revision safety gate failed: revised chapter is missing required sections: Pentest Lens. Failed attempt saved to reviews\\chapter-03-revision-failed.md.",
+    "status": "rejected",
+    "updated_at": "2026-06-11T15:44:17.649085+00:00"
+  },
+  "title": "OAuth 2.0 Protocol and Flows"
+}

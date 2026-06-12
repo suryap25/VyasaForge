@@ -1,0 +1,28 @@
+{
+  "chapter_id": "chapter_11",
+  "docx": {
+    "status": "passed",
+    "updated_at": "2026-06-11T16:27:05.026469+00:00"
+  },
+  "draft": {
+    "status": "passed",
+    "updated_at": "2026-06-11T16:11:44.779391+00:00",
+    "word_count": 2880
+  },
+  "final": {
+    "source": "drafts",
+    "status": "passed",
+    "updated_at": "2026-06-11T16:14:33.779428+00:00",
+    "word_count": 4836
+  },
+  "review": {
+    "status": "passed",
+    "updated_at": "2026-06-11T16:12:28.245813+00:00"
+  },
+  "revision": {
+    "reason": "Revision safety gate failed: revised chapter is missing required sections: Common Findings. Failed attempt saved to reviews\\chapter-11-revision-failed.md.",
+    "status": "rejected",
+    "updated_at": "2026-06-11T16:13:14.735705+00:00"
+  },
+  "title": "Security Best Practices and Threat Mitigation"
+}

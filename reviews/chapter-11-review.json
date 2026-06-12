@@ -1,0 +1,12 @@
+{
+  "chapter": 11,
+  "findings": [
+    {
+      "issue_type": "general_review",
+      "message": "Review contains general improvement guidance but no specific required section was detected.",
+      "recommended_action": "Apply only clear, reader-facing improvements; do not append editorial notes.",
+      "section": "chapter",
+      "severity": "low"
+    }
+  ]
+}

@@ -10,7 +10,7 @@ from typing import Any
 
 def _scalar(value: str) -> Any:
     value = value.strip()
-    if value.startswith('"') and value.endswith('"'):
+    if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
         return value[1:-1]
     if value.isdigit():
         return int(value)
@@ -46,7 +46,10 @@ def _parse_block(lines: list[tuple[int, str]], index: int, indent: int) -> tuple
         if raw_value:
             values[key] = _scalar(raw_value)
         else:
-            values[key], index = _parse_block(lines, index, indent + 2)
+            child_indent = indent + 2
+            if index < len(lines) and lines[index][0] == indent and lines[index][1].startswith("- "):
+                child_indent = indent
+            values[key], index = _parse_block(lines, index, child_indent)
     return values, index
 
 

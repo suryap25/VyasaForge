@@ -1,0 +1,33 @@
+{
+  "chapter": 10,
+  "findings": [
+    {
+      "issue_type": "trust_risk",
+      "message": "---\n\n## Strengths\n\n\u2705 **Excellent conceptual foundation** - Clear distinction between MFA and step-up authentication with good factor category explanations\n\n\u2705 **Strong architecture diagrams** - Visual representations of MFA flows and step-up decision trees are clear and helpful\n\n\u2705 **Comprehensive vulnerability catalog** - The \"Common Findings\" section is well-structured with real-world examples, root causes, and remediation guidance\n\n\u2705 **Practical code examples** - Python and Swift examples demon",
+      "recommended_action": "Patch the Conceptual Foundation section in place without adding editorial notes.",
+      "section": "Conceptual Foundation",
+      "severity": "medium"
+    },
+    {
+      "issue_type": "section_improvement",
+      "message": "**Inconsistent Section Completeness** (MEDIUM PRIORITY)\n- **Developer Lens**: Thorough with two complete code examples\n- **Pentest Lens**: Truncated methodology, then jumps to findings\n- **AppSec Lens**: Good but could include more implementation anti-patterns\n\nThe pentest section should have equal depth to the developer section.",
+      "recommended_action": "Patch the AppSec Lens section in place without adding editorial notes.",
+      "section": "AppSec Lens",
+      "severity": "medium"
+    },
+    {
+      "issue_type": "trust_risk",
+      "message": "---\n\n## Strengths\n\n\u2705 **Excellent conceptual foundation** - Clear distinction between MFA and step-up authentication with good factor category explanations\n\n\u2705 **Strong architecture diagrams** - Visual representations of MFA flows and step-up decision trees are clear and helpful\n\n\u2705 **Comprehensive vulnerability catalog** - The \"Common Findings\" section is well-structured with real-world examples, root causes, and remediation guidance\n\n\u2705 **Practical code examples** - Python and Swift examples demon",
+      "recommended_action": "Patch the Common Findings section in place without adding editorial notes.",
+      "section": "Common Findings",
+      "severity": "medium"
+    },
+    {
+      "issue_type": "trust_risk",
+      "message": "---\n\n## Strengths\n\n\u2705 **Excellent conceptual foundation** - Clear distinction between MFA and step-up authentication with good factor category explanations\n\n\u2705 **Strong architecture diagrams** - Visual representations of MFA flows and step-up decision trees are clear and helpful\n\n\u2705 **Comprehensive vulnerability catalog** - The \"Common Findings\" section is well-structured with real-world examples, root causes, and remediation guidance\n\n\u2705 **Practical code examples** - Python and Swift examples demon",
+      "recommended_action": "Patch the Secure Design Guidance section in place without adding editorial notes.",
+      "section": "Secure Design Guidance",
+      "severity": "medium"
+    }
+  ]
+}

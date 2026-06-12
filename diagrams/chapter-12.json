@@ -1,0 +1,139 @@
+{
+  "chapter": 12,
+  "chapter_id": "chapter_12",
+  "diagrams": [
+    {
+      "caption": "Sketchnote summary for Compliance, Auditing, and Operational Considerations.",
+      "chapter": 12,
+      "diagram_id": "chapter-12-summary",
+      "diagram_type": "chapter_summary",
+      "image_path": "sketchnotes\\images\\chapter-12.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-12-prompt.md",
+      "section": "Sketchnote Placeholder",
+      "status": "generated",
+      "title": "Chapter 12 Summary Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 12: Learning Objectives.",
+      "chapter": 12,
+      "diagram_id": "chapter-12-learning-objectives",
+      "diagram_type": "roadmap",
+      "image_path": "sketchnotes\\images\\chapter-12\\learning-objectives.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-12\\learning-objectives.md",
+      "section": "Learning Objectives",
+      "status": "generated",
+      "title": "Learning Objectives Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 12: Conceptual Foundation.",
+      "chapter": 12,
+      "diagram_id": "chapter-12-conceptual-foundation",
+      "diagram_type": "concept_map",
+      "image_path": "sketchnotes\\images\\chapter-12\\conceptual-foundation.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-12\\conceptual-foundation.md",
+      "section": "Conceptual Foundation",
+      "status": "generated",
+      "title": "Conceptual Foundation Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 12: Architecture Perspective.",
+      "chapter": 12,
+      "diagram_id": "chapter-12-architecture-perspective",
+      "diagram_type": "trust_boundary",
+      "image_path": "sketchnotes\\images\\chapter-12\\architecture-perspective.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-12\\architecture-perspective.md",
+      "section": "Architecture Perspective",
+      "status": "generated",
+      "title": "Architecture Perspective Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 12: AppSec Lens.",
+      "chapter": 12,
+      "diagram_id": "chapter-12-appsec-lens",
+      "diagram_type": "attack_path",
+      "image_path": "sketchnotes\\images\\chapter-12\\appsec-lens.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-12\\appsec-lens.md",
+      "section": "AppSec Lens",
+      "status": "generated",
+      "title": "AppSec Lens Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 12: Developer Lens.",
+      "chapter": 12,
+      "diagram_id": "chapter-12-developer-lens",
+      "diagram_type": "implementation_flow",
+      "image_path": "sketchnotes\\images\\chapter-12\\developer-lens.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-12\\developer-lens.md",
+      "section": "Developer Lens",
+      "status": "generated",
+      "title": "Developer Lens Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 12: Pentest Lens.",
+      "chapter": 12,
+      "diagram_id": "chapter-12-pentest-lens",
+      "diagram_type": "test_checklist",
+      "image_path": "sketchnotes\\images\\chapter-12\\pentest-lens.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-12\\pentest-lens.md",
+      "section": "Pentest Lens",
+      "status": "generated",
+      "title": "Pentest Lens Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 12: Common Findings.",
+      "chapter": 12,
+      "diagram_id": "chapter-12-common-findings",
+      "diagram_type": "risk_matrix",
+      "image_path": "sketchnotes\\images\\chapter-12\\common-findings.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-12\\common-findings.md",
+      "section": "Common Findings",
+      "status": "generated",
+      "title": "Common Findings Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 12: Secure Design Guidance.",
+      "chapter": 12,
+      "diagram_id": "chapter-12-secure-design-guidance",
+      "diagram_type": "control_map",
+      "image_path": "sketchnotes\\images\\chapter-12\\secure-design-guidance.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-12\\secure-design-guidance.md",
+      "section": "Secure Design Guidance",
+      "status": "generated",
+      "title": "Secure Design Guidance Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 12: Interview Questions.",
+      "chapter": 12,
+      "diagram_id": "chapter-12-interview-questions",
+      "diagram_type": "interview_cards",
+      "image_path": "sketchnotes\\images\\chapter-12\\interview-questions.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-12\\interview-questions.md",
+      "section": "Interview Questions",
+      "status": "generated",
+      "title": "Interview Questions Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 12: Key Takeaways.",
+      "chapter": 12,
+      "diagram_id": "chapter-12-key-takeaways",
+      "diagram_type": "takeaway_map",
+      "image_path": "sketchnotes\\images\\chapter-12\\key-takeaways.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-12\\key-takeaways.md",
+      "section": "Key Takeaways",
+      "status": "generated",
+      "title": "Key Takeaways Sketchnote"
+    }
+  ],
+  "title": "Compliance, Auditing, and Operational Considerations"
+}

@@ -99,7 +99,11 @@ def editorial_marker_errors(markdown: str) -> list[str]:
     return errors
 
 
-def validate_publish_quality(markdown: str, allow_sketchnote_placeholder: bool = True) -> PublishGateResult:
+def validate_publish_quality(
+    markdown: str,
+    allow_sketchnote_placeholder: bool = True,
+    check_required_section_duplicates: bool = True,
+) -> PublishGateResult:
     """Validate Markdown is clean enough for final publication."""
     body = strip_front_matter(markdown)
     errors: list[str] = []
@@ -110,9 +114,10 @@ def validate_publish_quality(markdown: str, allow_sketchnote_placeholder: bool =
     if has_heading_hierarchy_jump(body):
         errors.append("Heading hierarchy jumps by more than one level.")
 
-    for section, count in heading_counts(body).items():
-        if count > 1:
-            errors.append(f"Required section appears more than once: {section}")
+    if check_required_section_duplicates:
+        for section, count in heading_counts(body).items():
+            if count > 1:
+                errors.append(f"Required section appears more than once: {section}")
 
     errors.extend(editorial_marker_errors(body))
 

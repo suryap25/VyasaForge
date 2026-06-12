@@ -1,0 +1,139 @@
+{
+  "chapter": 2,
+  "chapter_id": "chapter_02",
+  "diagrams": [
+    {
+      "caption": "Sketchnote summary for Identity and Access Management Concepts.",
+      "chapter": 2,
+      "diagram_id": "chapter-02-summary",
+      "diagram_type": "chapter_summary",
+      "image_path": "sketchnotes\\images\\chapter-02.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-02-prompt.md",
+      "section": "Sketchnote Placeholder",
+      "status": "generated",
+      "title": "Chapter 02 Summary Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 02: Learning Objectives.",
+      "chapter": 2,
+      "diagram_id": "chapter-02-learning-objectives",
+      "diagram_type": "roadmap",
+      "image_path": "sketchnotes\\images\\chapter-02\\learning-objectives.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-02\\learning-objectives.md",
+      "section": "Learning Objectives",
+      "status": "generated",
+      "title": "Learning Objectives Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 02: Conceptual Foundation.",
+      "chapter": 2,
+      "diagram_id": "chapter-02-conceptual-foundation",
+      "diagram_type": "concept_map",
+      "image_path": "sketchnotes\\images\\chapter-02\\conceptual-foundation.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-02\\conceptual-foundation.md",
+      "section": "Conceptual Foundation",
+      "status": "generated",
+      "title": "Conceptual Foundation Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 02: Architecture Perspective.",
+      "chapter": 2,
+      "diagram_id": "chapter-02-architecture-perspective",
+      "diagram_type": "trust_boundary",
+      "image_path": "sketchnotes\\images\\chapter-02\\architecture-perspective.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-02\\architecture-perspective.md",
+      "section": "Architecture Perspective",
+      "status": "generated",
+      "title": "Architecture Perspective Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 02: AppSec Lens.",
+      "chapter": 2,
+      "diagram_id": "chapter-02-appsec-lens",
+      "diagram_type": "attack_path",
+      "image_path": "sketchnotes\\images\\chapter-02\\appsec-lens.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-02\\appsec-lens.md",
+      "section": "AppSec Lens",
+      "status": "generated",
+      "title": "AppSec Lens Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 02: Developer Lens.",
+      "chapter": 2,
+      "diagram_id": "chapter-02-developer-lens",
+      "diagram_type": "implementation_flow",
+      "image_path": "sketchnotes\\images\\chapter-02\\developer-lens.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-02\\developer-lens.md",
+      "section": "Developer Lens",
+      "status": "generated",
+      "title": "Developer Lens Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 02: Pentest Lens.",
+      "chapter": 2,
+      "diagram_id": "chapter-02-pentest-lens",
+      "diagram_type": "test_checklist",
+      "image_path": "sketchnotes\\images\\chapter-02\\pentest-lens.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-02\\pentest-lens.md",
+      "section": "Pentest Lens",
+      "status": "generated",
+      "title": "Pentest Lens Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 02: Common Findings.",
+      "chapter": 2,
+      "diagram_id": "chapter-02-common-findings",
+      "diagram_type": "risk_matrix",
+      "image_path": "sketchnotes\\images\\chapter-02\\common-findings.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-02\\common-findings.md",
+      "section": "Common Findings",
+      "status": "generated",
+      "title": "Common Findings Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 02: Secure Design Guidance.",
+      "chapter": 2,
+      "diagram_id": "chapter-02-secure-design-guidance",
+      "diagram_type": "control_map",
+      "image_path": "sketchnotes\\images\\chapter-02\\secure-design-guidance.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-02\\secure-design-guidance.md",
+      "section": "Secure Design Guidance",
+      "status": "generated",
+      "title": "Secure Design Guidance Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 02: Interview Questions.",
+      "chapter": 2,
+      "diagram_id": "chapter-02-interview-questions",
+      "diagram_type": "interview_cards",
+      "image_path": "sketchnotes\\images\\chapter-02\\interview-questions.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-02\\interview-questions.md",
+      "section": "Interview Questions",
+      "status": "generated",
+      "title": "Interview Questions Sketchnote"
+    },
+    {
+      "caption": "Sketchnote for Chapter 02: Key Takeaways.",
+      "chapter": 2,
+      "diagram_id": "chapter-02-key-takeaways",
+      "diagram_type": "takeaway_map",
+      "image_path": "sketchnotes\\images\\chapter-02\\key-takeaways.png",
+      "image_type": "png",
+      "prompt_path": "sketchnotes\\prompts\\chapter-02\\key-takeaways.md",
+      "section": "Key Takeaways",
+      "status": "generated",
+      "title": "Key Takeaways Sketchnote"
+    }
+  ],
+  "title": "Identity and Access Management Concepts"
+}

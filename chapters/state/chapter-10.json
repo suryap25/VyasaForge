@@ -1,0 +1,28 @@
+{
+  "chapter_id": "chapter_10",
+  "docx": {
+    "status": "passed",
+    "updated_at": "2026-06-11T16:27:05.009758+00:00"
+  },
+  "draft": {
+    "status": "passed",
+    "updated_at": "2026-06-11T16:07:27.457555+00:00",
+    "word_count": 2286
+  },
+  "final": {
+    "source": "drafts",
+    "status": "passed",
+    "updated_at": "2026-06-11T16:10:47.735736+00:00",
+    "word_count": 5189
+  },
+  "review": {
+    "status": "passed",
+    "updated_at": "2026-06-11T16:08:29.737455+00:00"
+  },
+  "revision": {
+    "reason": "Revision safety gate failed: revised chapter is missing required sections: Developer Lens, Secure Design Guidance. Failed attempt saved to reviews\\chapter-10-revision-failed.md.",
+    "status": "rejected",
+    "updated_at": "2026-06-11T16:09:21.369980+00:00"
+  },
+  "title": "Multi-Factor Authentication and Step-Up Authentication"
+}
