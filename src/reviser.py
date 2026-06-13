@@ -168,35 +168,35 @@ def deterministic_patch_content(section: str, existing_section: str | None) -> s
     additions: dict[str, str] = {
         "Interview Questions": (
             "\n\n### Additional Interview Questions\n\n"
-            "- How would you distinguish an authentication failure from an authorization failure during incident triage?\n"
-            "- What evidence would show that authorization is enforced server-side rather than only in the UI?\n"
-            "- How would you test for horizontal privilege escalation across two normal user accounts?\n"
-            "- What token validation mistakes commonly lead to authentication or authorization bypass?\n"
-            "- How should a design handle token revocation, session timeout, and privilege changes after login?"
+            "- What problem does this chapter help the reader solve?\n"
+            "- What assumptions must be true for the recommended approach to work?\n"
+            "- What tradeoffs should practitioners consider before implementation?\n"
+            "- How would you evaluate whether the guidance was applied correctly?\n"
+            "- What failure modes should reviewers look for?"
         ),
-        "Pentest Lens": (
-            "\n\n### Additional Testing Notes\n\n"
-            "- Test authentication controls with valid, invalid, expired, locked, and MFA-pending account states.\n"
-            "- Test authorization with at least two users at the same privilege level and one lower-privilege user.\n"
-            "- Verify access-control decisions on the server side, not only in browser-visible behavior.\n"
-            "- Include token tampering, replay, expiration, and revocation scenarios in the test plan."
+        "Evaluation Lens": (
+            "\n\n### Additional Evaluation Notes\n\n"
+            "- Define observable criteria that show whether the recommendation was implemented correctly.\n"
+            "- Review both expected behavior and failure behavior.\n"
+            "- Include operational checks that can be repeated by a reviewer or maintainer.\n"
+            "- Document evidence that supports acceptance of the implementation."
         ),
-        "Common Findings": (
-            "\n\n### Additional Common Finding\n\n"
-            "**Incomplete token revocation** occurs when logout, password reset, role change, or account disablement does not invalidate active sessions or tokens. "
-            "The practical impact is continued access after a user's authorization state has changed. "
-            "Designs should define revocation behavior for sessions, refresh tokens, and high-risk privilege changes."
+        "Common Pitfalls": (
+            "\n\n### Additional Common Pitfall\n\n"
+            "**Unstated assumptions** create confusion when readers try to apply guidance in a different environment. "
+            "The practical impact is inconsistent implementation and weak reviewability. "
+            "Good documentation should name assumptions, constraints, and signals that show when guidance does not apply."
         ),
-        "Secure Design Guidance": (
-            "\n\n### Additional Secure Design Guidance\n\n"
-            "Treat authentication, session management, and authorization as separate but connected control planes. "
-            "A secure design should define where identity is established, where session state is trusted, where policy is evaluated, and how access is revoked when user state changes."
+        "Design Guidance": (
+            "\n\n### Additional Design Guidance\n\n"
+            "Treat the concept, implementation choices, evaluation criteria, and operational constraints as connected parts of the same document system. "
+            "A strong design section should explain what to build, why it matters, what tradeoffs exist, and how readers can confirm the result."
         ),
     }
     addition = additions.get(
         section,
         "\n\n### Additional Guidance\n\n"
-        "Strengthen this section with concrete examples, explicit security assumptions, and clear validation steps.",
+        "Strengthen this section with concrete examples, explicit assumptions, and clear validation steps.",
     )
     return base + addition
 
@@ -291,7 +291,7 @@ def revise_chapter(chapter: int) -> Path:
                 "Return strictly valid JSON in this shape:\n"
                 "{\n"
                 '  "patches": [\n'
-                '    {"section": "Developer Lens", "content_markdown": "## Developer Lens\\n\\n..."}\n'
+                '    {"section": "Implementation Lens", "content_markdown": "## Implementation Lens\\n\\n..."}\n'
                 "  ]\n"
                 "}\n"
             ),

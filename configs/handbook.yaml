@@ -1,19 +1,17 @@
 handbook:
-  title: Authorization and Authentication for Web and Mobile Applications
+  title: Technical Documentation Production Handbook
   version: '1.0'
-  recommended_chapter_count: 12
-  recommendation_reason: 'Comprehensive coverage of authentication and authorization across web and mobile platforms requires foundational concepts, protocol deep-dives, implementation patterns, security considerations, and platform-specific guidance. Twelve chapters provide sufficient depth for enterprise practitioners while remaining focused on practical application.'
+  recommended_chapter_count: 6
+  recommendation_reason: 'A compact default registry demonstrates the VyasaForge document pipeline without binding the project to a specific domain.'
   audience:
-  - Backend engineers
-  - Full-stack developers
-  - Mobile developers
-  - Security engineers
-  - DevOps engineers
-  - Architects
+  - Technical writers
+  - Engineering teams
+  - Product teams
+  - Documentation reviewers
   chapters:
     chapter_01:
       number: 1
-      title: Fundamentals of Authentication and Authorization
+      title: Documentation Goals and Audience
       brief_path: chapters/briefs/chapter-01.md
       draft_path: chapters/drafts/chapter-01.md
       reviewed_path: chapters/reviewed/chapter-01.md
@@ -21,7 +19,7 @@ handbook:
       review_path: reviews/chapter-01-review.md
     chapter_02:
       number: 2
-      title: Identity and Access Management Concepts
+      title: Information Architecture and TOC Design
       brief_path: chapters/briefs/chapter-02.md
       draft_path: chapters/drafts/chapter-02.md
       reviewed_path: chapters/reviewed/chapter-02.md
@@ -29,7 +27,7 @@ handbook:
       review_path: reviews/chapter-02-review.md
     chapter_03:
       number: 3
-      title: OAuth 2.0 Protocol and Flows
+      title: Chapter Briefs and Execution Contracts
       brief_path: chapters/briefs/chapter-03.md
       draft_path: chapters/drafts/chapter-03.md
       reviewed_path: chapters/reviewed/chapter-03.md
@@ -37,7 +35,7 @@ handbook:
       review_path: reviews/chapter-03-review.md
     chapter_04:
       number: 4
-      title: OpenID Connect and User Information
+      title: Drafting Structured Technical Content
       brief_path: chapters/briefs/chapter-04.md
       draft_path: chapters/drafts/chapter-04.md
       reviewed_path: chapters/reviewed/chapter-04.md
@@ -45,7 +43,7 @@ handbook:
       review_path: reviews/chapter-04-review.md
     chapter_05:
       number: 5
-      title: JSON Web Tokens and Token Management
+      title: Review, Validation, and Repair
       brief_path: chapters/briefs/chapter-05.md
       draft_path: chapters/drafts/chapter-05.md
       reviewed_path: chapters/reviewed/chapter-05.md
@@ -53,57 +51,9 @@ handbook:
       review_path: reviews/chapter-05-review.md
     chapter_06:
       number: 6
-      title: Session Management and State
+      title: Finalization and Publishing
       brief_path: chapters/briefs/chapter-06.md
       draft_path: chapters/drafts/chapter-06.md
       reviewed_path: chapters/reviewed/chapter-06.md
       final_path: chapters/final/chapter-06.md
       review_path: reviews/chapter-06-review.md
-    chapter_07:
-      number: 7
-      title: Web Application Authentication Implementation
-      brief_path: chapters/briefs/chapter-07.md
-      draft_path: chapters/drafts/chapter-07.md
-      reviewed_path: chapters/reviewed/chapter-07.md
-      final_path: chapters/final/chapter-07.md
-      review_path: reviews/chapter-07-review.md
-    chapter_08:
-      number: 8
-      title: Mobile Application Authentication Patterns
-      brief_path: chapters/briefs/chapter-08.md
-      draft_path: chapters/drafts/chapter-08.md
-      reviewed_path: chapters/reviewed/chapter-08.md
-      final_path: chapters/final/chapter-08.md
-      review_path: reviews/chapter-08-review.md
-    chapter_09:
-      number: 9
-      title: Authorization Strategies and Access Control
-      brief_path: chapters/briefs/chapter-09.md
-      draft_path: chapters/drafts/chapter-09.md
-      reviewed_path: chapters/reviewed/chapter-09.md
-      final_path: chapters/final/chapter-09.md
-      review_path: reviews/chapter-09-review.md
-    chapter_10:
-      number: 10
-      title: Multi-Factor Authentication and Step-Up Authentication
-      brief_path: chapters/briefs/chapter-10.md
-      draft_path: chapters/drafts/chapter-10.md
-      reviewed_path: chapters/reviewed/chapter-10.md
-      final_path: chapters/final/chapter-10.md
-      review_path: reviews/chapter-10-review.md
-    chapter_11:
-      number: 11
-      title: Security Best Practices and Threat Mitigation
-      brief_path: chapters/briefs/chapter-11.md
-      draft_path: chapters/drafts/chapter-11.md
-      reviewed_path: chapters/reviewed/chapter-11.md
-      final_path: chapters/final/chapter-11.md
-      review_path: reviews/chapter-11-review.md
-    chapter_12:
-      number: 12
-      title: Compliance, Auditing, and Operational Considerations
-      brief_path: chapters/briefs/chapter-12.md
-      draft_path: chapters/drafts/chapter-12.md
-      reviewed_path: chapters/reviewed/chapter-12.md
-      final_path: chapters/final/chapter-12.md
-      review_path: reviews/chapter-12-review.md

@@ -9,8 +9,8 @@ plan, write, review, validate, repair, finalize, and compile structured
 documents such as handbooks, guides, runbooks, PRDs, architecture docs,
 security playbooks, and technical manuals.
 
-The AppSec Authentication & Authorization Handbook is the first example use
-case. It is not the product boundary.
+Domain-specific handbooks are generated from user-provided topics and registry
+configuration. No single domain is the product boundary.
 
 ## Pipeline
 
@@ -201,7 +201,7 @@ vf use-handbook --name aws-cloud-security
 Planning and TOC updates:
 
 ```powershell
-vf plan --topic "AppSec Authentication and Authorization"
+vf plan --topic "Technical Documentation for Platform Engineering"
 vf plan --topic "OAuth 2.0 for Developers" --chapters 6
 vf update-toc --input user_requirements.md
 ```
@@ -265,7 +265,7 @@ Useful project documents:
 
 ## Notes
 
-- AppSec prompts and configs remain as the first sample use case.
+- Default prompts and validators are domain-neutral.
 - LLM prompts and API keys are not written to usage logs.
 - Token usage is logged to `handbooks/<document-name>/logs/llm-usage.jsonl`
   when a workspace is active.

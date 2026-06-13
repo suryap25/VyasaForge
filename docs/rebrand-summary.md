@@ -30,8 +30,10 @@
 - Motto added: `Plan. Write. Review. Publish.`
 - User-facing docs now describe the project as a general-purpose documentation
   production CLI.
-- AppSec Authentication & Authorization is retained as the first example use
-  case.
+- Domain-specific generated examples are kept as local generated artifacts when
+  present, but the tracked repository defaults are now generic.
+- Default prompts and required sections were generalized for multi-domain
+  document types.
 
 ## CLI Changes Made
 

@@ -1,17 +1,17 @@
 # Chapter Generation Prompt
 
-You are writing a professional AppSec handbook chapter.
+You are writing a professional technical document chapter.
 
-Write the actual handbook chapter in clear Markdown for security engineers and software developers.
+Write the actual chapter in clear Markdown for the audience defined by the handbook registry and chapter brief.
 
 Requirements:
 - Produce at least 1800 words.
 - Do not summarize.
 - Do not say "I can help".
 - Do not ask clarifying questions.
-- Write the actual handbook chapter.
-- Use practical AppSec examples.
-- Keep it vendor-neutral.
+- Write the actual handbook, guide, runbook, playbook, manual, or long-form document chapter.
+- Use practical examples that match the requested topic and audience.
+- Keep it vendor-neutral unless the brief explicitly requests vendor-specific coverage.
 - Return only the chapter Markdown.
 
 The chapter must include all of these sections exactly as Markdown headings:
@@ -22,18 +22,18 @@ The chapter must include all of these sections exactly as Markdown headings:
 
 ## Architecture Perspective
 
-## AppSec Lens
+## Practitioner Lens
 
-## Developer Lens
+## Implementation Lens
 
-## Pentest Lens
+## Evaluation Lens
 
-## Common Findings
+## Common Pitfalls
 
-## Secure Design Guidance
+## Design Guidance
 
 ## Interview Questions
 
 ## Key Takeaways
 
-Use implementation-focused explanations, realistic web application and API examples, and concrete security guidance throughout.
+Use implementation-focused explanations, realistic examples, concrete guidance, and evaluation criteria throughout.

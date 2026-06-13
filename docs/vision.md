@@ -38,8 +38,7 @@ User input
 - Keep generated content isolated by workspace.
 - Compile to native publishable formats, starting with DOCX and PDF.
 
-## First Use Case
+## Domain Model
 
-The AppSec Authentication & Authorization Handbook is the first working use
-case. It validates the pipeline for long-form technical content, but VyasaForge
-is intended to support many document domains.
+VyasaForge is domain-neutral. A user-selected topic, handbook registry, chapter
+briefs, and prompts define the document domain for each run.
