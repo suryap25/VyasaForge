@@ -41,7 +41,7 @@ into finished documents.
 - Full CLI: `vyasaforge`
 - Workspaces: lowercase slug names such as `aws-cloud-security`
 - Generated documents: `<workspace-name>.docx` or `<workspace-name>.pdf`
-- Example use case: AppSec Authentication & Authorization Handbook
+- Example use cases: technical handbooks, architecture guides, runbooks, playbooks, PRDs, and training material
 
-Future documentation should describe AppSec as a sample use case, not the
-product boundary.
+Future documentation should avoid making any one domain look like the product
+boundary.

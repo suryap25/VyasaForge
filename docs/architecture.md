@@ -1,8 +1,7 @@
 # Architecture
 
-VyasaForge is a configurable multi-agent document production system. The AppSec
-handbook is the first use case, but the architecture is intended to support
-other long-form technical documents.
+VyasaForge is a configurable multi-agent document production system for
+long-form technical documents.
 
 ## High-Level Flow
 

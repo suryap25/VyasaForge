@@ -47,7 +47,7 @@ AGENT_CONTRACTS = [
         validation_gate="Patched chapter must pass validation before the pipeline continues.",
     ),
     AgentContract(
-        name="AppSec Reviewer Agent",
+        name="Specialist Reviewer Agent",
         role="reviewer",
         input_contract="Chapter draft and chapter review prompt.",
         output_contract="Review notes in the active handbook workspace reviews folder.",

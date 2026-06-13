@@ -12,8 +12,8 @@ from src.publish_gate import validate_publish_quality
 from src.qa import qa_handbook, write_qa_report
 from src.workspace import active_handbook_name, workspace_path, workspace_slug
 
-TITLE = "AppSec Authentication & Authorization Handbook v2.0"
-SUBTITLE = "Phase 1: Foundations & JWT"
+TITLE = "VyasaForge Document"
+SUBTITLE = "Generated Knowledge Artifact"
 SUPPORTED_FORMATS = {"docx", "pdf"}
 
 

@@ -1,7 +1,7 @@
 # VyasaForge Roadmap
 
 Goal:
-Build a configurable long-form technical document production system. The AppSec Authentication and Authorization handbook is the first use case, not the product boundary.
+Build a configurable long-form technical document production system for many document types and domains.
 
 ## Current Capability
 

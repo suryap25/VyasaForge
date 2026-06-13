@@ -85,9 +85,9 @@ def build_chapter_brief(chapter: int) -> ChapterBrief:
     must_cover_topics = [
         f"Core concepts for {title}",
         f"Architecture considerations for {title}",
-        f"Application security risks related to {title}",
-        f"Developer implementation guidance for {title}",
-        f"Testing and assessment guidance for {title}",
+        f"Practitioner concerns related to {title}",
+        f"Implementation guidance for {title}",
+        f"Evaluation and quality guidance for {title}",
     ]
 
     return ChapterBrief(
@@ -96,7 +96,7 @@ def build_chapter_brief(chapter: int) -> ChapterBrief:
         handbook_title=registry.title,
         title=title,
         goal=f"Write a practical, vendor-neutral handbook chapter about {title}.",
-        audience=["AppSec Engineers", "Developers", "Security Champions"],
+        audience=["Technical Practitioners", "Technical Writers", "Domain Reviewers"],
         target_word_count="3000-4500 words",
         required_sections=REQUIRED_SECTIONS,
         must_cover_topics=must_cover_topics,

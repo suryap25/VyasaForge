@@ -1,6 +1,6 @@
 # Chapter Revision Prompt
 
-You are revising an AppSec handbook chapter using reviewer feedback in section-patch mode.
+You are revising a technical document chapter using reviewer feedback in section-patch mode.
 
 The original chapter is already valid. Do not rewrite it from scratch.
 
@@ -10,19 +10,19 @@ Do not append a new "Revision Additions" section.
 Do not include editorial labels such as "Correction", "Enhancement", "Location", "Add after", or reviewer commentary.
 Do not shorten the chapter.
 
-Preserve the required handbook sections:
+Preserve the required document sections:
 - Learning Objectives
 - Conceptual Foundation
 - Architecture Perspective
-- AppSec Lens
-- Developer Lens
-- Pentest Lens
-- Common Findings
-- Secure Design Guidance
+- Practitioner Lens
+- Implementation Lens
+- Evaluation Lens
+- Common Pitfalls
+- Design Guidance
 - Interview Questions
 - Key Takeaways
 
-Use the review comments to improve technical accuracy, AppSec depth, clarity, interview questions, hallucination risk, and vendor-neutrality.
+Use the review comments to improve technical accuracy, domain depth, clarity, interview questions, hallucination risk, and vendor-neutrality.
 
 Return strictly valid JSON only:
 
@@ -30,8 +30,8 @@ Return strictly valid JSON only:
 {
   "patches": [
     {
-      "section": "Developer Lens",
-      "content_markdown": "## Developer Lens\n\nReader-facing replacement content for this section."
+      "section": "Implementation Lens",
+      "content_markdown": "## Implementation Lens\n\nReader-facing replacement content for this section."
     }
   ]
 }

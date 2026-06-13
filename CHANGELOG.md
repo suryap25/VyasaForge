@@ -19,8 +19,10 @@ should be tagged in GitHub and summarized here.
 ### Changed
 
 - Packaging metadata prepared for public release.
-- Public-facing documentation now positions AppSec as the first example use
-  case rather than the product boundary.
+- Public-facing documentation now positions VyasaForge as a domain-neutral
+  documentation production system.
+- Default chapter prompts and required sections are now generic instead of
+  domain-specific.
 
 ### Security
 

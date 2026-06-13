@@ -36,7 +36,7 @@ Reliability and scale work is ongoing:
 
 ### Generic Document Production Engine
 
-- Make non-AppSec handbook templates first-class.
+- Make domain-specific handbook templates first-class.
 - Allow reusable handbook archetypes.
 - Support topic-specific required sections and quality gates.
 

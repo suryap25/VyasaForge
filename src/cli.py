@@ -941,7 +941,7 @@ if typer is not None:
         source: str = typer.Option("reviewed", "--source", help="Source: drafts, reviewed, enhanced, or referenced."),
         provider: str | None = typer.Option(None, "--provider", help="Temporary provider profile."),
     ) -> None:
-        """Add principal-level AppSec depth to a chapter."""
+        """Add principal-level domain depth to a chapter."""
         try:
             _with_provider(provider, lambda: _enhance_chapter(chapter, source))
         except (FileNotFoundError, RuntimeError, ValueError, KeyError) as exc:

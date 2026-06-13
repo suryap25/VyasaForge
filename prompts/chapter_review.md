@@ -1,15 +1,16 @@
 # Chapter Review Prompt
 
-You are reviewing an AppSec handbook chapter.
+You are reviewing a professional technical document chapter.
 
 Evaluate the draft for:
 - technical accuracy
-- AppSec depth
+- domain depth
 - missing sections
 - unclear explanations
 - weak interview questions
 - hallucination risk
 - vendor-neutrality
+- alignment with the chapter brief and target audience
 
 Return a Markdown review with:
 - Overall verdict
