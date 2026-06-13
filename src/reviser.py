@@ -208,8 +208,6 @@ def deterministic_patches(findings: list[dict[str, str]], draft: str) -> list[di
         section = finding.get("section", "")
         if section not in REQUIRED_SECTIONS or section in seen:
             continue
-        if section == "Sketchnote Placeholder":
-            continue
         patches.append(
             {
                 "section": section,
@@ -264,7 +262,7 @@ def revise_chapter(chapter: int) -> Path:
         key=REQUIRED_SECTIONS.index,
     )
     if not target_sections:
-        target_sections = [section for section in REQUIRED_SECTIONS if section != "Sketchnote Placeholder"]
+        target_sections = list(REQUIRED_SECTIONS)
 
     messages = [
         {"role": "system", "content": prompt},
@@ -328,7 +326,7 @@ def revise_chapter(chapter: int) -> Path:
     revised_word_count = count_words(revised)
     missing_sections = missing_required_sections(revised)
     too_short = revised_word_count < original_word_count * MIN_REVISED_WORD_RATIO
-    publish_result = validate_publish_quality(revised, allow_sketchnote_placeholder=True)
+    publish_result = validate_publish_quality(revised)
 
     if too_short or missing_sections or not publish_result.passed:
         failed_revision_path.parent.mkdir(parents=True, exist_ok=True)

@@ -21,7 +21,6 @@ Preserve the required handbook sections:
 - Secure Design Guidance
 - Interview Questions
 - Key Takeaways
-- Sketchnote Placeholder
 
 Use the review comments to improve technical accuracy, AppSec depth, clarity, interview questions, hallucination risk, and vendor-neutrality.
 

@@ -26,7 +26,6 @@ REQUIRED_SECTION_NAMES = [
     "Secure Design Guidance",
     "Interview Questions",
     "Key Takeaways",
-    "Sketchnote Placeholder",
 ]
 
 
@@ -101,7 +100,6 @@ def editorial_marker_errors(markdown: str) -> list[str]:
 
 def validate_publish_quality(
     markdown: str,
-    allow_sketchnote_placeholder: bool = True,
     check_required_section_duplicates: bool = True,
 ) -> PublishGateResult:
     """Validate Markdown is clean enough for final publication."""
@@ -121,9 +119,6 @@ def validate_publish_quality(
 
     errors.extend(editorial_marker_errors(body))
 
-    if not allow_sketchnote_placeholder and "[SKETCHNOTE DIAGRAM PLACEHOLDER]" in body:
-        errors.append("Unresolved sketchnote placeholder remains in publish content.")
-
     return PublishGateResult(
         passed=not errors,
         word_count=count_markdown_words(body),
@@ -131,16 +126,16 @@ def validate_publish_quality(
     )
 
 
-def validate_publish_file(path: Path, allow_sketchnote_placeholder: bool = True) -> PublishGateResult:
+def validate_publish_file(path: Path) -> PublishGateResult:
     """Validate a Markdown file for publication."""
     if not path.exists():
         return PublishGateResult(False, 0, [f"Missing publish file: {path}"])
-    return validate_publish_quality(path.read_text(encoding="utf-8"), allow_sketchnote_placeholder)
+    return validate_publish_quality(path.read_text(encoding="utf-8"))
 
 
-def assert_publishable(path: Path, allow_sketchnote_placeholder: bool = True) -> None:
+def assert_publishable(path: Path) -> None:
     """Raise a clear error if a Markdown file fails the publish gate."""
-    result = validate_publish_file(path, allow_sketchnote_placeholder)
+    result = validate_publish_file(path)
     if result.passed:
         return
     raise RuntimeError("Publish gate failed for " + str(path) + ": " + "; ".join(result.errors))

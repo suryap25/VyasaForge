@@ -82,7 +82,7 @@ def add_references(chapter: int, source_path: Path) -> Path:
     if _reference_count(referenced) < 3:
         failures.append("referenced chapter has fewer than 3 reference entries")
 
-    publish_result = validate_publish_quality(referenced, allow_sketchnote_placeholder=True)
+    publish_result = validate_publish_quality(referenced)
     if not publish_result.passed:
         failures.extend(publish_result.errors)
 

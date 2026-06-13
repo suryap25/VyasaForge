@@ -20,7 +20,6 @@ class StructuralQAResult:
     duplicate_required_sections: list[str]
     required_sections_out_of_order: list[str]
     hierarchy_errors: list[str]
-    repeated_diagram_patterns: bool
     errors: list[str]
 
 
@@ -75,18 +74,6 @@ def _hierarchy_errors(entries: list[tuple[int, str]]) -> list[str]:
     return errors
 
 
-def _repeated_diagram_patterns(markdown: str) -> bool:
-    images = re.findall(
-        r"!\[[^\]]*(?:Sketchnote|Architecture diagram)[^\]]*\]\(([^)]+)\)",
-        markdown,
-        flags=re.IGNORECASE,
-    )
-    if len(images) < 3:
-        return False
-    normalized = [Path(image).name.replace("chapter-", "").replace(".png", "").replace(".svg", "") for image in images]
-    return len(set(normalized)) <= 2
-
-
 def structural_qa_markdown(markdown: str) -> StructuralQAResult:
     """Run deterministic structural QA against chapter Markdown."""
     body = strip_front_matter(markdown)
@@ -101,7 +88,6 @@ def structural_qa_markdown(markdown: str) -> StructuralQAResult:
     ]
     required_sections_out_of_order = _required_order_errors(h2_headings)
     hierarchy_errors = _hierarchy_errors(entries)
-    repeated_diagram_patterns = _repeated_diagram_patterns(body)
 
     errors: list[str] = []
     for heading in duplicate_headings:
@@ -111,8 +97,6 @@ def structural_qa_markdown(markdown: str) -> StructuralQAResult:
     for order_error in required_sections_out_of_order:
         errors.append(f"Required section order issue: {order_error}")
     errors.extend(hierarchy_errors)
-    if repeated_diagram_patterns:
-        errors.append("Repeated diagram image pattern detected.")
 
     return StructuralQAResult(
         passed=not errors,
@@ -121,7 +105,6 @@ def structural_qa_markdown(markdown: str) -> StructuralQAResult:
         duplicate_required_sections=duplicate_required_sections,
         required_sections_out_of_order=required_sections_out_of_order,
         hierarchy_errors=hierarchy_errors,
-        repeated_diagram_patterns=repeated_diagram_patterns,
         errors=errors,
     )
 
@@ -136,7 +119,6 @@ def structural_qa_file(path: Path) -> StructuralQAResult:
             duplicate_required_sections=[],
             required_sections_out_of_order=[],
             hierarchy_errors=[],
-            repeated_diagram_patterns=False,
             errors=[f"Missing chapter file: {path}"],
         )
     return structural_qa_markdown(path.read_text(encoding="utf-8"))

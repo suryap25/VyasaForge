@@ -319,7 +319,7 @@ def _publish_gate(chapter: int, stage: str = "final") -> None:
     from src.validator import resolve_chapter_stage_path
 
     chapter_path = resolve_chapter_stage_path(chapter, stage=stage)
-    result = validate_publish_file(chapter_path, allow_sketchnote_placeholder=True)
+    result = validate_publish_file(chapter_path)
     print(f"{'PASS' if result.passed else 'FAIL'}: publish gate")
     print(f"Path: {chapter_path}")
     print(f"Word count: {result.word_count}")
@@ -342,41 +342,6 @@ def _structural_qa(chapter: int, path: Path | None = None, stage: str = "final")
         print(f"- {error}")
     if not result.passed:
         raise SystemExit(1)
-
-
-def _diagram_status(chapter: int) -> None:
-    from src.diagrams import load_diagram_registry
-
-    registry = load_diagram_registry(chapter)
-    diagrams = registry.get("diagrams", [])
-    print(f"Chapter: {registry.get('chapter_id')} - {registry.get('title')}")
-    print(f"Diagrams: {len(diagrams) if isinstance(diagrams, list) else 0}")
-    if isinstance(diagrams, list):
-        for diagram in diagrams:
-            if isinstance(diagram, dict):
-                print(
-                    f"- {diagram.get('diagram_id')}: "
-                    f"{diagram.get('section')} [{diagram.get('diagram_type', 'unknown')}] -> {diagram.get('status')} "
-                    f"({diagram.get('image_path')})"
-                )
-
-
-def _generate_sketchnote_prompts(chapters: str, stage: str = "final") -> None:
-    from src.sketchnotes import generate_all_sketchnote_prompts
-
-    chapter_numbers = _parse_chapter_numbers(chapters)
-    for chapter in chapter_numbers:
-        for prompt_path in generate_all_sketchnote_prompts(chapter, stage=stage):
-            print(f"Wrote diagram prompt: {Path(prompt_path)}")
-
-
-def _generate_sketchnotes(chapters: str, stage: str = "final") -> None:
-    from src.sketchnotes import generate_all_sketchnote_images
-
-    chapter_numbers = _parse_chapter_numbers(chapters)
-    for chapter in chapter_numbers:
-        for image_path in generate_all_sketchnote_images(chapter, stage=stage):
-            print(f"Wrote diagram image: {Path(image_path)}")
 
 
 def _plan_handbook(
@@ -538,8 +503,6 @@ def _run_chapter(chapter: int, compile_at_end: bool = True) -> None:
 
     _run_step("finalize-chapter", lambda: _finalize_chapter(chapter, final_source))
     _run_step("validate-chapter --stage final", lambda: _validate_chapter(chapter, "final"))
-    _run_step("generate-diagram-prompts", lambda: _generate_sketchnote_prompts(str(chapter), "final"))
-    _run_step("generate-diagrams", lambda: _generate_sketchnotes(str(chapter), "final"))
     _run_step("qa-handbook --stage final", lambda: _qa_handbook(str(chapter), "final"))
     if compile_at_end:
         _run_step("compile-docx", lambda: _compile_docx(str(chapter)))
@@ -574,8 +537,6 @@ def _provider_env_var(model: str) -> tuple[str, str | None]:
 
 def _doctor() -> None:
     """Print provider and configuration diagnostics without calling the LLM."""
-    import shutil
-
     phase1_config = Path("configs/phase1.example.json")
     handbook_config = Path("configs/handbook.yaml")
     provider_config = Path("configs/providers.yaml")
@@ -584,15 +545,6 @@ def _doctor() -> None:
     print(f"- {phase1_config}: {'FOUND' if phase1_config.exists() else 'MISSING'}")
     print(f"- {handbook_config}: {'FOUND' if handbook_config.exists() else 'MISSING'}")
     print(f"- {provider_config}: {'FOUND' if provider_config.exists() else 'MISSING'}")
-
-    print("Diagram tooling:")
-    print(f"- Graphviz dot: {'FOUND' if shutil.which('dot') else 'MISSING'}")
-    try:
-        import graphviz  # noqa: F401
-
-        print("- Python graphviz package: FOUND")
-    except ImportError:
-        print("- Python graphviz package: MISSING")
 
     try:
         from src.provider_profiles import active_provider_profile, selected_profile_name
@@ -733,25 +685,6 @@ def _run_argparse() -> None:
     publish_gate_parser.add_argument("--chapter", type=int, required=True)
     publish_gate_parser.add_argument("--stage", default="final")
 
-    diagram_status_parser = subparsers.add_parser("diagram-status")
-    diagram_status_parser.add_argument("--chapter", type=int, required=True)
-
-    sketchnote_prompt_parser = subparsers.add_parser("generate-sketchnote-prompts")
-    sketchnote_prompt_parser.add_argument("--chapters", required=True)
-    sketchnote_prompt_parser.add_argument("--stage", default="final")
-
-    sketchnote_parser = subparsers.add_parser("generate-sketchnotes")
-    sketchnote_parser.add_argument("--chapters", required=True)
-    sketchnote_parser.add_argument("--stage", default="final")
-
-    diagram_prompt_parser = subparsers.add_parser("generate-diagram-prompts")
-    diagram_prompt_parser.add_argument("--chapters", required=True)
-    diagram_prompt_parser.add_argument("--stage", default="final")
-
-    diagram_parser = subparsers.add_parser("generate-diagrams")
-    diagram_parser.add_argument("--chapters", required=True)
-    diagram_parser.add_argument("--stage", default="final")
-
     plan_parser = subparsers.add_parser("plan-handbook")
     plan_parser.add_argument("--topic", required=True)
     plan_parser.add_argument("--chapters", type=int)
@@ -804,11 +737,6 @@ def _run_argparse() -> None:
         "agent-status": _agent_status,
         "qa-handbook": lambda: _qa_handbook(args.chapters, args.stage),
         "publish-gate": lambda: _publish_gate(args.chapter, args.stage),
-        "diagram-status": lambda: _diagram_status(args.chapter),
-        "generate-sketchnote-prompts": lambda: _generate_sketchnote_prompts(args.chapters, args.stage),
-        "generate-sketchnotes": lambda: _generate_sketchnotes(args.chapters, args.stage),
-        "generate-diagram-prompts": lambda: _generate_sketchnote_prompts(args.chapters, args.stage),
-        "generate-diagrams": lambda: _generate_sketchnotes(args.chapters, args.stage),
         "plan-handbook": lambda: _with_provider(args.provider, lambda: _plan_handbook(args.topic, args.chapters, args.audience, args.depth, args.pages)),
         "update-toc": lambda: _with_provider(args.provider, lambda: _update_toc(args.input)),
         "handbook-status": _handbook_status,
@@ -1025,58 +953,6 @@ if typer is not None:
         """Run deterministic structural QA for one chapter stage."""
         try:
             _structural_qa(chapter, stage=stage)
-        except (FileNotFoundError, RuntimeError, ValueError) as exc:
-            raise typer.BadParameter(str(exc)) from exc
-
-    @app.command()
-    def diagram_status(chapter: int = typer.Option(..., "--chapter", help="Chapter number to inspect.")) -> None:
-        """Print generated diagram artifact registry status."""
-        try:
-            _diagram_status(chapter)
-        except (FileNotFoundError, RuntimeError, ValueError) as exc:
-            raise typer.BadParameter(str(exc)) from exc
-
-    @app.command()
-    def generate_sketchnote_prompts(
-        chapters: str = typer.Option(..., "--chapters", help="Comma-separated chapter numbers."),
-        stage: str = typer.Option("final", "--stage", help="Chapter stage to use."),
-    ) -> None:
-        """Generate diagram planning prompts from chapter content."""
-        try:
-            _generate_sketchnote_prompts(chapters, stage)
-        except (FileNotFoundError, RuntimeError, ValueError) as exc:
-            raise typer.BadParameter(str(exc)) from exc
-
-    @app.command()
-    def generate_sketchnotes(
-        chapters: str = typer.Option(..., "--chapters", help="Comma-separated chapter numbers."),
-        stage: str = typer.Option("final", "--stage", help="Chapter stage to use."),
-    ) -> None:
-        """Generate Graphviz SVG and PNG diagrams from chapter content."""
-        try:
-            _generate_sketchnotes(chapters, stage)
-        except (FileNotFoundError, RuntimeError, ValueError) as exc:
-            raise typer.BadParameter(str(exc)) from exc
-
-    @app.command()
-    def generate_diagram_prompts(
-        chapters: str = typer.Option(..., "--chapters", help="Comma-separated chapter numbers."),
-        stage: str = typer.Option("final", "--stage", help="Chapter stage to use."),
-    ) -> None:
-        """Generate diagram planning prompts from chapter content."""
-        try:
-            _generate_sketchnote_prompts(chapters, stage)
-        except (FileNotFoundError, RuntimeError, ValueError) as exc:
-            raise typer.BadParameter(str(exc)) from exc
-
-    @app.command()
-    def generate_diagrams(
-        chapters: str = typer.Option(..., "--chapters", help="Comma-separated chapter numbers."),
-        stage: str = typer.Option("final", "--stage", help="Chapter stage to use."),
-    ) -> None:
-        """Generate Graphviz SVG and PNG diagrams from chapter content."""
-        try:
-            _generate_sketchnotes(chapters, stage)
         except (FileNotFoundError, RuntimeError, ValueError) as exc:
             raise typer.BadParameter(str(exc)) from exc
 

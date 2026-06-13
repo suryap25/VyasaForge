@@ -10,7 +10,6 @@ from src.handbook import load_handbook_registry
 from src.handbook import resolve_chapter
 from src.publish_gate import validate_publish_quality
 from src.qa import qa_handbook, write_qa_report
-from src.sketchnotes import preferred_image_path_for, preferred_section_image_path_for, section_sketchnote_sections
 
 OUTPUT_PATH = Path("output/AppSec_Authentication_Authorization_Handbook_Phase1.docx")
 TITLE = "AppSec Authentication & Authorization Handbook v2.0"
@@ -42,59 +41,9 @@ def pandoc_path() -> str:
     return executable
 
 
-def sketchnote_markdown(chapter: int) -> str | None:
-    """Return Markdown image syntax for a generated architecture diagram if it exists."""
-    image_path = preferred_image_path_for(chapter)
-    if not image_path.exists():
-        return None
-    return f"![Architecture diagram for Chapter {chapter:02d}]({image_path.as_posix()}){{ width=6.5in }}"
-
-
-def section_sketchnote_markdown(chapter: int, section: str) -> str | None:
-    """Return Markdown image syntax for a section architecture diagram if it exists."""
-    image_path = preferred_section_image_path_for(chapter, section)
-    if not image_path.exists():
-        return None
-    return f"![Architecture diagram for Chapter {chapter:02d} - {section}]({image_path.as_posix()}){{ width=6.5in }}"
-
-
-def insert_section_sketchnotes(chapter: int, body: str) -> str:
-    """Insert section diagram images immediately after matching section headings."""
-    lines = body.splitlines()
-    output: list[str] = []
-    pending_sections = {
-        section: section_sketchnote_markdown(chapter, section)
-        for section in section_sketchnote_sections()
-    }
-
-    for line in lines:
-        output.append(line)
-        for section, image_markdown in pending_sections.items():
-            if image_markdown is None:
-                continue
-            if re_match_heading(line, section):
-                output.extend(["", image_markdown, ""])
-                pending_sections[section] = None
-                break
-
-    return "\n".join(output)
-
-
-def re_match_heading(line: str, section: str) -> bool:
-    """Return true when a Markdown heading line names a target section."""
-    import re
-
-    return re.match(rf"^##\s+{re.escape(section)}\s*$", line) is not None
-
-
 def chapter_markdown_for_compile(chapter: int, chapter_path: Path) -> str:
-    """Return chapter Markdown with diagram images inserted when available."""
-    body = markdown_body(chapter_path.read_text(encoding="utf-8"))
-    body = insert_section_sketchnotes(chapter, body)
-    image_markdown = sketchnote_markdown(chapter)
-    if image_markdown is None:
-        return body
-    return body.replace("[SKETCHNOTE DIAGRAM PLACEHOLDER]", image_markdown)
+    """Return chapter Markdown prepared for compilation."""
+    return markdown_body(chapter_path.read_text(encoding="utf-8"))
 
 
 def combined_markdown(chapters: list[int], chapter_paths: list[Path]) -> str:
@@ -148,7 +97,7 @@ def compile_handbook(chapters: list[int], output_format: str = "docx") -> Path:
 
     for chapter, chapter_path in zip(chapters, chapter_paths):
         chapter_content = chapter_markdown_for_compile(chapter, chapter_path)
-        gate_result = validate_publish_quality(chapter_content, allow_sketchnote_placeholder=False)
+        gate_result = validate_publish_quality(chapter_content)
         if not gate_result.passed:
             raise RuntimeError(
                 f"Compile-time publish gate failed for chapter {chapter}: "
@@ -162,7 +111,6 @@ def compile_handbook(chapters: list[int], output_format: str = "docx") -> Path:
     combined_content = combined_markdown(chapters, chapter_paths)
     gate_result = validate_publish_quality(
         combined_content,
-        allow_sketchnote_placeholder=False,
         check_required_section_duplicates=False,
     )
     if not gate_result.passed:
@@ -187,12 +135,6 @@ def compile_handbook(chapters: list[int], output_format: str = "docx") -> Path:
         ]
         completed = subprocess.run(command, capture_output=True, text=True, check=False)
         stderr = completed.stderr.strip()
-        if "Could not convert image" in stderr:
-            raise RuntimeError(
-                "Pandoc could not convert one or more diagram images. "
-                "Install rsvg-convert or generate DOCX-compatible raster images. "
-                f"Pandoc output: {stderr}"
-            )
         if completed.returncode != 0:
             raise RuntimeError(f"Pandoc {output_format.upper()} compilation failed: {stderr or 'no error output'}")
     finally:

@@ -36,6 +36,4 @@ The chapter must include all of these sections exactly as Markdown headings:
 
 ## Key Takeaways
 
-## Sketchnote Placeholder
-
 Use implementation-focused explanations, realistic web application and API examples, and concrete security guidance throughout.

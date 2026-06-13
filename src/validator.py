@@ -22,7 +22,6 @@ REQUIRED_SECTIONS = [
     "Secure Design Guidance",
     "Interview Questions",
     "Key Takeaways",
-    "Sketchnote Placeholder",
 ]
 
 @dataclass(frozen=True)
@@ -82,10 +81,7 @@ def validate_chapter(chapter: int, stage: str = "drafts") -> ValidationResult:
     for section in missing_sections:
         errors.append(f"Missing required section: {section}")
 
-    structural_result = validate_publish_quality(
-        chapter_text,
-        allow_sketchnote_placeholder=True,
-    )
+    structural_result = validate_publish_quality(chapter_text)
     errors.extend(structural_result.errors)
 
     return ValidationResult(

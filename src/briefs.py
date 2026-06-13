@@ -26,7 +26,6 @@ BRIEF_SECTIONS = [
     "Examples Required",
     "Interview Questions Required",
     "References Needed",
-    "Diagram Placeholder",
     "Quality Gates",
 ]
 
@@ -48,7 +47,6 @@ if BaseModel is object:
         examples_required: list[str]
         interview_questions_required: bool = True
         references_needed: str = ""
-        diagram_placeholder: str = ""
         quality_gates: list[str] | None = None
 else:
     class ChapterBrief(BaseModel):
@@ -66,7 +64,6 @@ else:
         examples_required: list[str]
         interview_questions_required: bool = True
         references_needed: str
-        diagram_placeholder: str
         quality_gates: list[str] = Field(default_factory=list)
 
 
@@ -110,7 +107,6 @@ def build_chapter_brief(chapter: int) -> ChapterBrief:
             "At least one testing or review checklist",
         ],
         references_needed="Include vendor-neutral standards or concepts when useful; do not invent citations.",
-        diagram_placeholder="Include the required Sketchnote Placeholder section.",
         quality_gates=[
             "Draft must pass chapter validator before review.",
             "Draft must contain every required handbook section.",
@@ -155,9 +151,6 @@ def render_chapter_brief(brief: ChapterBrief) -> str:
         "",
         "## References Needed",
         brief.references_needed,
-        "",
-        "## Diagram Placeholder",
-        brief.diagram_placeholder,
         "",
         "## Quality Gates",
         *[f"- {gate}" for gate in (brief.quality_gates or [])],

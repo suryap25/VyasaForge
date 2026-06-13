@@ -8,14 +8,9 @@ from src.handbook import resolve_chapter
 from src.publish_gate import code_fence_count
 from src.validator import has_section, resolve_chapter_stage_path, validate_chapter
 
-SKETCHNOTE_SECTION = "Sketchnote Placeholder"
-SKETCHNOTE_MARKDOWN = "## Sketchnote Placeholder\n\n[SKETCHNOTE DIAGRAM PLACEHOLDER]"
-
 
 def deterministic_section_markdown(section: str) -> str:
     """Return a small deterministic fallback for a missing required section."""
-    if section == SKETCHNOTE_SECTION:
-        return SKETCHNOTE_MARKDOWN
     if section == "Interview Questions":
         return (
             "## Interview Questions\n\n"
@@ -69,12 +64,8 @@ def repair_chapter(chapter: int, stage: str = "drafts") -> Path:
     if not result.missing_sections:
         return chapter_path
 
-    if result.missing_sections == [SKETCHNOTE_SECTION]:
-        append_section(chapter_path, SKETCHNOTE_MARKDOWN)
-        return chapter_path
-
     existing = chapter_path.read_text(encoding="utf-8")
-    llm_sections = [section for section in result.missing_sections if section != SKETCHNOTE_SECTION]
+    llm_sections = list(result.missing_sections)
     missing_headings = "\n".join(f"## {section}" for section in llm_sections)
     messages = [
         {

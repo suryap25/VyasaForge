@@ -6,7 +6,6 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from src.diagrams import diagram_registry_path
 from src.handbook import resolve_chapter
 from src.structural_qa import StructuralQAResult, structural_qa_file
 from src.validator import REQUIRED_SECTIONS, ValidationResult, validate_chapter
@@ -23,10 +22,8 @@ class ChapterQAResult:
     stage: str
     validation: ValidationResult
     weak_interview_questions: bool
-    sketchnote_missing_placeholder: bool
     repeated_headings: list[str]
     structural: StructuralQAResult
-    diagram_errors: list[str]
     passed: bool
 
 
@@ -80,35 +77,6 @@ def _chapter_path(chapter: int, stage: str) -> Path:
     raise ValueError("QA stage must be drafts, reviewed, or final.")
 
 
-def _diagram_errors(chapter: int) -> list[str]:
-    path = diagram_registry_path(chapter)
-    if not path.exists():
-        return [f"Missing diagram registry: {path}"]
-
-    import json
-
-    registry = json.loads(path.read_text(encoding="utf-8"))
-    diagrams = registry.get("diagrams", [])
-    if not isinstance(diagrams, list) or not diagrams:
-        return ["No diagrams registered for chapter."]
-
-    errors: list[str] = []
-    diagram_types: set[str] = set()
-    for diagram in diagrams:
-        if not isinstance(diagram, dict):
-            errors.append("Malformed diagram registry entry.")
-            continue
-        diagram_types.add(str(diagram.get("diagram_type", "")))
-        image_path = Path(str(diagram.get("image_path", "")))
-        if diagram.get("status") != "generated":
-            errors.append(f"Diagram not generated: {diagram.get('diagram_id')}")
-        if not image_path.exists():
-            errors.append(f"Diagram image missing: {image_path}")
-    if len(diagrams) >= 3 and len(diagram_types) < 3:
-        errors.append("Diagram set has too little visual variety.")
-    return errors
-
-
 def qa_chapter(chapter: int, stage: str = "final") -> ChapterQAResult:
     """Run deterministic quality checks for one chapter."""
     metadata = resolve_chapter(chapter)
@@ -117,22 +85,17 @@ def qa_chapter(chapter: int, stage: str = "final") -> ChapterQAResult:
     markdown = chapter_path.read_text(encoding="utf-8") if chapter_path.exists() else ""
     headings = _heading_titles(markdown)
     interview_text = _section_text(markdown, "Interview Questions")
-    sketchnote_text = _section_text(markdown, "Sketchnote Placeholder")
     repeated_headings = [
         heading for heading in _repeated(headings)
         if heading not in REQUIRED_SECTIONS
     ]
     structural = structural_qa_file(chapter_path)
-    diagram_errors = _diagram_errors(chapter) if stage == "final" else []
     weak_interview_questions = bool(interview_text) and interview_text.count("?") < 3
-    sketchnote_missing_placeholder = bool(sketchnote_text) and "[SKETCHNOTE DIAGRAM PLACEHOLDER]" not in sketchnote_text
     passed = (
         validation.passed
         and not weak_interview_questions
-        and not sketchnote_missing_placeholder
         and not repeated_headings
         and structural.passed
-        and not diagram_errors
     )
     return ChapterQAResult(
         chapter=chapter,
@@ -140,10 +103,8 @@ def qa_chapter(chapter: int, stage: str = "final") -> ChapterQAResult:
         stage=stage,
         validation=validation,
         weak_interview_questions=weak_interview_questions,
-        sketchnote_missing_placeholder=sketchnote_missing_placeholder,
         repeated_headings=repeated_headings,
         structural=structural,
-        diagram_errors=diagram_errors,
         passed=passed,
     )
 
@@ -198,18 +159,14 @@ def render_qa_report(result: HandbookQAResult) -> str:
                 f"- Word count: {chapter_result.validation.word_count}",
                 f"- Missing sections: {', '.join(chapter_result.validation.missing_sections) if chapter_result.validation.missing_sections else 'none'}",
                 f"- Weak interview questions: {'yes' if chapter_result.weak_interview_questions else 'no'}",
-                f"- Sketchnote placeholder issue: {'yes' if chapter_result.sketchnote_missing_placeholder else 'no'}",
                 f"- Repeated headings: {', '.join(chapter_result.repeated_headings) if chapter_result.repeated_headings else 'none'}",
                 f"- Structural QA: {'PASS' if chapter_result.structural.passed else 'FAIL'}",
-                f"- Diagram QA: {'PASS' if not chapter_result.diagram_errors else 'FAIL'}",
             ]
         )
         for error in chapter_result.validation.errors:
             lines.append(f"- Validator error: {error}")
         for error in chapter_result.structural.errors:
             lines.append(f"- Structural error: {error}")
-        for error in chapter_result.diagram_errors:
-            lines.append(f"- Diagram error: {error}")
 
     return "\n".join(lines).strip() + "\n"
 

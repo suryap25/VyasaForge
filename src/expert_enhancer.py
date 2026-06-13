@@ -72,7 +72,7 @@ def enhance_chapter(chapter: int, source_path: Path) -> Path:
     if missing_sections:
         failures.append("enhanced chapter is missing required sections: " + ", ".join(missing_sections))
 
-    publish_result = validate_publish_quality(enhanced, allow_sketchnote_placeholder=True)
+    publish_result = validate_publish_quality(enhanced)
     if not publish_result.passed:
         failures.extend(publish_result.errors)
 

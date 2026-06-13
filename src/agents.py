@@ -75,13 +75,6 @@ AGENT_CONTRACTS = [
         validation_gate="No LLM calls; report must list pass/fail checks.",
     ),
     AgentContract(
-        name="Diagram Agent",
-        role=None,
-        input_contract="Validated chapter Markdown.",
-        output_contract="Diagram plan Markdown plus local Graphviz SVG and PNG images.",
-        validation_gate="Renderer must produce DOCX-compatible PNG images before compiler insertion.",
-    ),
-    AgentContract(
         name="Compiler Agent",
         role=None,
         input_contract="Validated final Markdown chapters.",

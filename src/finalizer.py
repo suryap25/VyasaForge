@@ -45,7 +45,7 @@ def finalize_chapter(chapter: int, source: str = "reviewed") -> Path:
     source_content = source_path.read_text(encoding="utf-8")
 
     final_content = normalize_required_sections(metadata_header(chapter, source) + source_content)
-    gate_result = validate_publish_quality(final_content, allow_sketchnote_placeholder=True)
+    gate_result = validate_publish_quality(final_content)
     if not gate_result.passed:
         raise RuntimeError("Publish gate failed for final chapter: " + "; ".join(gate_result.errors))
 
