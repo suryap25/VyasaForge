@@ -1,63 +1,177 @@
-# Contributing
+# Contributing to VyasaForge
 
-Thank you for helping improve VyasaForge. This project is a configurable
-multi-agent document production system, so contribution quality matters for
-both software behavior and generated writing quality.
+Thank you for contributing to VyasaForge.
 
-## Branch Strategy
+VyasaForge is a configurable multi-agent document production system designed to transform structured knowledge into publishable documents through planning, writing, review, validation, repair, and publishing workflows.
 
-- `main` is the protected release branch.
-- Use short-lived feature branches from `main`.
-- Prefer branch names like `feature/brief-schema`, `fix/compiler-output`, or
-  `docs/release-checklist`.
-- Keep pull requests focused on one concern.
+## Before You Contribute
 
-## Pull Request Process
+Please:
 
-1. Open an issue first for large behavior changes, new agents, provider changes,
-   compiler changes, or prompt contract changes.
-2. Keep generated artifacts out of the pull request.
-3. Include a clear summary, validation steps, and any known limitations.
-4. Run the local checks before requesting review:
+* Search existing issues before opening a new one.
+* Open an issue before making large architectural changes.
+* Discuss roadmap-altering changes before implementation.
+* Keep pull requests focused on a single concern.
 
-   ```powershell
-   python -m compileall src
-   python -m src.cli --help
-   python -m src.cli doctor
-   ```
+---
 
-5. Maintainer review is required before merge.
+# Development Philosophy
 
-## Coding Standards
+VyasaForge follows several core principles:
 
-- Keep changes small, explicit, and reviewable.
-- Preserve provider-agnostic boundaries. Application logic must not call a
-  vendor SDK directly.
-- Do not log prompts, API keys, or generated secrets.
-- Prefer deterministic validators and gates over unbounded agent behavior.
-- Avoid changing chapter-generation behavior in repository hardening changes.
-- Use type hints for new Python interfaces where practical.
+1. Provider Agnostic
 
-## Prompt Standards
+   * Core logic must not depend on a specific LLM provider.
+   * All model interactions belong behind the LLM Gateway abstraction.
 
-- Prompts are source code for this project.
-- Prompt changes must describe input contracts, output contracts, and failure
-  handling.
-- Avoid prompts that ask the model to guess missing user intent.
-- Keep provider-specific wording out of prompts unless the prompt is explicitly
-  provider-facing.
-- Do not include real secrets, proprietary customer data, or private generated
-  content in prompts.
+2. Deterministic First
 
-## Documentation Standards
+   * Prefer validators, contracts, and repair workflows over prompt-only enforcement.
 
-- Update `README.md` for user-visible commands.
-- Update `docs/architecture.md` for architectural changes.
-- Update `docs/roadmap.md` for phase or milestone changes.
-- Add troubleshooting notes when a change introduces a new dependency or setup
-  requirement.
+3. Small Changes
 
-## Generated Artifacts
+   * Large refactors should be split into multiple pull requests.
 
-Do not commit generated handbook workspaces, chapter drafts, reviews, output
-documents, logs, local state, or API usage records.
+4. Documentation as Code
+
+   * Prompts, schemas, validators, templates, and contracts are considered source code.
+
+---
+
+# Branch Strategy
+
+Protected branch:
+
+```text
+main
+```
+
+Use short-lived feature branches:
+
+```text
+feature/brief-factory
+feature/chapter-planner
+feature/research-agent
+
+fix/compiler-regression
+fix/state-persistence
+
+docs/roadmap-update
+docs/security-guide
+```
+
+---
+
+# Pull Request Process
+
+For significant changes:
+
+1. Open an issue first.
+2. Create a feature branch.
+3. Implement the change.
+4. Run validation.
+5. Open a pull request.
+
+Required validation:
+
+```powershell
+python -m compileall src
+python -m src.cli --help
+python -m src.cli doctor
+```
+
+If applicable:
+
+```powershell
+python -m src.cli handbook-status
+python -m src.cli validate-chapter --chapter 1 --stage final
+```
+
+---
+
+# Coding Standards
+
+* Use type hints where practical.
+* Avoid hidden side effects.
+* Prefer explicit configuration over hardcoded values.
+* Preserve provider-agnostic boundaries.
+* Keep modules focused and testable.
+* Do not commit generated artifacts.
+
+---
+
+# Prompt Standards
+
+Prompts are production assets.
+
+Prompt changes should define:
+
+* Input contract
+* Output contract
+* Expected format
+* Failure handling
+* Validation expectations
+
+Avoid:
+
+* Prompt-only validation
+* Hidden assumptions
+* Provider-specific wording
+
+unless explicitly required.
+
+---
+
+# Documentation Standards
+
+Update documentation whenever behavior changes.
+
+Potential files:
+
+```text
+README.md
+docs/architecture.md
+docs/roadmap.md
+docs/open-source-summary.md
+docs/rebrand-summary.md
+```
+
+---
+
+# Security Guidelines
+
+Never commit:
+
+```text
+.env
+API keys
+Provider secrets
+Generated private documents
+Customer data
+Usage logs containing secrets
+```
+
+Secrets must be supplied through environment variables.
+
+---
+
+# Generated Artifacts
+
+Do not commit:
+
+```text
+chapters/drafts/
+chapters/reviewed/
+chapters/final/
+output/
+logs/
+state/
+```
+
+unless intentionally updating sample content.
+
+---
+
+# Questions?
+
+Open a GitHub Discussion before opening a large architectural pull request.
