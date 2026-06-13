@@ -6,16 +6,29 @@
 !README.md
 !ROADMAP.md
 !pyproject.toml
+!LICENSE
+!CONTRIBUTING.md
+!SECURITY.md
+!CODE_OF_CONDUCT.md
+!CHANGELOG.md
+!docs/
+!docs/**
+!.github/
+!.github/**
 
 # Keep source, configuration, and prompts.
 !src/
 !src/**
 !configs/
-!configs/**
+!configs/.gitkeep
+!configs/*.example.json
+!configs/providers.yaml
+!configs/handbook.yaml
 !prompts/
 !prompts/**
 
 # Ignore generated handbook artifacts.
+handbooks/
 chapters/
 reviews/
 reports/
@@ -23,6 +36,9 @@ diagrams/
 sketchnotes/
 output/
 logs/
+state/
+usage_logs/
+configs/active-handbook.txt
 
 # Ignore local notes and secrets.
 developers_notes.txt
@@ -31,6 +47,7 @@ developers_notes.txt
 !.env.example
 
 # Ignore Python caches, virtual environments, and build outputs.
+**/__pycache__/
 __pycache__/
 *.py[cod]
 *$py.class

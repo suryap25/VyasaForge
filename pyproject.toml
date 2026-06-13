@@ -1,9 +1,13 @@
 [project]
 name = "appsec-handbook-agent"
 version = "0.1.0"
-description = "Scaffolding for an AppSec handbook agent."
+description = "Configurable multi-agent handbook generation system for technical documentation."
 readme = "README.md"
 requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "Surya Vass", email = "pvass25@users.noreply.github.com" },
+]
 dependencies = [
     "litellm>=1.0",
     "pydantic>=2.0",
@@ -13,7 +17,7 @@ dependencies = [
 ]
 
 [project.scripts]
-appsec-handbook-agent = "appsec_handbook_agent.cli:app"
+appsec-handbook-agent = "src.cli:app"
 
 [build-system]
 requires = ["setuptools>=68"]
