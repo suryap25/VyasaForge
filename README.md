@@ -1,16 +1,16 @@
 # AppSec Handbook Agent
 
-Configurable document production pipeline for generating an AppSec Authentication and Authorization handbook.
+Configurable document production pipeline for generating long-form technical handbooks. The AppSec Authentication and Authorization handbook is the first supported use case.
 
-## MVP1 Status
+## Current Status
 
-MVP1 supports one chapter end to end:
+The utility supports topic-driven handbook planning and chapter generation:
 
 ```text
-create brief -> write draft -> validate -> repair -> review -> revise -> finalize -> compile DOCX -> status
+topic -> handbook TOC -> chapter briefs -> write -> validate -> repair -> review -> revise -> enhance -> references -> finalize -> QA -> compile DOCX/PDF -> status
 ```
 
-The current MVP is focused on Chapter 1: Authentication vs Authorization.
+The visual/sketchnote/diagram generation layer has been removed. The current focus is reliable text generation, review, validation, finalization, and document compilation.
 
 ## Prerequisites
 
@@ -53,14 +53,20 @@ This checks:
 - expected provider environment variables
 - whether the required API key variable is present
 
-## MVP1 End-to-End Run
+## End-to-End Run
 
 If you deleted `chapters/briefs`, `chapters/drafts`, `chapters/reviewed`, or `chapters/final`, the commands below will recreate the needed folders as files are generated.
 
-Create the Chapter 1 brief:
+Plan a handbook from a topic:
 
 ```powershell
-python -m src.cli create-chapter --chapter 1
+python -m src.cli plan-handbook --topic "AppSec Authentication and Authorization"
+```
+
+Generate chapter briefs:
+
+```powershell
+python -m src.cli generate-briefs
 ```
 
 Run the full Chapter 1 pipeline:
@@ -72,6 +78,7 @@ python -m src.cli run-chapter --chapter 1
 The pipeline runs these stages:
 
 ```text
+create-chapter
 write-chapter
 validate-chapter --stage drafts
 repair-chapter --stage drafts, if needed
@@ -79,10 +86,14 @@ validate-chapter --stage drafts
 review-chapter
 revise-chapter
 validate-chapter --stage reviewed
+expert-enhance-chapter
+add-references
 finalize-chapter
 validate-chapter --stage final
+qa-handbook --stage final
 compile-docx
 handbook-status
+llm-usage
 ```
 
 If revision fails the safety gate, the pipeline falls back to finalizing the validated draft so MVP1 can still complete.
@@ -106,12 +117,15 @@ python -m src.cli show-state --chapter 1
 python -m src.cli handbook-status
 ```
 
-Expected MVP1 outputs:
+Expected outputs:
 
 ```text
+configs/handbook.yaml
 chapters/briefs/chapter-01.md
 chapters/drafts/chapter-01.md
 chapters/reviewed/chapter-01.md
+chapters/enhanced/chapter-01.md
+chapters/referenced/chapter-01.md
 chapters/final/chapter-01.md
 chapters/state/chapter-01.json
 reviews/chapter-01-review.md
@@ -149,6 +163,8 @@ Run multiple registered chapters in order:
 python -m src.cli run-chapters --chapters 1,2,3
 ```
 
+This compiles once at the end after all requested chapters complete.
+
 Plan a new handbook TOC from a topic:
 
 ```powershell
@@ -183,7 +199,7 @@ If the requirements are ambiguous, the TOC is not changed. Clarification questio
 configs/handbook-clarification-questions.md
 ```
 
-## Phase 5: Chapter Brief Factory
+## Chapter Brief Factory
 
 Generate execution contracts from the current handbook registry:
 
@@ -205,7 +221,7 @@ PASS: chapters\briefs\chapter-01.md
 
 Each brief includes the chapter goal, audience, target word count, required handbook sections, must-cover topics, examples required, references guidance, and quality gates.
 
-## Phase 6: Controlled Agent Contracts
+## Controlled Agent Contracts
 
 Show the controlled multi-agent contract registry:
 
@@ -215,7 +231,7 @@ python -m src.cli agent-status
 
 This does not call the LLM. It prints each agent, its configured LLM role if any, and the validation gate that controls its output.
 
-## Phase 7: Handbook QA
+## Handbook QA
 
 Run deterministic book-level QA after final chapters exist:
 
@@ -234,7 +250,7 @@ Wrote QA report: reports\handbook-qa.md
 
 The QA report checks chapter validation status, missing sections, weak interview-question sections, duplicate chapter titles, and large chapter-length imbalance. It does not call the LLM.
 
-## Phase 8: Document Compiler v2
+## Document Compiler
 
 Compile a native DOCX with Pandoc, table of contents, and numbered sections:
 
