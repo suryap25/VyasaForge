@@ -1,8 +1,8 @@
 # Contributing
 
-Thank you for helping improve AppSec Handbook Agent. This project is a
-configurable multi-agent document production system, so contribution quality
-matters for both software behavior and generated writing quality.
+Thank you for helping improve VyasaForge. This project is a configurable
+multi-agent document production system, so contribution quality matters for
+both software behavior and generated writing quality.
 
 ## Branch Strategy
 

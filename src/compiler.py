@@ -53,7 +53,7 @@ def combined_markdown(chapters: list[int], chapter_paths: list[Path]) -> str:
         "---",
         f"title: {registry.title}",
         f"subtitle: Version {registry.version}",
-        "author: appsec-handbook-agent",
+        "author: VyasaForge",
         "toc-title: Table of Contents",
         "---",
         "",

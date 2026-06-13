@@ -1,4 +1,4 @@
-"""CLI entrypoint for handbook utilities."""
+"""CLI entrypoint for VyasaForge."""
 
 from __future__ import annotations
 
@@ -6,6 +6,11 @@ import argparse
 import os
 from pathlib import Path
 from typing import Callable
+
+APP_NAME = "VyasaForge"
+APP_TAGLINE = "Forge structured knowledge into publishable documents."
+APP_MOTTO = "Plan. Write. Review. Publish."
+APP_HELP = f"{APP_NAME}\n\n{APP_TAGLINE}\n{APP_MOTTO}"
 
 try:
     import typer
@@ -658,9 +663,22 @@ def _use_provider(profile: str) -> None:
     print(f"Updated: {Path(path)}")
 
 
+def _init_project() -> None:
+    """Create local workspace roots and print setup diagnostics."""
+    Path("handbooks").mkdir(exist_ok=True)
+    print(APP_NAME)
+    print(APP_TAGLINE)
+    print(APP_MOTTO)
+    print("\nInitialized local workspace root: handbooks")
+    print("\nDiagnostics:")
+    _doctor()
+
+
 def _run_argparse() -> None:
-    parser = argparse.ArgumentParser(description="AppSec handbook agent utilities.")
+    parser = argparse.ArgumentParser(description=APP_HELP)
     subparsers = parser.add_subparsers(dest="command", required=True)
+
+    subparsers.add_parser("init")
 
     test_model_parser = subparsers.add_parser("test-model")
     test_model_parser.add_argument("--role", default="writer")
@@ -732,6 +750,14 @@ def _run_argparse() -> None:
     plan_parser.add_argument("--pages", type=int)
     plan_parser.add_argument("--provider")
 
+    plan_alias_parser = subparsers.add_parser("plan")
+    plan_alias_parser.add_argument("--topic", required=True)
+    plan_alias_parser.add_argument("--chapters", type=int)
+    plan_alias_parser.add_argument("--audience")
+    plan_alias_parser.add_argument("--depth")
+    plan_alias_parser.add_argument("--pages", type=int)
+    plan_alias_parser.add_argument("--provider")
+
     update_toc_parser = subparsers.add_parser("update-toc")
     update_toc_parser.add_argument("--input", required=True)
     update_toc_parser.add_argument("--provider")
@@ -763,6 +789,7 @@ def _run_argparse() -> None:
 
     args = parser.parse_args()
     commands: dict[str, Callable[[], None]] = {
+        "init": _init_project,
         "test-model": lambda: _with_provider(args.provider, lambda: _test_model(args.role)),
         "create-chapter": lambda: _create_chapter(args.chapter, args.overwrite),
         "generate-briefs": lambda: _generate_briefs(args.chapters, args.overwrite),
@@ -781,6 +808,7 @@ def _run_argparse() -> None:
         "qa-handbook": lambda: _qa_handbook(args.chapters, args.stage),
         "publish-gate": lambda: _publish_gate(args.chapter, args.stage),
         "plan-handbook": lambda: _with_provider(args.provider, lambda: _plan_handbook(args.topic, args.chapters, args.audience, args.depth, args.pages)),
+        "plan": lambda: _with_provider(args.provider, lambda: _plan_handbook(args.topic, args.chapters, args.audience, args.depth, args.pages)),
         "update-toc": lambda: _with_provider(args.provider, lambda: _update_toc(args.input)),
         "handbook-status": _handbook_status,
         "diff-chapter": lambda: _diff_chapter(args.chapter, args.from_stage, args.to_stage),
@@ -801,7 +829,15 @@ def _run_argparse() -> None:
 
 
 if typer is not None:
-    app = typer.Typer(help="AppSec handbook agent utilities.")
+    app = typer.Typer(help=APP_HELP)
+
+    @app.command()
+    def init() -> None:
+        """Initialize local VyasaForge workspace folders and diagnostics."""
+        try:
+            _init_project()
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
+            raise typer.BadParameter(str(exc)) from exc
 
     @app.command()
     def test_model(
@@ -1011,6 +1047,21 @@ if typer is not None:
         provider: str | None = typer.Option(None, "--provider", help="Temporary provider profile."),
     ) -> None:
         """Generate handbook registry YAML from a topic."""
+        try:
+            _with_provider(provider, lambda: _plan_handbook(topic, chapters, audience, depth, pages))
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    @app.command()
+    def plan(
+        topic: str = typer.Option(..., "--topic", help="Document topic to plan."),
+        chapters: int | None = typer.Option(None, "--chapters", help="Optional exact number of chapters."),
+        audience: str | None = typer.Option(None, "--audience", help="Optional target audience."),
+        depth: str | None = typer.Option(None, "--depth", help="Optional depth, such as beginner or advanced."),
+        pages: int | None = typer.Option(None, "--pages", help="Optional target page count."),
+        provider: str | None = typer.Option(None, "--provider", help="Temporary provider profile."),
+    ) -> None:
+        """Plan a document registry from a topic."""
         try:
             _with_provider(provider, lambda: _plan_handbook(topic, chapters, audience, depth, pages))
         except (FileNotFoundError, RuntimeError, ValueError) as exc:

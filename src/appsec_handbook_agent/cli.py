@@ -1,17 +1,17 @@
-"""Command-line interface scaffolding."""
+"""Compatibility CLI scaffolding."""
 
 from pathlib import Path
 
 import typer
 
-from appsec_handbook_agent.models import ChapterRequest, ProjectConfig
+from .models import ChapterRequest, ProjectConfig
 
-app = typer.Typer(help="AppSec handbook agent scaffolding.")
+app = typer.Typer(help="VyasaForge compatibility scaffolding.")
 
 
 @app.callback()
 def main() -> None:
-    """AppSec handbook agent command group."""
+    """VyasaForge compatibility command group."""
 
 
 @app.command()

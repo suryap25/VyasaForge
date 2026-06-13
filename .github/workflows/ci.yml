@@ -27,6 +27,8 @@ jobs:
 
       - name: CLI smoke tests
         run: |
+          vf --help
+          vyasaforge --help
           python -m src.cli --help
           python -m src.cli doctor
           python -m src.cli list-providers

@@ -1,5 +1,9 @@
 # Open Source Release Summary
 
+Project name: VyasaForge
+
+Tagline: Forge structured knowledge into publishable documents.
+
 ## Files Created
 
 - `LICENSE`
@@ -17,11 +21,19 @@
 - `docs/roadmap.md`
 - `docs/release-checklist.md`
 - `docs/open-source-summary.md`
+- `docs/branding.md`
+- `docs/vision.md`
+- `docs/rebrand-summary.md`
 
 ## Files Modified
 
 - `.gitignore`
 - `pyproject.toml`
+- `README.md`
+- `src/cli.py`
+- `src/compiler.py`
+- `src/finalizer.py`
+- `ROADMAP.md`
 
 ## Repository Hardening Completed
 
@@ -34,6 +46,9 @@
 - Strengthened `.gitignore` for generated artifacts, local state, logs, outputs,
   and secrets.
 - Updated package metadata and console script entrypoint.
+- Rebranded public-facing documentation and CLI help to VyasaForge.
+- Added `vyasaforge` and `vf` entry points while keeping existing invocation
+  paths.
 
 ## Files Requiring Manual GitHub Configuration
 

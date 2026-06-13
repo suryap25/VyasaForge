@@ -1,7 +1,7 @@
 [project]
-name = "appsec-handbook-agent"
+name = "vyasaforge"
 version = "0.1.0"
-description = "Configurable multi-agent handbook generation system for technical documentation."
+description = "Forge structured knowledge into publishable documents."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "Apache-2.0" }
@@ -17,6 +17,8 @@ dependencies = [
 ]
 
 [project.scripts]
+vyasaforge = "src.cli:app"
+vf = "src.cli:app"
 appsec-handbook-agent = "src.cli:app"
 
 [build-system]
@@ -24,4 +26,5 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["."]
+include = ["src", "src.*"]

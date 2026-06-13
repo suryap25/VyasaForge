@@ -1,21 +1,141 @@
-# AppSec Handbook Agent
+# VyasaForge
 
-Configurable document production pipeline for generating long-form technical handbooks. The AppSec Authentication and Authorization handbook is the first supported use case.
+Forge structured knowledge into publishable documents.
 
-## Current Status
+**Plan. Write. Review. Publish.**
 
-The utility supports topic-driven handbook planning and chapter generation:
+VyasaForge is a configurable multi-agent documentation production CLI. It can
+plan, write, review, validate, repair, finalize, and compile structured
+documents such as handbooks, guides, runbooks, PRDs, architecture docs,
+security playbooks, and technical manuals.
+
+The AppSec Authentication & Authorization Handbook is the first example use
+case. It is not the product boundary.
+
+## Pipeline
 
 ```text
-topic -> handbook TOC -> chapter briefs -> write -> validate -> repair -> review -> revise -> enhance -> references -> finalize -> QA -> compile DOCX/PDF -> status
+Topic -> TOC -> Briefs -> Drafts -> Review -> Validation -> Repair -> Finalization -> DOCX
 ```
 
-The visual/sketchnote/diagram generation layer has been removed. The current focus is reliable text generation, review, validation, finalization, and document compilation.
+The current implementation supports:
 
-Each planned handbook gets its own workspace:
+- topic-driven TOC planning
+- chapter brief generation
+- configurable LLM-backed writing
+- deterministic validation and repair
+- reviewer and revision agents with safety gates
+- final Markdown stages
+- DOCX/PDF compilation through Pandoc
+- provider abstraction through LiteLLM
+- per-handbook workspaces
+- state and token usage tracking
+
+Visual/sketchnote/diagram generation has been removed. The current focus is
+reliable text generation, review, validation, finalization, and document
+compilation.
+
+## Installation
+
+From the project root:
+
+```powershell
+python -m pip install -e .
+```
+
+This installs the CLI entry points:
+
+```powershell
+vyasaforge --help
+vf --help
+```
+
+On Windows, if `vf` is not found after installation, add your user Python
+Scripts directory to `PATH`, for example:
 
 ```text
-handbooks/<handbook-name>/
+C:\Users\<you>\AppData\Roaming\Python\Python314\Scripts
+```
+
+The legacy module invocation remains supported:
+
+```powershell
+python -m src.cli --help
+```
+
+## Prerequisites
+
+Install Pandoc and make sure it is available on `PATH`:
+
+```powershell
+pandoc --version
+```
+
+Pandoc is required for native DOCX compilation. If Pandoc is missing,
+VyasaForge stops at compilation instead of producing a lower-quality fallback.
+
+Set the provider API key in your shell. For Claude/Anthropic:
+
+```powershell
+$env:ANTHROPIC_API_KEY="your_api_key_here"
+```
+
+API keys are read from environment variables only. Do not put secrets in config
+files.
+
+## Quick Start
+
+Initialize local workspace folders and run diagnostics:
+
+```powershell
+vf init
+```
+
+Plan a document from a topic:
+
+```powershell
+vf plan --topic "Cloud Security focussing on AWS"
+```
+
+Generate chapter briefs:
+
+```powershell
+vf generate-briefs
+```
+
+Run the full pipeline for Chapter 1:
+
+```powershell
+vf run-chapter --chapter 1
+```
+
+Check status:
+
+```powershell
+vf handbook-status
+```
+
+Compile final chapters into DOCX:
+
+```powershell
+vf compile-docx --chapters 1
+```
+
+The same workflow also works with the legacy module path:
+
+```powershell
+python -m src.cli plan-handbook --topic "Cloud Security focussing on AWS"
+python -m src.cli generate-briefs
+python -m src.cli run-chapter --chapter 1
+python -m src.cli compile-docx --chapters 1
+```
+
+## Workspaces
+
+Each planned document gets its own workspace:
+
+```text
+handbooks/<document-name>/
   handbook.yaml
   chapters/
   reviews/
@@ -24,317 +144,128 @@ handbooks/<handbook-name>/
   logs/
 ```
 
-Global provider/model settings remain in `configs/`.
-
-## Prerequisites
-
-Install Python dependencies from the project root:
+For example:
 
 ```powershell
-cd C:\Users\surya\Developer\devEnv\appsec-handbook-agent
-python -m pip install -e .
+vf plan --topic "Cloud Security focussing on AWS"
 ```
 
-Install Pandoc and make sure it is available on `PATH`:
-
-```powershell
-pandoc --version
-```
-
-Pandoc is required for native DOCX compilation. If Pandoc is missing, the pipeline stops at `compile-docx` instead of creating a lower-quality fallback DOCX.
-
-Set the provider API key in your shell. For Claude/Anthropic:
-
-```powershell
-$env:ANTHROPIC_API_KEY="your_api_key_here"
-```
-
-The API key is read from the environment only. Do not put secrets in config files.
-
-## Check Configuration
-
-Run diagnostics before calling the model:
-
-```powershell
-python -m src.cli doctor
-```
-
-This checks:
-
-- `configs/phase1.example.json`
-- the active handbook registry under `handbooks/<handbook-name>/handbook.yaml`
-- configured LLM roles and model names
-- expected provider environment variables
-- whether the required API key variable is present
-
-## End-to-End Run
-
-If you deleted folders inside a handbook workspace, such as `handbooks/<handbook-name>/chapters/briefs`, `chapters/drafts`, `chapters/reviewed`, or `chapters/final`, the commands below will recreate the needed folders as files are generated.
-
-Plan a handbook from a topic:
-
-```powershell
-python -m src.cli plan-handbook --topic "AppSec Authentication and Authorization"
-```
-
-This creates and activates a workspace such as:
-
-```text
-handbooks/appsec-authentication-authorization/
-```
-
-For a topic like:
-
-```powershell
-python -m src.cli plan-handbook --topic "Cloud Security focusing on AWS"
-```
-
-The workspace name is normalized to:
+creates and activates:
 
 ```text
 handbooks/aws-cloud-security/
 ```
 
-Generate chapter briefs:
-
-```powershell
-python -m src.cli generate-briefs
-```
-
-Run the full Chapter 1 pipeline:
-
-```powershell
-python -m src.cli run-chapter --chapter 1
-```
-
-The pipeline runs these stages:
+Expected outputs include:
 
 ```text
-create-chapter
-write-chapter
-validate-chapter --stage drafts
-repair-chapter --stage drafts, if needed
-validate-chapter --stage drafts
-review-chapter
-revise-chapter
-validate-chapter --stage reviewed
-expert-enhance-chapter
-add-references
-finalize-chapter
-validate-chapter --stage final
-qa-handbook --stage final
-compile-docx
-handbook-status
-llm-usage
+handbooks/<document-name>/handbook.yaml
+handbooks/<document-name>/chapters/briefs/chapter-01.md
+handbooks/<document-name>/chapters/drafts/chapter-01.md
+handbooks/<document-name>/chapters/reviewed/chapter-01.md
+handbooks/<document-name>/chapters/final/chapter-01.md
+handbooks/<document-name>/chapters/state/chapter-01.json
+handbooks/<document-name>/reviews/chapter-01-review.md
+handbooks/<document-name>/logs/llm-usage.jsonl
+handbooks/<document-name>/output/<document-name>.docx
 ```
 
-If revision fails the safety gate, the pipeline falls back to finalizing the validated draft so MVP1 can still complete.
+Global provider/model settings remain in `configs/`.
 
-Draft repair handles missing required sections and can deterministically close an unbalanced fenced code block. If the LLM repair call is unavailable, the repairer falls back to local section scaffolds so the pipeline can continue with clear placeholders for later enrichment.
+## Common Commands
 
-## Verify Outputs
-
-Validate each stage:
+Diagnostics:
 
 ```powershell
-python -m src.cli validate-chapter --chapter 1 --stage drafts
-python -m src.cli validate-chapter --chapter 1 --stage reviewed
-python -m src.cli validate-chapter --chapter 1 --stage final
+vf doctor
+vf list-providers
+vf provider-status
 ```
 
-Show state and dashboard:
+Provider switching:
 
 ```powershell
-python -m src.cli show-state --chapter 1
-python -m src.cli handbook-status
+vf use-provider --profile anthropic_haiku
+vf use-provider --profile openai_gpt
+vf use-provider --profile gemini_flash
+vf use-provider --profile ollama_local
 ```
 
-Expected outputs:
-
-```text
-handbooks/<handbook-name>/handbook.yaml
-handbooks/<handbook-name>/chapters/briefs/chapter-01.md
-handbooks/<handbook-name>/chapters/drafts/chapter-01.md
-handbooks/<handbook-name>/chapters/reviewed/chapter-01.md
-handbooks/<handbook-name>/chapters/enhanced/chapter-01.md
-handbooks/<handbook-name>/chapters/referenced/chapter-01.md
-handbooks/<handbook-name>/chapters/final/chapter-01.md
-handbooks/<handbook-name>/chapters/state/chapter-01.json
-handbooks/<handbook-name>/reviews/chapter-01-review.md
-handbooks/<handbook-name>/logs/llm-usage.jsonl
-handbooks/<handbook-name>/output/<handbook-name>.docx
-```
-
-## Useful Individual Commands
+Workspace management:
 
 ```powershell
-python -m src.cli test-model --role writer
-python -m src.cli generate-briefs --chapters 1,2 --overwrite
-python -m src.cli write-chapter --chapter 1
-python -m src.cli repair-chapter --chapter 1 --stage drafts
-python -m src.cli review-chapter --chapter 1
-python -m src.cli revise-chapter --chapter 1
-python -m src.cli finalize-chapter --chapter 1 --source reviewed
-python -m src.cli finalize-chapter --chapter 1 --source drafts
-python -m src.cli compile-docx --chapters 1
-python -m src.cli diff-chapter --chapter 1 --from-stage drafts --to-stage final
-python -m src.cli llm-usage --chapter 1
+vf list-handbooks
+vf use-handbook --name aws-cloud-security
 ```
 
-## Configurable Engine Commands
-
-List and switch handbook workspaces:
+Planning and TOC updates:
 
 ```powershell
-python -m src.cli list-handbooks
-python -m src.cli use-handbook --name aws-cloud-security
+vf plan --topic "AppSec Authentication and Authorization"
+vf plan --topic "OAuth 2.0 for Developers" --chapters 6
+vf update-toc --input user_requirements.md
 ```
 
-Create or refresh structured chapter briefs from the active handbook registry:
+Chapter pipeline:
 
 ```powershell
-python -m src.cli generate-briefs --chapters 1,2,3 --overwrite
+vf generate-briefs --chapters 1,2,3 --overwrite
+vf validate-brief --chapter 1
+vf write-chapter --chapter 1
+vf validate-chapter --chapter 1 --stage drafts
+vf repair-chapter --chapter 1 --stage drafts
+vf review-chapter --chapter 1
+vf revise-chapter --chapter 1
+vf finalize-chapter --chapter 1 --source reviewed
 ```
 
-Run multiple registered chapters in order:
+Compilation and reporting:
 
 ```powershell
-python -m src.cli run-chapters --chapters 1,2,3
+vf compile-docx --chapters 1
+vf compile-handbook --chapters 1 --format docx
+vf compile-handbook --chapters 1 --format pdf
+vf handbook-status
+vf llm-usage --chapter 1
+vf qa-handbook --chapters 1 --stage final
 ```
 
-This compiles once at the end after all requested chapters complete.
-
-Plan a new handbook TOC from a topic:
+Run multiple chapters:
 
 ```powershell
-python -m src.cli plan-handbook --topic "AppSec Authentication and Authorization"
+vf run-chapters --chapters 1,2,3
 ```
 
-The planner chooses the recommended chapter count when `--chapters` is omitted. Optional constraints can guide the recommendation:
+`run-chapters` compiles once at the end after all requested chapters complete.
 
-```powershell
-python -m src.cli plan-handbook `
-  --topic "Cloud Security for Product Security Engineers" `
-  --audience "AppSec Engineers, Developers" `
-  --depth intermediate `
-  --pages 120
-```
+## Safety Gates
 
-Use `--chapters` only when you want to force an exact chapter count:
+VyasaForge uses deterministic gates around agent output:
 
-```powershell
-python -m src.cli plan-handbook --topic "OAuth 2.0 for Developers" --chapters 6
-```
+- required section validation
+- word count checks
+- fenced code block checks
+- publish-quality checks
+- revision safety gates
+- handbook-level QA
 
-Update the TOC from user requirements:
+If revision fails the safety gate, the pipeline can fall back to a validated
+draft so the document can still progress to finalization.
 
-```powershell
-python -m src.cli update-toc --input user_requirements.md
-```
+## Open Source
 
-If the requirements are ambiguous, the TOC is not changed. Clarification questions are written to:
+Useful project documents:
 
-```text
-handbooks/<handbook-name>/configs/handbook-clarification-questions.md
-```
-
-## Chapter Brief Factory
-
-Generate execution contracts from the current handbook registry:
-
-```powershell
-python -m src.cli generate-briefs --chapters 1,2,3 --overwrite
-```
-
-Validate a generated brief:
-
-```powershell
-python -m src.cli validate-brief --chapter 1
-```
-
-Expected output:
-
-```text
-PASS: handbooks\<handbook-name>\chapters\briefs\chapter-01.md
-```
-
-Each brief includes the chapter goal, audience, target word count, required handbook sections, must-cover topics, examples required, references guidance, and quality gates.
-
-## Controlled Agent Contracts
-
-Show the controlled multi-agent contract registry:
-
-```powershell
-python -m src.cli agent-status
-```
-
-This does not call the LLM. It prints each agent, its configured LLM role if any, and the validation gate that controls its output.
-
-## Handbook QA
-
-Run deterministic book-level QA after final chapters exist:
-
-```powershell
-python -m src.cli qa-handbook --chapters 1 --stage final
-```
-
-Expected output:
-
-```text
-PASS: handbook QA
-Stage: final
-Chapters checked: 1
-Wrote QA report: handbooks\<handbook-name>\reports\handbook-qa.md
-```
-
-The QA report checks chapter validation status, missing sections, weak interview-question sections, duplicate chapter titles, and large chapter-length imbalance. It does not call the LLM.
-
-## Document Compiler
-
-Compile a native DOCX with Pandoc, table of contents, and numbered sections:
-
-```powershell
-python -m src.cli compile-handbook --chapters 1 --format docx
-```
-
-Optional PDF output:
-
-```powershell
-python -m src.cli compile-handbook --chapters 1 --format pdf
-```
-
-PDF support depends on the local Pandoc PDF toolchain. DOCX remains the primary supported output.
-
-## M21-M25: Publish Reliability
-
-Run the publish-quality gate against a chapter stage:
-
-```powershell
-python -m src.cli publish-gate --chapter 1 --stage final
-```
-
-The gate rejects structural and publishing problems such as:
-
-```text
-Revision Additions
-Correction / Enhancement process markers
-unbalanced code fences
-duplicate required sections
-```
-
-Structured review findings are written beside the human review:
-
-```text
-handbooks/<handbook-name>/reviews/chapter-01-review.md
-handbooks/<handbook-name>/reviews/chapter-01-review.json
-```
-
-The reviser now expects section-patch JSON and replaces target sections in place. It no longer appends a `Revision Additions` section.
-
-Compile now runs a publish gate before Pandoc.
+- [Architecture](docs/architecture.md)
+- [Branding](docs/branding.md)
+- [Vision](docs/vision.md)
+- [Roadmap](docs/roadmap.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security](SECURITY.md)
 
 ## Notes
 
-- `run-chapter` creates the chapter brief automatically before writing.
-- LLM prompts and API keys are not written to the usage log.
-- Token usage is logged to `handbooks/<handbook-name>/logs/llm-usage.jsonl` when a handbook workspace is active.
+- AppSec prompts and configs remain as the first sample use case.
+- LLM prompts and API keys are not written to usage logs.
+- Token usage is logged to `handbooks/<document-name>/logs/llm-usage.jsonl`
+  when a workspace is active.

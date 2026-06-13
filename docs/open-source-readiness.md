@@ -2,8 +2,8 @@
 
 ## Scope
 
-This audit reviews repository readiness for a public GitHub release of AppSec
-Handbook Agent as a configurable multi-agent handbook generation system.
+This audit reviews repository readiness for a public GitHub release of
+VyasaForge as a configurable multi-agent documentation production system.
 
 ## Missing Files
 
@@ -88,8 +88,8 @@ Actions taken:
 
 - Added Apache-2.0 metadata.
 - Added author metadata.
-- Updated description.
-- Pointed console script at `src.cli:app`.
+- Updated description for VyasaForge.
+- Added `vyasaforge` and `vf` console scripts pointing at `src.cli:app`.
 
 Remaining future improvements:
 

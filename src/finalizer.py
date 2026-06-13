@@ -20,7 +20,7 @@ def metadata_header(chapter: int, source: str) -> str:
         f"chapter: {chapter}\n"
         "stage: final\n"
         f"source: {source}\n"
-        "generated_by: appsec-handbook-agent\n"
+        "generated_by: vyasaforge\n"
         "---\n\n"
     )
 

@@ -1,9 +1,9 @@
-# Roadmap
+# VyasaForge Roadmap
 
 ## Phase 1 Complete
 
-The current MVP can generate and compile handbook chapters through a controlled
-pipeline:
+The current MVP can generate and compile structured document chapters through a
+controlled pipeline:
 
 - TOC planning
 - chapter brief generation

@@ -1,4 +1,4 @@
-"""AppSec handbook agent package."""
+"""Compatibility package for VyasaForge."""
 
 __all__ = ["__version__"]
 

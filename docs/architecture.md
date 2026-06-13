@@ -1,8 +1,8 @@
 # Architecture
 
-AppSec Handbook Agent is a configurable multi-agent document production system.
-The AppSec handbook is the first use case, but the architecture is intended to
-support other long-form technical handbooks.
+VyasaForge is a configurable multi-agent document production system. The AppSec
+handbook is the first use case, but the architecture is intended to support
+other long-form technical documents.
 
 ## High-Level Flow
 
@@ -43,6 +43,15 @@ python -m src.cli plan-handbook --topic "Cloud Security focussing on AWS"
 python -m src.cli generate-briefs
 python -m src.cli run-chapters --chapters 1,2,3
 python -m src.cli compile-handbook --chapters 1,2,3 --format docx
+```
+
+Installed CLI aliases are also available:
+
+```powershell
+vf plan --topic "Cloud Security focussing on AWS"
+vf generate-briefs
+vf run-chapters --chapters 1,2,3
+vf compile-docx --chapters 1,2,3
 ```
 
 ## Handbook Workspaces

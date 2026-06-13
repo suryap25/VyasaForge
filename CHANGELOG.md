@@ -9,6 +9,8 @@ should be tagged in GitHub and summarized here.
 
 ### Added
 
+- VyasaForge branding, `vf` CLI alias, and `vyasaforge` CLI entry point.
+- Branding and vision documentation.
 - Open-source governance files.
 - GitHub issue and pull request templates.
 - CI workflow for syntax and CLI smoke checks.
@@ -17,6 +19,8 @@ should be tagged in GitHub and summarized here.
 ### Changed
 
 - Packaging metadata prepared for public release.
+- Public-facing documentation now positions AppSec as the first example use
+  case rather than the product boundary.
 
 ### Security
 
