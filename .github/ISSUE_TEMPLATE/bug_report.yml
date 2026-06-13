@@ -1,0 +1,48 @@
+name: Bug report
+description: Report a reproducible problem
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please remove secrets, generated private content, and API keys before submitting.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the problem and the expected behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include the exact CLI commands and relevant config names.
+      placeholder: |
+        1. Run `python -m src.cli doctor`
+        2. Run `python -m src.cli ...`
+        3. Observe ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: "0.1.0 or commit SHA"
+  - type: dropdown
+    id: provider
+    attributes:
+      label: LLM provider profile
+      options:
+        - Anthropic
+        - OpenAI
+        - Gemini
+        - Ollama
+        - Other / not applicable
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output
+      description: Paste sanitized logs. Do not include API keys or prompts containing private data.
+      render: text
