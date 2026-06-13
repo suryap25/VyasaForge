@@ -232,7 +232,7 @@ Chapters checked: 1
 Wrote QA report: reports\handbook-qa.md
 ```
 
-The QA report checks chapter validation status, missing sections, weak interview-question sections, sketchnote placeholder issues, duplicate chapter titles, and large chapter-length imbalance. It does not call the LLM.
+The QA report checks chapter validation status, missing sections, weak interview-question sections, diagram placeholder issues, duplicate chapter titles, and large chapter-length imbalance. It does not call the LLM.
 
 ## Phase 8: Document Compiler v2
 
@@ -250,36 +250,36 @@ python -m src.cli compile-handbook --chapters 1 --format pdf
 
 PDF support depends on the local Pandoc PDF toolchain. DOCX remains the primary supported output.
 
-## Phase 9: Sketchnotes
+## Phase 9: Graphviz Diagrams
 
-Generate reusable sketchnote prompts from final chapter content:
+Generate reusable diagram planning prompts from final chapter content:
 
 ```powershell
-python -m src.cli generate-sketchnote-prompts --chapters 1 --stage final
+python -m src.cli generate-diagram-prompts --chapters 1 --stage final
 ```
 
 Expected output:
 
 ```text
-sketchnotes/prompts/chapter-01-prompt.md
+diagrams/prompts/chapter-01-prompt.md
 ```
 
-Generate deterministic local sketchnotes:
+Generate deterministic local Graphviz diagrams:
 
 ```powershell
-python -m src.cli generate-sketchnotes --chapters 1 --stage final
+python -m src.cli generate-diagrams --chapters 1 --stage final
 ```
 
 Expected output:
 
 ```text
-sketchnotes/images/chapter-01.svg
-sketchnotes/images/chapter-01.png
-sketchnotes/images/chapter-01/<section>.svg
-sketchnotes/images/chapter-01/<section>.png
+diagrams/images/chapter-01.svg
+diagrams/images/chapter-01.png
+diagrams/images/chapter-01/<section>.svg
+diagrams/images/chapter-01/<section>.png
 ```
 
-Compile the handbook after sketchnotes exist:
+Compile the handbook after diagrams exist:
 
 ```powershell
 python -m src.cli compile-handbook --chapters 1 --format docx
@@ -287,7 +287,9 @@ python -m src.cli compile-handbook --chapters 1 --format docx
 
 The generator keeps SVG source files and also creates DOCX-compatible PNG files. The compiler prefers PNG images and replaces `[SKETCHNOTE DIAGRAM PLACEHOLDER]` with the generated chapter image when it exists. If the image does not exist, the placeholder remains visible.
 
-The normal chapter pipeline now runs sketchnote prompt generation and local image generation before DOCX compilation:
+Diagram arrows are numbered to reduce clutter. Flow descriptions are moved into a generated legend inside the diagram.
+
+The normal chapter pipeline now runs diagram prompt generation and local image generation before DOCX compilation:
 
 ```powershell
 python -m src.cli run-chapter --chapter 1
@@ -308,7 +310,7 @@ Revision Additions
 Correction / Enhancement process markers
 unbalanced code fences
 duplicate required sections
-unresolved sketchnote placeholders at compile time
+unresolved diagram placeholders at compile time
 ```
 
 Structured review findings are written beside the human review:
@@ -320,10 +322,12 @@ reviews/chapter-01-review.json
 
 The reviser now expects section-patch JSON and replaces target sections in place. It no longer appends a `Revision Additions` section.
 
-Sketchnote and diagram artifacts are tracked in:
+Diagram artifacts are tracked in:
 
 ```text
 diagrams/chapter-01.json
+diagrams/prompts/chapter-01-prompt.md
+diagrams/images/chapter-01.png
 ```
 
 Inspect diagram status:
@@ -332,7 +336,7 @@ Inspect diagram status:
 python -m src.cli diagram-status --chapter 1
 ```
 
-Compile now runs a publish gate before Pandoc. Sketchnotes are compiled from PNG files by default so Pandoc does not require `rsvg-convert` for the normal DOCX path.
+Compile now runs a publish gate before Pandoc. Diagrams are compiled from PNG files by default so Pandoc does not require `rsvg-convert` for the normal DOCX path.
 
 ## Notes
 

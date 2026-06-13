@@ -76,7 +76,11 @@ def _hierarchy_errors(entries: list[tuple[int, str]]) -> list[str]:
 
 
 def _repeated_diagram_patterns(markdown: str) -> bool:
-    images = re.findall(r"!\[[^\]]*Sketchnote[^\]]*\]\(([^)]+)\)", markdown, flags=re.IGNORECASE)
+    images = re.findall(
+        r"!\[[^\]]*(?:Sketchnote|Architecture diagram)[^\]]*\]\(([^)]+)\)",
+        markdown,
+        flags=re.IGNORECASE,
+    )
     if len(images) < 3:
         return False
     normalized = [Path(image).name.replace("chapter-", "").replace(".png", "").replace(".svg", "") for image in images]
@@ -108,7 +112,7 @@ def structural_qa_markdown(markdown: str) -> StructuralQAResult:
         errors.append(f"Required section order issue: {order_error}")
     errors.extend(hierarchy_errors)
     if repeated_diagram_patterns:
-        errors.append("Repeated sketchnote diagram pattern detected.")
+        errors.append("Repeated diagram image pattern detected.")
 
     return StructuralQAResult(
         passed=not errors,

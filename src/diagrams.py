@@ -1,4 +1,4 @@
-"""Diagram artifact registry for chapter sketchnotes."""
+"""Diagram artifact registry for generated chapter diagrams."""
 
 from __future__ import annotations
 

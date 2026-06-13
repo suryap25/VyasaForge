@@ -43,23 +43,23 @@ def pandoc_path() -> str:
 
 
 def sketchnote_markdown(chapter: int) -> str | None:
-    """Return Markdown image syntax for a generated sketchnote if it exists."""
+    """Return Markdown image syntax for a generated architecture diagram if it exists."""
     image_path = preferred_image_path_for(chapter)
     if not image_path.exists():
         return None
-    return f"![Sketchnote for Chapter {chapter:02d}]({image_path.as_posix()}){{ width=6.5in }}"
+    return f"![Architecture diagram for Chapter {chapter:02d}]({image_path.as_posix()}){{ width=6.5in }}"
 
 
 def section_sketchnote_markdown(chapter: int, section: str) -> str | None:
-    """Return Markdown image syntax for a section sketchnote if it exists."""
+    """Return Markdown image syntax for a section architecture diagram if it exists."""
     image_path = preferred_section_image_path_for(chapter, section)
     if not image_path.exists():
         return None
-    return f"![Sketchnote for Chapter {chapter:02d} - {section}]({image_path.as_posix()}){{ width=6.5in }}"
+    return f"![Architecture diagram for Chapter {chapter:02d} - {section}]({image_path.as_posix()}){{ width=6.5in }}"
 
 
 def insert_section_sketchnotes(chapter: int, body: str) -> str:
-    """Insert section sketchnote images immediately after matching section headings."""
+    """Insert section diagram images immediately after matching section headings."""
     lines = body.splitlines()
     output: list[str] = []
     pending_sections = {
@@ -88,7 +88,7 @@ def re_match_heading(line: str, section: str) -> bool:
 
 
 def chapter_markdown_for_compile(chapter: int, chapter_path: Path) -> str:
-    """Return chapter Markdown with sketchnote image inserted when available."""
+    """Return chapter Markdown with diagram images inserted when available."""
     body = markdown_body(chapter_path.read_text(encoding="utf-8"))
     body = insert_section_sketchnotes(chapter, body)
     image_markdown = sketchnote_markdown(chapter)
@@ -189,7 +189,7 @@ def compile_handbook(chapters: list[int], output_format: str = "docx") -> Path:
         stderr = completed.stderr.strip()
         if "Could not convert image" in stderr:
             raise RuntimeError(
-                "Pandoc could not convert one or more sketchnote images. "
+                "Pandoc could not convert one or more diagram images. "
                 "Install rsvg-convert or generate DOCX-compatible raster images. "
                 f"Pandoc output: {stderr}"
             )
