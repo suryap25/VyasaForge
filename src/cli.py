@@ -193,9 +193,14 @@ def _enhance_chapter(chapter: int, source: str = "reviewed") -> Path:
     from src.expert_enhancer import enhance_chapter
     from src.finalizer import SOURCE_FIELDS, SOURCE_PATHS
     from src.handbook import resolve_chapter
+    from src.workspace import workspace_path
 
     metadata = resolve_chapter(chapter)
-    source_path = getattr(metadata, SOURCE_FIELDS[source]) if source in SOURCE_FIELDS else Path(str(SOURCE_PATHS[source]).format(chapter=chapter))
+    source_path = (
+        getattr(metadata, SOURCE_FIELDS[source])
+        if source in SOURCE_FIELDS
+        else workspace_path(*SOURCE_PATHS[source], f"chapter-{chapter:02d}.md")
+    )
     enhanced_path = enhance_chapter(chapter, source_path)
     print(f"Wrote expert-enhanced chapter: {Path(enhanced_path)}")
     return Path(enhanced_path)
@@ -205,9 +210,14 @@ def _add_references(chapter: int, source: str = "enhanced") -> Path:
     from src.finalizer import SOURCE_FIELDS, SOURCE_PATHS
     from src.handbook import resolve_chapter
     from src.reference_agent import add_references
+    from src.workspace import workspace_path
 
     metadata = resolve_chapter(chapter)
-    source_path = getattr(metadata, SOURCE_FIELDS[source]) if source in SOURCE_FIELDS else Path(str(SOURCE_PATHS[source]).format(chapter=chapter))
+    source_path = (
+        getattr(metadata, SOURCE_FIELDS[source])
+        if source in SOURCE_FIELDS
+        else workspace_path(*SOURCE_PATHS[source], f"chapter-{chapter:02d}.md")
+    )
     referenced_path = add_references(chapter, source_path)
     print(f"Wrote reference-enriched chapter: {Path(referenced_path)}")
     return Path(referenced_path)
@@ -386,8 +396,9 @@ def _display_status(status: str | None, generated_label: bool = False) -> str:
 
 def _handbook_status() -> None:
     import json
+    from src.workspace import workspace_path
 
-    state_dir = Path("chapters/state")
+    state_dir = workspace_path("chapters", "state")
     rows = []
     completed = 0
 
@@ -420,6 +431,31 @@ def _handbook_status() -> None:
     for row in rows:
         print(" | ".join(str(value).ljust(widths[index]) for index, value in enumerate(row)))
     print(f"\nTotal completed chapters: {completed}")
+
+
+def _list_handbooks() -> None:
+    from src.workspace import active_handbook_name, list_handbook_workspaces
+
+    active = active_handbook_name()
+    rows = [["*" if name == active else "", name] for name in list_handbook_workspaces()]
+    if not rows:
+        print("No handbook workspaces found.")
+        return
+    _print_table(["Active", "Handbook"], rows)
+
+
+def _use_handbook(name: str) -> None:
+    from src.handbook import load_handbook_registry
+    from src.workspace import registry_path_for, set_active_handbook, workspace_slug
+
+    slug = workspace_slug(name)
+    registry_path = registry_path_for(slug)
+    if not registry_path.exists():
+        raise FileNotFoundError(f"Missing handbook workspace registry: {registry_path}")
+    set_active_handbook(slug)
+    load_handbook_registry.cache_clear()
+    load_handbook_registry(str(registry_path))
+    print(f"Active handbook set to: {slug}")
 
 
 def _diff_chapter(chapter: int = 1, from_stage: str = "drafts", to_stage: str = "reviewed") -> None:
@@ -537,14 +573,17 @@ def _provider_env_var(model: str) -> tuple[str, str | None]:
 
 def _doctor() -> None:
     """Print provider and configuration diagnostics without calling the LLM."""
+    from src.workspace import active_handbook_name, active_registry_path
+
     phase1_config = Path("configs/phase1.example.json")
-    handbook_config = Path("configs/handbook.yaml")
+    handbook_config = active_registry_path()
     provider_config = Path("configs/providers.yaml")
 
     print("Config files:")
     print(f"- {phase1_config}: {'FOUND' if phase1_config.exists() else 'MISSING'}")
     print(f"- {handbook_config}: {'FOUND' if handbook_config.exists() else 'MISSING'}")
     print(f"- {provider_config}: {'FOUND' if provider_config.exists() else 'MISSING'}")
+    print(f"Active handbook: {active_handbook_name() or 'legacy configs/handbook.yaml'}")
 
     try:
         from src.provider_profiles import active_provider_profile, selected_profile_name
@@ -712,6 +751,10 @@ def _run_argparse() -> None:
     run_chapters_parser.add_argument("--chapters", required=True)
     run_chapters_parser.add_argument("--provider")
 
+    subparsers.add_parser("list-handbooks")
+    use_handbook_parser = subparsers.add_parser("use-handbook")
+    use_handbook_parser.add_argument("--name", required=True)
+
     subparsers.add_parser("doctor")
     subparsers.add_parser("list-providers")
     subparsers.add_parser("provider-status")
@@ -743,6 +786,8 @@ def _run_argparse() -> None:
         "diff-chapter": lambda: _diff_chapter(args.chapter, args.from_stage, args.to_stage),
         "run-chapter": lambda: _with_provider(args.provider, lambda: _run_chapter(args.chapter)),
         "run-chapters": lambda: _with_provider(args.provider, lambda: _run_chapters(args.chapters)),
+        "list-handbooks": _list_handbooks,
+        "use-handbook": lambda: _use_handbook(args.name),
         "doctor": _doctor,
         "list-providers": _list_providers,
         "provider-status": _provider_status,
@@ -1018,6 +1063,19 @@ if typer is not None:
         """Run the chapter pipeline for multiple chapters."""
         try:
             _with_provider(provider, lambda: _run_chapters(chapters))
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
+            raise typer.BadParameter(str(exc)) from exc
+
+    @app.command()
+    def list_handbooks() -> None:
+        """List available handbook workspaces."""
+        _list_handbooks()
+
+    @app.command()
+    def use_handbook(name: str = typer.Option(..., "--name", help="Handbook workspace name.")) -> None:
+        """Set the active handbook workspace."""
+        try:
+            _use_handbook(name)
         except (FileNotFoundError, RuntimeError, ValueError) as exc:
             raise typer.BadParameter(str(exc)) from exc
 

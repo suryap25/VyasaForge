@@ -10,8 +10,8 @@ from src.handbook import load_handbook_registry
 from src.handbook import resolve_chapter
 from src.publish_gate import validate_publish_quality
 from src.qa import qa_handbook, write_qa_report
+from src.workspace import active_handbook_name, workspace_path, workspace_slug
 
-OUTPUT_PATH = Path("output/AppSec_Authentication_Authorization_Handbook_Phase1.docx")
 TITLE = "AppSec Authentication & Authorization Handbook v2.0"
 SUBTITLE = "Phase 1: Foundations & JWT"
 SUPPORTED_FORMATS = {"docx", "pdf"}
@@ -74,9 +74,9 @@ def combined_markdown(chapters: list[int], chapter_paths: list[Path]) -> str:
 
 def output_path_for(output_format: str) -> Path:
     """Return the v2 handbook compiler output path."""
-    if output_format == "docx":
-        return OUTPUT_PATH
-    return Path("output/AppSec_Authentication_Authorization_Handbook_Phase1.pdf")
+    registry = load_handbook_registry()
+    handbook_name = active_handbook_name() or workspace_slug(registry.title)
+    return workspace_path("output", f"{handbook_name}.{output_format}")
 
 
 def compile_handbook(chapters: list[int], output_format: str = "docx") -> Path:
@@ -93,7 +93,7 @@ def compile_handbook(chapters: list[int], output_format: str = "docx") -> Path:
     qa_result = qa_handbook(chapters, stage="final")
     write_qa_report(qa_result)
     if not qa_result.passed:
-        raise RuntimeError("Publish QA failed. See reports/handbook-qa.md for details.")
+        raise RuntimeError("Publish QA failed. See the active handbook reports/handbook-qa.md for details.")
 
     for chapter, chapter_path in zip(chapters, chapter_paths):
         chapter_content = chapter_markdown_for_compile(chapter, chapter_path)

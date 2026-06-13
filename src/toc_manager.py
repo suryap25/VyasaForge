@@ -7,13 +7,12 @@ from pathlib import Path
 from typing import Any
 
 from src import llm_gateway
-from src.handbook import REGISTRY_PATH, load_handbook_registry
+from src.handbook import load_handbook_registry
+from src.workspace import active_registry_path, registry_path_for, set_active_handbook, workspace_path, workspace_slug
 
 PLANNING_PROMPT_PATH = Path("prompts/handbook_planning.md")
 TOC_CLARIFICATION_PROMPT_PATH = Path("prompts/toc_clarification.md")
 TOC_UPDATE_PROMPT_PATH = Path("prompts/toc_update.md")
-CHANGE_SUMMARY_PATH = Path("configs/handbook-change-summary.md")
-CLARIFICATION_PATH = Path("configs/handbook-clarification-questions.md")
 
 
 def _load_yaml() -> Any:
@@ -99,7 +98,7 @@ def _registry_to_yaml(raw_registry: dict[str, Any]) -> str:
     return yaml.safe_dump(raw_registry, sort_keys=False, allow_unicode=False)
 
 
-def _save_registry(raw_registry: dict[str, Any], output_path: Path = REGISTRY_PATH) -> Path:
+def _save_registry(raw_registry: dict[str, Any], output_path: Path) -> Path:
     """Validate and save handbook registry YAML."""
     normalized = _normalize_registry(raw_registry)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -157,9 +156,11 @@ def plan_handbook(
     audience: str | None = None,
     depth: str | None = None,
     pages: int | None = None,
-    output_path: Path = REGISTRY_PATH,
+    output_path: Path | None = None,
 ) -> Path:
     """Generate a handbook registry from a topic."""
+    workspace_name = workspace_slug(topic)
+    registry_output_path = output_path or registry_path_for(workspace_name)
     prompt = _load_prompt(PLANNING_PROMPT_PATH)
     response = llm_gateway.call_llm(
         role="planner",
@@ -169,7 +170,11 @@ def plan_handbook(
         ],
     )
     registry = _parse_yaml_response(response)
-    return _save_registry(registry, output_path=output_path)
+    registry_path = _save_registry(registry, output_path=registry_output_path)
+    set_active_handbook(workspace_name)
+    load_handbook_registry.cache_clear()
+    load_handbook_registry(str(registry_path))
+    return registry_path
 
 
 def _write_clarification_questions(
@@ -199,8 +204,10 @@ def _write_clarification_questions(
             "",
         ]
     )
-    CLARIFICATION_PATH.write_text("\n".join(lines), encoding="utf-8")
-    return CLARIFICATION_PATH
+    clarification_path = workspace_path("configs", "handbook-clarification-questions.md")
+    clarification_path.parent.mkdir(parents=True, exist_ok=True)
+    clarification_path.write_text("\n".join(lines), encoding="utf-8")
+    return clarification_path
 
 
 def _requirements_are_clear(
@@ -237,12 +244,13 @@ def _requirements_are_clear(
     return (False, clarification_path)
 
 
-def update_toc(requirements_path: Path, output_path: Path = REGISTRY_PATH) -> tuple[Path, Path]:
+def update_toc(requirements_path: Path, output_path: Path | None = None) -> tuple[Path, Path]:
     """Update the handbook registry using a user requirements file."""
     if not requirements_path.exists():
         raise FileNotFoundError(f"Missing user requirements file: {requirements_path}")
 
-    current_registry = output_path.read_text(encoding="utf-8")
+    registry_output_path = output_path or active_registry_path()
+    current_registry = registry_output_path.read_text(encoding="utf-8")
     requirements = requirements_path.read_text(encoding="utf-8")
     clear, clarification_path = _requirements_are_clear(current_registry, requirements, requirements_path)
     if not clear:
@@ -265,11 +273,13 @@ def update_toc(requirements_path: Path, output_path: Path = REGISTRY_PATH) -> tu
         ],
     )
     registry = _parse_yaml_response(response)
-    registry_path = _save_registry(registry, output_path=output_path)
-    CHANGE_SUMMARY_PATH.write_text(
+    registry_path = _save_registry(registry, output_path=registry_output_path)
+    change_summary_path = workspace_path("configs", "handbook-change-summary.md")
+    change_summary_path.parent.mkdir(parents=True, exist_ok=True)
+    change_summary_path.write_text(
         "# Handbook TOC Change Summary\n\n"
         f"Input file: {requirements_path}\n\n"
         "Applied requested TOC updates and validated the registry schema.\n",
         encoding="utf-8",
     )
-    return registry_path, CHANGE_SUMMARY_PATH
+    return registry_path, change_summary_path

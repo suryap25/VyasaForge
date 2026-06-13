@@ -9,13 +9,12 @@ from typing import Any
 
 from src.handbook import resolve_chapter
 from src.validator import count_words
-
-STATE_DIR = Path("chapters/state")
+from src.workspace import workspace_path
 
 
 def state_path(chapter: int) -> Path:
     """Return the JSON state path for a chapter."""
-    return STATE_DIR / f"chapter-{chapter:02d}.json"
+    return workspace_path("chapters", "state", f"chapter-{chapter:02d}.json")
 
 
 def timestamp() -> str:
@@ -53,8 +52,8 @@ def load_state(chapter: int) -> dict[str, Any]:
 
 def save_state(chapter: int, state: dict[str, Any]) -> Path:
     """Persist chapter state as formatted JSON."""
-    STATE_DIR.mkdir(parents=True, exist_ok=True)
     path = state_path(chapter)
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return path
 

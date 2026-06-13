@@ -7,12 +7,10 @@ from pathlib import Path
 from src.handbook import resolve_chapter
 from src.publish_gate import validate_publish_quality
 from src.structure_repair import normalize_required_sections
+from src.workspace import workspace_path
 
 SOURCE_FIELDS = {"drafts": "draft_path", "reviewed": "reviewed_path"}
-SOURCE_PATHS = {
-    "enhanced": Path("chapters/enhanced/chapter-{chapter:02d}.md"),
-    "referenced": Path("chapters/referenced/chapter-{chapter:02d}.md"),
-}
+SOURCE_PATHS = {"enhanced": ("chapters", "enhanced"), "referenced": ("chapters", "referenced")}
 
 
 def metadata_header(chapter: int, source: str) -> str:
@@ -31,12 +29,16 @@ def finalize_chapter(chapter: int, source: str = "reviewed") -> Path:
     """Copy a selected chapter source into the final stage with metadata."""
     metadata = resolve_chapter(chapter)
     source_field = SOURCE_FIELDS.get(source)
-    source_template = SOURCE_PATHS.get(source)
-    if source_field is None and source_template is None:
+    source_dir = SOURCE_PATHS.get(source)
+    if source_field is None and source_dir is None:
         available_sources = ", ".join(sorted([*SOURCE_FIELDS, *SOURCE_PATHS]))
         raise ValueError(f"Unknown finalizer source '{source}'. Available sources: {available_sources}")
 
-    source_path = getattr(metadata, source_field) if source_field else Path(str(source_template).format(chapter=chapter))
+    source_path = (
+        getattr(metadata, source_field)
+        if source_field
+        else workspace_path(*source_dir, f"chapter-{chapter:02d}.md")
+    )
     final_path = metadata.final_path
 
     if not source_path.exists():

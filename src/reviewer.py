@@ -9,6 +9,7 @@ from pathlib import Path
 
 from src.handbook import resolve_chapter
 from src.validator import REQUIRED_SECTIONS
+from src.workspace import workspace_path
 
 PROMPT_PATH = Path("prompts/chapter_review.md")
 
@@ -32,7 +33,7 @@ class ReviewFinding:
 
 def review_findings_path(chapter: int) -> Path:
     """Return the structured review findings path."""
-    return Path("reviews") / f"chapter-{chapter:02d}-review.json"
+    return workspace_path("reviews", f"chapter-{chapter:02d}-review.json")
 
 
 def _sentence_for_section(review: str, section: str) -> str | None:

@@ -12,6 +12,20 @@ topic -> handbook TOC -> chapter briefs -> write -> validate -> repair -> review
 
 The visual/sketchnote/diagram generation layer has been removed. The current focus is reliable text generation, review, validation, finalization, and document compilation.
 
+Each planned handbook gets its own workspace:
+
+```text
+handbooks/<handbook-name>/
+  handbook.yaml
+  chapters/
+  reviews/
+  reports/
+  output/
+  logs/
+```
+
+Global provider/model settings remain in `configs/`.
+
 ## Prerequisites
 
 Install Python dependencies from the project root:
@@ -48,19 +62,37 @@ python -m src.cli doctor
 This checks:
 
 - `configs/phase1.example.json`
-- `configs/handbook.yaml`
+- the active handbook registry under `handbooks/<handbook-name>/handbook.yaml`
 - configured LLM roles and model names
 - expected provider environment variables
 - whether the required API key variable is present
 
 ## End-to-End Run
 
-If you deleted `chapters/briefs`, `chapters/drafts`, `chapters/reviewed`, or `chapters/final`, the commands below will recreate the needed folders as files are generated.
+If you deleted folders inside a handbook workspace, such as `handbooks/<handbook-name>/chapters/briefs`, `chapters/drafts`, `chapters/reviewed`, or `chapters/final`, the commands below will recreate the needed folders as files are generated.
 
 Plan a handbook from a topic:
 
 ```powershell
 python -m src.cli plan-handbook --topic "AppSec Authentication and Authorization"
+```
+
+This creates and activates a workspace such as:
+
+```text
+handbooks/appsec-authentication-authorization/
+```
+
+For a topic like:
+
+```powershell
+python -m src.cli plan-handbook --topic "Cloud Security focusing on AWS"
+```
+
+The workspace name is normalized to:
+
+```text
+handbooks/aws-cloud-security/
 ```
 
 Generate chapter briefs:
@@ -120,17 +152,17 @@ python -m src.cli handbook-status
 Expected outputs:
 
 ```text
-configs/handbook.yaml
-chapters/briefs/chapter-01.md
-chapters/drafts/chapter-01.md
-chapters/reviewed/chapter-01.md
-chapters/enhanced/chapter-01.md
-chapters/referenced/chapter-01.md
-chapters/final/chapter-01.md
-chapters/state/chapter-01.json
-reviews/chapter-01-review.md
-logs/llm-usage.jsonl
-output/AppSec_Authentication_Authorization_Handbook_Phase1.docx
+handbooks/<handbook-name>/handbook.yaml
+handbooks/<handbook-name>/chapters/briefs/chapter-01.md
+handbooks/<handbook-name>/chapters/drafts/chapter-01.md
+handbooks/<handbook-name>/chapters/reviewed/chapter-01.md
+handbooks/<handbook-name>/chapters/enhanced/chapter-01.md
+handbooks/<handbook-name>/chapters/referenced/chapter-01.md
+handbooks/<handbook-name>/chapters/final/chapter-01.md
+handbooks/<handbook-name>/chapters/state/chapter-01.json
+handbooks/<handbook-name>/reviews/chapter-01-review.md
+handbooks/<handbook-name>/logs/llm-usage.jsonl
+handbooks/<handbook-name>/output/<handbook-name>.docx
 ```
 
 ## Useful Individual Commands
@@ -151,7 +183,14 @@ python -m src.cli llm-usage --chapter 1
 
 ## Configurable Engine Commands
 
-Create or refresh structured chapter briefs from `configs/handbook.yaml`:
+List and switch handbook workspaces:
+
+```powershell
+python -m src.cli list-handbooks
+python -m src.cli use-handbook --name aws-cloud-security
+```
+
+Create or refresh structured chapter briefs from the active handbook registry:
 
 ```powershell
 python -m src.cli generate-briefs --chapters 1,2,3 --overwrite
@@ -196,7 +235,7 @@ python -m src.cli update-toc --input user_requirements.md
 If the requirements are ambiguous, the TOC is not changed. Clarification questions are written to:
 
 ```text
-configs/handbook-clarification-questions.md
+handbooks/<handbook-name>/configs/handbook-clarification-questions.md
 ```
 
 ## Chapter Brief Factory
@@ -216,7 +255,7 @@ python -m src.cli validate-brief --chapter 1
 Expected output:
 
 ```text
-PASS: chapters\briefs\chapter-01.md
+PASS: handbooks\<handbook-name>\chapters\briefs\chapter-01.md
 ```
 
 Each brief includes the chapter goal, audience, target word count, required handbook sections, must-cover topics, examples required, references guidance, and quality gates.
@@ -245,7 +284,7 @@ Expected output:
 PASS: handbook QA
 Stage: final
 Chapters checked: 1
-Wrote QA report: reports\handbook-qa.md
+Wrote QA report: handbooks\<handbook-name>\reports\handbook-qa.md
 ```
 
 The QA report checks chapter validation status, missing sections, weak interview-question sections, duplicate chapter titles, and large chapter-length imbalance. It does not call the LLM.
@@ -286,8 +325,8 @@ duplicate required sections
 Structured review findings are written beside the human review:
 
 ```text
-reviews/chapter-01-review.md
-reviews/chapter-01-review.json
+handbooks/<handbook-name>/reviews/chapter-01-review.md
+handbooks/<handbook-name>/reviews/chapter-01-review.json
 ```
 
 The reviser now expects section-patch JSON and replaces target sections in place. It no longer appends a `Revision Additions` section.
@@ -298,4 +337,4 @@ Compile now runs a publish gate before Pandoc.
 
 - `run-chapter` creates the chapter brief automatically before writing.
 - LLM prompts and API keys are not written to the usage log.
-- Token usage is logged to `logs/llm-usage.jsonl` when available from the provider.
+- Token usage is logged to `handbooks/<handbook-name>/logs/llm-usage.jsonl` when a handbook workspace is active.

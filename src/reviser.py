@@ -9,6 +9,7 @@ from pathlib import Path
 from src.handbook import resolve_chapter
 from src.publish_gate import validate_publish_quality
 from src.validator import REQUIRED_SECTIONS, count_words, has_section
+from src.workspace import workspace_path
 
 PROMPT_PATH = Path("prompts/chapter_revision.md")
 MIN_REVISED_WORD_RATIO = 0.8
@@ -27,7 +28,7 @@ def missing_required_sections(markdown: str) -> list[str]:
 
 def review_findings_path(chapter: int) -> Path:
     """Return structured review findings path."""
-    return Path("reviews") / f"chapter-{chapter:02d}-review.json"
+    return workspace_path("reviews", f"chapter-{chapter:02d}-review.json")
 
 
 def extract_json_payload(text: str) -> object:

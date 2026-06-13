@@ -9,15 +9,14 @@ from src.handbook import resolve_chapter
 from src.publish_gate import validate_publish_quality
 from src.structural_qa import structural_qa_markdown
 from src.validator import REQUIRED_SECTIONS, count_words, has_section
+from src.workspace import workspace_path
 
 PROMPT_PATH = Path("prompts/chapter_expert_enhancement.md")
-ENHANCED_DIR = Path("chapters/enhanced")
-FAILED_DIR = Path("reviews")
 
 
 def enhanced_path_for(chapter: int) -> Path:
     """Return the expert-enhanced chapter path."""
-    return ENHANCED_DIR / f"chapter-{chapter:02d}.md"
+    return workspace_path("chapters", "enhanced", f"chapter-{chapter:02d}.md")
 
 
 def _clean_markdown(text: str) -> str:
@@ -81,8 +80,8 @@ def enhance_chapter(chapter: int, source_path: Path) -> Path:
         failures.extend(structural_result.errors)
 
     if failures:
-        FAILED_DIR.mkdir(parents=True, exist_ok=True)
-        failed_path = FAILED_DIR / f"chapter-{chapter:02d}-enhancement-failed.md"
+        failed_path = workspace_path("reviews", f"chapter-{chapter:02d}-enhancement-failed.md")
+        failed_path.parent.mkdir(parents=True, exist_ok=True)
         failed_path.write_text(enhanced, encoding="utf-8")
         raise RuntimeError(
             "Expert enhancement rejected: "

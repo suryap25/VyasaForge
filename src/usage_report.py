@@ -9,8 +9,15 @@ from typing import Any
 USAGE_LOG_PATH = Path("logs/llm-usage.jsonl")
 
 
-def load_usage_records(path: Path = USAGE_LOG_PATH) -> list[dict[str, Any]]:
+def load_usage_records(path: Path | None = None) -> list[dict[str, Any]]:
     """Load LLM usage JSONL records."""
+    if path is None:
+        try:
+            from src.workspace import workspace_path
+
+            path = workspace_path("logs", "llm-usage.jsonl")
+        except Exception:
+            path = USAGE_LOG_PATH
     if not path.exists():
         return []
 

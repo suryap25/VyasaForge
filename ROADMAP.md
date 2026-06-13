@@ -21,6 +21,7 @@ The utility can:
 - Compile DOCX/PDF through Pandoc.
 - Track per-chapter state and LLM token usage.
 - Switch model providers through provider profiles.
+- Manage multiple handbook workspaces under `handbooks/<handbook-name>/`.
 
 Removed:
 
@@ -32,6 +33,7 @@ Removed:
 
 ```text
 plan-handbook
+use-handbook / list-handbooks
 generate-briefs
 run-chapter / run-chapters
   create-chapter
@@ -60,6 +62,7 @@ run-chapter / run-chapters
 5. Better reference quality gates.
 6. Improved DOCX styling and front matter.
 7. Full handbook generation across all planned chapters.
+8. Workspace cleanup/archive commands.
 
 ## Out Of Scope
 

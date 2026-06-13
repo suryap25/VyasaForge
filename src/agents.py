@@ -22,7 +22,7 @@ AGENT_CONTRACTS = [
         name="Planner Agent",
         role="planner",
         input_contract="Topic, optional audience, depth, pages, and optional exact chapter count.",
-        output_contract="Normalized configs/handbook.yaml registry.",
+        output_contract="Normalized handbook.yaml registry under the selected handbook workspace.",
         validation_gate="Registry must parse and contain numbered chapters with file paths.",
     ),
     AgentContract(
@@ -36,7 +36,7 @@ AGENT_CONTRACTS = [
         name="Chapter Writer Agent",
         role="writer",
         input_contract="Chapter brief, generation prompt, and handbook registry metadata.",
-        output_contract="Markdown draft in chapters/drafts.",
+        output_contract="Markdown draft in the active handbook workspace chapters/drafts folder.",
         validation_gate="Draft must pass required-section and word-count validation.",
     ),
     AgentContract(
@@ -50,7 +50,7 @@ AGENT_CONTRACTS = [
         name="AppSec Reviewer Agent",
         role="reviewer",
         input_contract="Chapter draft and chapter review prompt.",
-        output_contract="Review notes in reviews/chapter-NN-review.md.",
+        output_contract="Review notes in the active handbook workspace reviews folder.",
         validation_gate="Review file must exist before revision.",
     ),
     AgentContract(
@@ -78,7 +78,7 @@ AGENT_CONTRACTS = [
         name="Compiler Agent",
         role=None,
         input_contract="Validated final Markdown chapters.",
-        output_contract="DOCX or PDF under output/.",
+        output_contract="DOCX or PDF under the active handbook workspace output folder.",
         validation_gate="Pandoc must be installed and compilation must exit successfully.",
     ),
 ]

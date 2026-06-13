@@ -7,6 +7,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from src.workspace import active_registry_path
+
 REGISTRY_PATH = Path("configs/handbook.yaml")
 
 
@@ -42,15 +44,28 @@ def chapter_id_for(chapter: int | str) -> str:
     return f"chapter_{int(chapter):02d}"
 
 
-@lru_cache(maxsize=1)
-def load_handbook_registry(path: str = str(REGISTRY_PATH)) -> HandbookRegistry:
+def _resolve_artifact_path(registry_path: Path, value: str) -> Path:
+    """Resolve registry artifact paths under the handbook workspace."""
+    path = Path(value)
+    if path.is_absolute():
+        return path
+    try:
+        is_legacy_registry = registry_path.resolve() == REGISTRY_PATH.resolve()
+    except OSError:
+        is_legacy_registry = registry_path == REGISTRY_PATH
+    base = Path(".") if is_legacy_registry else registry_path.parent
+    return base / path
+
+
+@lru_cache(maxsize=8)
+def load_handbook_registry(path: str | None = None) -> HandbookRegistry:
     """Load handbook chapter metadata from YAML."""
     try:
         import yaml
     except ImportError:
         from src import simple_yaml as yaml
 
-    registry_path = Path(path)
+    registry_path = Path(path) if path is not None else active_registry_path()
     if not registry_path.exists():
         raise FileNotFoundError(f"Missing handbook registry: {registry_path}")
 
@@ -61,11 +76,11 @@ def load_handbook_registry(path: str = str(REGISTRY_PATH)) -> HandbookRegistry:
             chapter_id=chapter_id,
             number=settings["number"],
             title=settings["title"],
-            brief_path=Path(settings["brief_path"]),
-            draft_path=Path(settings["draft_path"]),
-            reviewed_path=Path(settings["reviewed_path"]),
-            final_path=Path(settings["final_path"]),
-            review_path=Path(settings["review_path"]),
+            brief_path=_resolve_artifact_path(registry_path, settings["brief_path"]),
+            draft_path=_resolve_artifact_path(registry_path, settings["draft_path"]),
+            reviewed_path=_resolve_artifact_path(registry_path, settings["reviewed_path"]),
+            final_path=_resolve_artifact_path(registry_path, settings["final_path"]),
+            review_path=_resolve_artifact_path(registry_path, settings["review_path"]),
         )
         for chapter_id, settings in handbook["chapters"].items()
     }

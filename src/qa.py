@@ -9,6 +9,7 @@ from pathlib import Path
 from src.handbook import resolve_chapter
 from src.structural_qa import StructuralQAResult, structural_qa_file
 from src.validator import REQUIRED_SECTIONS, ValidationResult, validate_chapter
+from src.workspace import workspace_path
 
 REPORT_PATH = Path("reports/handbook-qa.md")
 
@@ -171,8 +172,9 @@ def render_qa_report(result: HandbookQAResult) -> str:
     return "\n".join(lines).strip() + "\n"
 
 
-def write_qa_report(result: HandbookQAResult, path: Path = REPORT_PATH) -> Path:
+def write_qa_report(result: HandbookQAResult, path: Path | None = None) -> Path:
     """Write QA report to disk."""
+    path = path or workspace_path("reports", "handbook-qa.md")
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(render_qa_report(result), encoding="utf-8")
     return path

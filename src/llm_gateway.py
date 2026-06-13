@@ -156,7 +156,13 @@ def _log_usage(
     total_tokens: int | None,
 ) -> None:
     """Append one LLM usage record as JSONL."""
-    USAGE_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        from src.workspace import workspace_path
+
+        log_path = workspace_path("logs", "llm-usage.jsonl")
+    except Exception:
+        log_path = USAGE_LOG_PATH
+    log_path.parent.mkdir(parents=True, exist_ok=True)
     record = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "chapter": chapter,
@@ -166,7 +172,7 @@ def _log_usage(
         "output_tokens": output_tokens,
         "total_tokens": total_tokens,
     }
-    with USAGE_LOG_PATH.open("a", encoding="utf-8") as log_file:
+    with log_path.open("a", encoding="utf-8") as log_file:
         log_file.write(json.dumps(record, sort_keys=True) + "\n")
 
 

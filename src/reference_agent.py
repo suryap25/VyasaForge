@@ -10,15 +10,14 @@ from src.handbook import resolve_chapter
 from src.publish_gate import validate_publish_quality
 from src.structural_qa import structural_qa_markdown
 from src.validator import REQUIRED_SECTIONS, count_words, has_section
+from src.workspace import workspace_path
 
 PROMPT_PATH = Path("prompts/chapter_references.md")
-REFERENCED_DIR = Path("chapters/referenced")
-FAILED_DIR = Path("reviews")
 
 
 def referenced_path_for(chapter: int) -> Path:
     """Return the reference-enriched chapter path."""
-    return REFERENCED_DIR / f"chapter-{chapter:02d}.md"
+    return workspace_path("chapters", "referenced", f"chapter-{chapter:02d}.md")
 
 
 def _clean_markdown(text: str) -> str:
@@ -95,8 +94,8 @@ def add_references(chapter: int, source_path: Path) -> Path:
         failures.extend(structural_errors)
 
     if failures:
-        FAILED_DIR.mkdir(parents=True, exist_ok=True)
-        failed_path = FAILED_DIR / f"chapter-{chapter:02d}-references-failed.md"
+        failed_path = workspace_path("reviews", f"chapter-{chapter:02d}-references-failed.md")
+        failed_path.parent.mkdir(parents=True, exist_ok=True)
         failed_path.write_text(referenced, encoding="utf-8")
         raise RuntimeError(
             "Reference enrichment rejected: "
